@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>АО Whirl — О нас</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+  <style>
+    :root{--bg:#03030a;--sf:rgba(255,255,255,.042);--sf2:rgba(255,255,255,.08);--bd:rgba(255,255,255,.08);--bd2:rgba(255,255,255,.18);--t:#f2f2f7;--t2:rgba(242,242,247,.55);--t3:rgba(242,242,247,.26);--ac:#2997ff;--acd:rgba(41,151,255,.12);--ease:cubic-bezier(.16,1,.3,1);}
+    *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+    html{scroll-behavior:smooth;}
+    body{background:var(--bg);color:var(--t);font-family:'DM Sans',-apple-system,sans-serif;overflow-x:hidden;cursor:none;-webkit-font-smoothing:antialiased;}
+    a{text-decoration:none;color:inherit;}
+    #bgc{position:fixed;inset:0;z-index:0;width:100%;height:100%;pointer-events:none;}
+    .grain{position:fixed;inset:-50%;z-index:1;width:200%;height:200%;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23g)' opacity='0.04'/%3E%3C/svg%3E");pointer-events:none;animation:grain .45s steps(1) infinite;}
+    @keyframes grain{0%,100%{transform:translate(0,0)}20%{transform:translate(-1%,-2%)}40%{transform:translate(2%,1%)}60%{transform:translate(-2%,2%)}80%{transform:translate(1%,-1%)}}
+    .cur-dot{width:8px;height:8px;background:white;border-radius:50%;position:fixed;z-index:9999;pointer-events:none;transform:translate(-50%,-50%);mix-blend-mode:difference;transition:transform .15s var(--ease);}
+    .cur-ring{width:36px;height:36px;border:1px solid rgba(255,255,255,.3);border-radius:50%;position:fixed;z-index:9998;pointer-events:none;transform:translate(-50%,-50%);}
+    body:has(a:hover) .cur-dot,body:has(button:hover) .cur-dot{transform:translate(-50%,-50%) scale(2.5);}
+    header{position:fixed;top:0;left:0;right:0;z-index:900;height:50px;display:flex;align-items:center;justify-content:space-between;padding:0 40px;background:rgba(3,3,10,.7);backdrop-filter:blur(24px) saturate(200%);-webkit-backdrop-filter:blur(24px) saturate(200%);border-bottom:1px solid var(--bd);transition:background .4s;opacity:0;transform:translateY(-10px);animation:hdrIn .6s ease forwards;}
+    @keyframes hdrIn{to{opacity:1;transform:translateY(0)}}
+    header.scrolled{background:rgba(3,3,10,.9);}
+    .logo-t{font-family:'DM Serif Display',serif;font-size:19px;letter-spacing:-.3px;color:var(--t);}
+    nav{position:absolute;left:50%;transform:translateX(-50%);display:flex;gap:36px;}
+    nav a{font-size:13px;font-weight:400;color:var(--t2);transition:color .2s;white-space:nowrap;}
+    nav a:hover, nav a.active{color:var(--t);}
+    .h-right{display:flex;align-items:center;}
+    .lang-pill{display:flex;background:var(--sf);border:1px solid var(--bd);border-radius:100px;padding:2px;gap:1px;}
+    .lang-pill button{background:none;border:none;color:var(--t2);font:500 11px/1 'DM Sans',sans-serif;padding:4px 11px;border-radius:100px;cursor:pointer;transition:all .2s;}
+    .lang-pill button.active{background:rgba(255,255,255,.14);color:var(--t);}
+    .burger { display: none; width: 38px; height: 38px; align-items: center; justify-content: center; cursor: pointer; margin-left: 14px; z-index: 1000; flex-shrink: 0; background: var(--sf); border: 1px solid var(--bd); border-radius: 50%; padding: 0; position: relative; transition: all 0.3s; }
+    .burger:hover { background: var(--sf2); border-color: var(--bd2); transform: scale(1.05); }
+    .burger span { position: absolute; display: block; width: 14px; height: 1.5px; background: var(--t); border-radius: 2px; transition: 0.3s cubic-bezier(.16,1,.3,1); pointer-events: none; }
+    .burger span:nth-child(1) { transform: translateY(-4px); }
+    .burger span:nth-child(2) { transform: translateY(0); }
+    .burger span:nth-child(3) { transform: translateY(4px); }
+    .burger.open span:nth-child(1) { transform: translateY(0) rotate(45deg); }
+    .burger.open span:nth-child(2) { opacity: 0; transform: scale(0); }
+    .burger.open span:nth-child(3) { transform: translateY(0) rotate(-45deg); }
+    .mob-nav { position: fixed; top: 0; left: 0; width: 100%; height: 100vh; background: rgba(3,3,10,0.85); backdrop-filter: blur(24px) saturate(200%); -webkit-backdrop-filter: blur(24px) saturate(200%); z-index: 800; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 32px; opacity: 0; visibility: hidden; transition: opacity 0.4s cubic-bezier(.16,1,.3,1), visibility 0.4s; }
+    .mob-nav::before { content: ''; position: absolute; inset: 0; background: radial-gradient(circle at 50% 50%, rgba(41,151,255,0.08), transparent 70%); pointer-events: none; }
+    .mob-nav.active { opacity: 1; visibility: visible; }
+    .mob-nav a { font-size: 26px; font-weight: 500; font-family: 'DM Sans', sans-serif; color: var(--t2); text-decoration: none; transform: translateY(20px); opacity: 0; transition: color 0.3s, transform 0.4s cubic-bezier(.16,1,.3,1), opacity 0.4s; }
+    .mob-nav a.active, .mob-nav a:hover { color: var(--t); transform: translateY(0) scale(1.05); }
+    .mob-nav.active a { transform: translateY(0); opacity: 1; }
+    .mob-nav a:nth-child(1) { transition-delay: 0.1s; }
+    .mob-nav a:nth-child(2) { transition-delay: 0.15s; }
+    .mob-nav a:nth-child(3) { transition-delay: 0.2s; }
+    @media(max-width:900px){nav{display:none;} .burger{display:flex;}}
+    .section{position:relative;z-index:2;padding:120px 80px 80px;}
+    @media(max-width:900px){.section{padding:90px 28px;}}
+    
+    .about-hero {
+      text-align: center;
+      margin-bottom: 60px;
+      opacity: 0;
+      animation: fi 1s .2s forwards, up .8s .2s var(--ease) forwards;
+    }
+    .about-hero h1 {
+      font-family: 'DM Serif Display', serif;
+      font-size: clamp(42px, 6vw, 76px);
+      letter-spacing: -2px;
+      color: var(--t);
+      margin-bottom: 24px;
+    }
+    .about-hero .hero-grad{
+        background:linear-gradient(120deg,#e0e8ff 0%,#90b8ff 35%,#c08bff 65%,#ff8acd 100%);
+        -webkit-background-clip:text;
+        -webkit-text-fill-color:transparent;
+        background-clip:text;
+        background-size:200%;
+        animation:gm 6s ease infinite;
+    }
+    .about-hero p {
+      font-size: 18px;
+      color: var(--t2);
+      max-width: 600px;
+      margin: 0 auto;
+      line-height: 1.6;
+    }
+    
+    .content-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 32px;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    
+    .card {
+      background: var(--sf);
+      border: 1px solid var(--bd);
+      border-radius: 24px;
+      padding: 40px;
+      position: relative;
+      overflow: hidden;
+      transition: transform .4s var(--ease), border-color .4s;
+    }
+    @media(max-width: 600px) {
+      .card { padding: 24px; }
+    }
+    .card:hover {
+      border-color: var(--bd2);
+      transform: translateY(-4px);
+    }
+    
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 4px;
+      height: 100%;
+      background: var(--ac);
+      opacity: 0;
+      transition: opacity .4s;
+    }
+    .card:hover::before {
+      opacity: 1;
+    }
+
+    .card-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      background: var(--acd);
+      border: 1px solid rgba(41, 151, 255, .18);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--ac);
+      margin-bottom: 24px;
+    }
+    .card-icon svg { width: 22px; height: 22px; }
+    
+    .card-text {
+      font-size: 16px;
+      line-height: 1.7;
+      color: var(--t);
+    }
+    
+    .btn{display:inline-flex;align-items:center;gap:8px;padding:13px 26px;border-radius:100px;font:500 14px/1 'DM Sans',sans-serif;cursor:pointer;transition:all .25s var(--ease);border:none;}
+    .btn svg{width:16px;height:16px;flex-shrink:0;}
+    .btn-w{background:var(--t);color:#04040a;}
+    .btn-w:hover{background:#d8d8e0;transform:scale(1.03);}
+    .btn-o{background:var(--sf);border:1px solid var(--bd);color:var(--t);backdrop-filter:blur(12px);}
+    .btn-o:hover{background:var(--sf2);border-color:var(--bd2);transform:scale(1.03);}
+    .dl-btn{margin-top:24px;}
+    
+    .docs-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px;
+    }
+    @media(max-width:600px) {
+      .docs-grid { grid-template-columns: 1fr; }
+      .doc-card { padding: 18px; }
+    }
+    .doc-card {
+      background: var(--sf);
+      border: 1px solid var(--bd);
+      border-radius: 16px;
+      padding: 24px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      transition: transform .3s var(--ease), border-color .3s;
+      color: var(--t);
+    }
+    .doc-card:hover {
+      border-color: var(--bd2);
+      transform: translateY(-4px);
+    }
+    .doc-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--t2);
+      flex-shrink: 0;
+    }
+    .doc-title {
+      font-size: 15px;
+      font-weight: 500;
+      line-height: 1.4;
+      color: var(--t);
+    }
+
+    @keyframes up { from { transform: translateY(30px); } to { transform: translateY(0); } }
+    @keyframes fi { to { opacity: 1; } }
+    @keyframes gm{0%,100%{background-position:0%}50%{background-position:100%}}
+
+    [data-anim]{opacity:0;transition:opacity .9s var(--ease),transform .9s var(--ease);will-change:transform,opacity;}
+    [data-anim="fade-up"]{transform:translateY(40px);}
+    [data-anim].anim-in{opacity:1!important;transform:none!important;}
+
+    footer{position:relative;z-index:2;border-top:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between;padding:26px 80px;flex-wrap:wrap;gap:12px;margin-top: 80px;}
+    .ft-logo{font-family:'DM Serif Display',serif;font-size:15px;color:var(--t3);}
+    .ft-copy{font-size:11px;color:var(--t3);}
+    .ft-links{display:flex;gap:24px;}
+    .ft-links a{font-size:11px;color:var(--t3);transition:color .2s;}
+    .ft-links a:hover{color:var(--t2);}
+    @media(max-width:700px){footer{padding:24px 28px;flex-direction:column;}}
+  
+    /* =========================================
+       LIGHT MODE — data-theme="light" on <html>
+       ========================================= */
+    [data-theme="light"]{
+      --bg:#f5f5f7;
+      --sf:rgba(0,0,0,.04);
+      --sf2:rgba(0,0,0,.08);
+      --bd:rgba(0,0,0,.1);
+      --bd2:rgba(0,0,0,.22);
+      --t:#1d1d1f;
+      --t2:rgba(29,29,31,.56);
+      --t3:rgba(29,29,31,.32);
+      --ac:#0071e3;
+      --acd:rgba(0,113,227,.1);
+    }
+    /* Header & nav overrides */
+    [data-theme="light"] header{background:rgba(245,245,247,.82)!important;}
+    [data-theme="light"] header.scrolled{background:rgba(245,245,247,.96)!important;}
+    [data-theme="light"] .mob-nav{background:rgba(245,245,247,.95)!important;}
+    [data-theme="light"] #intro{background:#f5f5f7!important;}
+    [data-theme="light"] .lang-pill button.active{background:rgba(0,0,0,.12);color:var(--t);}
+    [data-theme="light"] .cur-ring{border-color:rgba(0,0,0,.18);}
+    [data-theme="light"] .cur-dot{background:#1d1d1f;}
+    [data-theme="light"] .btn-w{background:#1d1d1f;color:#f5f5f7;}
+    [data-theme="light"] .btn-w:hover{background:#333;}
+    [data-theme="light"] .hero-grad{
+      background:linear-gradient(120deg,#003399 0%,#0055cc 35%,#7700cc 65%,#cc0066 100%);
+      -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;background-size:200%;
+    }
+    [data-theme="light"] .metrics-wrap,[data-theme="light"] .info-grid{background:var(--bd);}
+    [data-theme="light"] .met,[data-theme="light"] .info-cell{background:var(--bg);}
+    [data-theme="light"] .met:hover,[data-theme="light"] .info-cell:hover{background:var(--sf);}
+    /* Smooth transitions for theme switch */
+    body,header,.mob-nav,#intro,.pcard,.doc-row,.info-cell,.met,.ct-wrap,
+    .lang-pill,.doc-ico,.info-pill,.lbl,.ticker-item,.ft-logo,.ft-copy,.ft-links a{
+      transition:background .35s ease,color .35s ease,border-color .35s ease,box-shadow .35s ease!important;
+    }
+    /* ── Theme Toggle Button ── */
+    .theme-toggle{
+      position:relative;display:inline-flex;align-items:center;justify-content:center;
+      width:34px;height:34px;border-radius:50%;
+      background:var(--sf);border:1px solid var(--bd);
+      cursor:pointer;margin-left:8px;flex-shrink:0;
+      transition:background .25s,border-color .25s,transform .25s;
+      overflow:hidden;
+    }
+    .theme-toggle:hover{background:var(--sf2);border-color:var(--bd2);transform:scale(1.08);}
+    .theme-toggle .t-icon{
+      position:absolute;width:15px;height:15px;
+      color:var(--t2);transition:transform .4s cubic-bezier(.16,1,.3,1),opacity .3s;
+    }
+    .t-moon{opacity:1;transform:rotate(0deg) scale(1);}
+    .t-sun{opacity:0;transform:rotate(90deg) scale(.4);}
+    [data-theme="light"] .t-moon{opacity:0;transform:rotate(-90deg) scale(.4);}
+    [data-theme="light"] .t-sun{opacity:1;transform:rotate(0deg) scale(1);}
+    [data-theme="light"] .theme-toggle:hover{background:var(--sf2);}
+
+  </style>
+</head>
+<body>
+
+<canvas id="bgc"></canvas>
+<div class="grain"></div>
+<div class="cur-dot" id="cd"></div>
+<div class="cur-ring" id="cr"></div>
+
+<header id="hdr">
+  <a href="index.html" class="logo-t">Whirl</a>
+  <nav>
+    <a href="#" onclick="return false;" style="opacity:.5;cursor:default;">ODU</a>
+    <a href="about.html" class="active" data-tr="nav_about">О нас</a>
+    <a href="careers.html" data-tr="nav_careers">Карьера</a>
+  </nav>
+  <div class="h-right">
+    <div class="lang-pill">
+      <button data-lang="ru" class="active">RU</button>
+      <button data-lang="en">ENG</button>
+      <button data-lang="uz">UZ</button>
+    </div>
+    <button class="burger" id="burger"><span></span><span></span><span></span></button>
+    <button class="theme-toggle" id="themeToggle" title="Тема / Theme"><svg class="t-icon t-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg><svg class="t-icon t-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg></button>
+  </div>
+</header>
+
+<div class="mob-nav" id="mobNav">
+  <a href="#" onclick="return false;" style="opacity:.5;cursor:default;">ODU</a>
+  <a href="about.html" data-tr="nav_about">О нас</a>
+  <a href="careers.html" data-tr="nav_careers">Карьера</a>
+</div>
+
+<section class="section">
+  <div class="about-hero">
+    <h1><span data-tr="title_1">О</span> <span class="hero-grad" data-tr="title_2">Компании</span></h1>
+    <p data-tr="subtitle">Надежные финансовые решения и инновационная инфраструктура для вашего бизнеса.</p>
+  </div>
+
+  <div class="content-grid">
+    <div class="card" data-anim="fade-up">
+      <div class="card-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+      </div>
+      <div class="card-text" data-tr="p1">
+        Акционерное общество «WHIRL» является лицензированной платёжной организацией, осуществляющей деятельность на основании лицензии Центрального банка Республики Узбекистан.
+      </div>
+    </div>
+
+    <div class="card" data-anim="fade-up" style="transition-delay: 0.1s;">
+      <div class="card-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"></path></svg>
+      </div>
+      <div class="card-text" data-tr="p2">
+        Общество специализируется на предоставлении платёжной инфраструктуры и технологических решений, обеспечивающих проведение электронных платежей, переводов денежных средств, а также интеграцию финансовых сервисов с банками и партнёрами.
+      </div>
+    </div>
+
+    <div class="card" data-anim="fade-up" style="transition-delay: 0.2s;">
+      <div class="card-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"></rect><path d="M12 16v-4"></path><path d="M8 16v-2"></path><path d="M16 16v-6"></path></svg>
+      </div>
+      <div class="card-text" data-tr="p3">
+        В рамках своей деятельности АО «WHIRL» развивает платёжный сервис ODU, представляющий собой программно-технический комплекс для осуществления платежных операций пользователями и взаимодействия с финансовыми институтами.
+      </div>
+    </div>
+
+    <div class="card" data-anim="fade-up" style="transition-delay: 0.3s;">
+      <div class="card-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+      </div>
+      <div class="card-text" data-tr="p5">
+        Общество действует в соответствии с требованиями законодательства в области платежных систем, противодействия легализации доходов и защиты информации.
+      </div>
+    </div>
+  </div>
+
+  <div style="max-width: 900px; margin: 80px auto 0;" data-anim="fade-up">
+    <h2 style="font-family: 'DM Serif Display', serif; font-size: clamp(24px, 5vw, 32px); color: var(--t); margin-bottom: 32px; text-align: center;" data-tr="corp_title">Корпоративные материалы</h2>
+    <div class="docs-grid">
+      <a href="license_66_2026.pdf" target="_blank" class="doc-card">
+        <div class="doc-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+        </div>
+        <div class="doc-title" data-tr="doc_license">Лицензия ЦБ РУз №66</div>
+      </a>
+
+      <a href="appeals.html" class="doc-card" style="border-color: rgba(41, 151, 255, 0.3);">
+        <div class="doc-icon" style="color: var(--ac); background: rgba(41, 151, 255, 0.1);">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+        </div>
+        <div class="doc-title" data-tr="doc_appeals">Правила рассмотрения обращений</div>
+      </a>
+
+      <a href="privacy.html" class="doc-card" style="border-color: rgba(41, 151, 255, 0.3);">
+        <div class="doc-icon" style="color: var(--ac); background: rgba(41, 151, 255, 0.1);">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+        </div>
+        <div class="doc-title" data-tr="doc_privacy">Конфиденциальность</div>
+      </a>
+    </div>
+  </div>
+
+</section>
+
+<footer>
+  <span class="ft-logo">Whirl</span>
+  <div class="ft-links">
+    <a href="#" onclick="return false;" style="opacity:.5;cursor:default;">ODU</a>
+    <a href="privacy.html" data-tr="nav_privacy">Конфиденциальность</a>
+  </div>
+  <span class="ft-copy" data-tr="footer_copy">© 2017 АО «WHIRL». Все права защищены.</span>
+</footer>
+
+<script>
+const T={
+  ru:{
+    nav_about:"О нас", nav_careers:"Карьера", nav_privacy:"Конфиденциальность",
+    title_1:"О", title_2:"Компании",
+    subtitle:"Надежные финансовые решения и инновационная инфраструктура для вашего бизнеса.",
+    p1:"Акционерное общество «WHIRL» является лицензированной платёжной организацией, осуществляющей деятельность на основании лицензии Центрального банка Республики Узбекистан.",
+    p2:"Общество специализируется на предоставлении платёжной инфраструктуры и технологических решений, обеспечивающих проведение электронных платежей, переводов денежных средств, а также интеграцию финансовых сервисов с банками и партнёрами.",
+    p3:"В рамках своей деятельности АО «WHIRL» развивает платёжный сервис ODU, представляющий собой программно-технический комплекс для осуществления платежных операций пользователями и взаимодействия с финансовыми институтами.",
+    p4:"АО «WHIRL» входит в группу компаний и может участвовать в уставных капиталах иных юридических лиц. Единственным акционером Общества является Барабанова Ангелина Сергеевна.",
+    p5:"Общество действует в соответствии с требованиями законодательства в области платежных систем, противодействия легализации доходов и защиты информации.",
+    footer_copy:'© 2017 АО «WHIRL». Все права защищены.',
+    btn_lic:"Скачать лицензию ЦБ РУз №66",
+    lic_banner_title:"Официальная Лицензия",
+    lic_banner_desc:"Центральный банк Республики Узбекистан. Лицензия №66 на осуществление деятельности платёжной организации.",
+    btn_lic_main:"Скачать Лицензию (PDF)",
+    corp_title: "Корпоративные материалы",
+    doc_anticorrupt: "Антикоррупционная политика",
+    doc_ethic: "Кодекс делового поведения и этики",
+    doc_esg: "Политика ESG WHIRL",
+    doc_license: "Лицензия ЦБ РУз №66",
+    doc_appeals: "Правила рассмотрения обращений",
+    doc_privacy: "Политика конфиденциальности"
+  },
+  en:{
+    nav_about:"About", nav_careers:"Careers", nav_privacy:"Privacy Policy",
+    title_1:"About", title_2:"Company",
+    subtitle:"Reliable financial solutions and innovative infrastructure for your business.",
+    p1:"Joint Stock Company «WHIRL» is a licensed payment organization operating under a license from the Central Bank of the Republic of Uzbekistan.",
+    p2:"The Company specializes in providing payment infrastructure and technological solutions that ensure electronic payments, money transfers, and the integration of financial services with banks and partners.",
+    p3:"As part of its activities, JSC «WHIRL» develops the ODU payment service, which is a software and hardware complex for users to perform payment operations and interact with financial institutions.",
+    p4:"JSC «WHIRL» is part of a group of companies and may participate in the authorized capital of other legal entities. The sole shareholder of the Company is Barabanova Angelina Sergeevna.",
+    p5:"The Company operates in accordance with the legal requirements in the field of payment systems, anti-money laundering, and information security.",
+    footer_copy:'© 2017 «WHIRL» JSC. All rights reserved.',
+    btn_lic:"Download CBU License No. 66",
+    lic_banner_title:"Official License",
+    lic_banner_desc:"Central Bank of the Republic of Uzbekistan. License No. 66 to carry out payment organization activities.",
+    btn_lic_main:"Download License (PDF)",
+    corp_title: "Corporate Materials",
+    doc_anticorrupt: "Anti-corruption Policy",
+    doc_ethic: "Code of Business Conduct and Ethics",
+    doc_esg: "WHIRL ESG Policy",
+    doc_license: "CBU License No. 66",
+    doc_appeals: "Rules for Reviewing Appeals",
+    doc_privacy: "Privacy Policy"
+  },
+  uz:{
+    nav_about:"Biz haqimizda", nav_careers:"Karyera", nav_privacy:"Maxfiylik",
+    title_1:"Kompaniya", title_2:"Haqida",
+    subtitle:"Biznesingiz uchun ishonchli moliyaviy yechimlar va innovatsion infratuzilma.",
+    p1:"«WHIRL» aksiyadorlik jamiyati O'zbekiston Respublikasi Markaziy bankining litsenziyasi asosida faoliyat yurituvchi litsenziyalangan to'lov tashkiloti hisoblanadi.",
+    p2:"Jamiyat elektron to'lovlar, pul o'tkazmalarini amalga oshirish hamda moliyaviy xizmatlarni banklar va hamkorlar bilan integratsiyasini ta'minlovchi to'lov infratuzilmasi va texnologik yechimlarni taqdim etishga ixtisoslashgan.",
+    p3:"O'z faoliyati doirasida «WHIRL» AJ foydalanuvchilar tomonidan to'lov operatsiyalarini amalga oshirish va moliyaviy institutlar bilan o'zaro hamkorlik qilish uchun mo'ljallangan dasturiy-texnik majmua bo'lgan ODU to'lov xizmatini rivojlantirmoqda.",
+    p4:"«WHIRL» AJ kompaniyalar guruhiga kiradi va boshqa yuridik shaxslarning ustav kapitallarida ishtirok etishi mumkin. Jamiyatning yagona aksiyadori - Barabanova Angelina Sergeyevna.",
+    p5:"Jamiyat to'lov tizimlari, daromadlarni legallashtirishga qarshi kurashish va axborot xavfsizligi sohasidagi qonunchilik talablariga muvofiq faoliyat yuritadi.",
+    footer_copy:'© 2017 «WHIRL» AJ. Barcha huquqlar himoyalangan.',
+    btn_lic:"O'zR MB 66-son litsenziyasini yuklab olish",
+    lic_banner_title:"Rasmiy Litsenziya",
+    lic_banner_desc:"O'zbekiston Respublikasi Markaziy banki. To'lov tashkiloti faoliyatini amalga oshirish uchun 66-sonli litsenziya.",
+    btn_lic_main:"Litsenziyani yuklab olish (PDF)",
+    corp_title: "Korporativ materiallar",
+    doc_anticorrupt: "Korroptsiyaga qarshi siyosat",
+    doc_ethic: "Biznes yuritish va axloq kodeksi",
+    doc_esg: "WHIRL ESG Siyosati",
+    doc_license: "O'zR MB 66-son litsenziyasi",
+    doc_appeals: "Murojaatlarni ko'rib chiqish qoidalari",
+    doc_privacy: "Maxfiylik siyosati"
+  }
+};
+
+let currentLang = localStorage.getItem('whirl_lang') || 'ru';
+function applyLang(lang) {
+  currentLang = lang; localStorage.setItem('whirl_lang', lang);
+  const d = T[lang];
+  document.querySelectorAll('[data-tr]').forEach(el => {
+    const key = el.getAttribute('data-tr');
+    if (d[key] !== undefined) el.innerHTML = d[key];
+  });
+  document.querySelectorAll('.lang-pill button').forEach(b => b.classList.toggle('active', b.getAttribute('data-lang') === lang));
+  document.documentElement.lang = lang;
+}
+applyLang(currentLang);
+document.querySelectorAll('.lang-pill button').forEach(btn => {
+  btn.addEventListener('click', () => applyLang(btn.getAttribute('data-lang')));
+});
+
+(function(){
+  const c=document.getElementById('bgc'),ctx=c.getContext('2d');
+  let W,H,t=0;
+  const B=[
+    {x:.10,y:.20,rx:.62,ry:.42,a:0,vx:.00015,vy:.00010,va:.000055,col:[15,100,255],alpha:.18},
+    {x:.82,y:.50,rx:.54,ry:.36,a:1.2,vx:-.00012,vy:.00017,va:-.00005,col:[140,60,255],alpha:.15},
+    {x:.42,y:.85,rx:.46,ry:.30,a:2.5,vx:.00020,vy:-.00013,va:.000080,col:[255,35,95],alpha:.14},
+    {x:.92,y:.12,rx:.34,ry:.24,a:.5,vx:-.00013,vy:.00009,va:-.00007,col:[0,185,145],alpha:.13},
+    {x:.58,y:.32,rx:.40,ry:.27,a:1.8,vx:.00009,vy:.00015,va:.000090,col:[255,130,0],alpha:.12},
+    {x:.22,y:.72,rx:.48,ry:.33,a:3.1,vx:-.00017,vy:-.00011,va:.000050,col:[0,195,255],alpha:.13},
+    {x:.70,y:.78,rx:.36,ry:.25,a:.8,vx:.00011,vy:.00013,va:-.000060,col:[255,80,180],alpha:.10},
+    {x:.35,y:.45,rx:.30,ry:.20,a:4.2,vx:-.00009,vy:.00007,va:.000070,col:[100,255,160],alpha:.09},
+  ];
+  const MP=Array.from({length:6},()=>({x:Math.random(),y:Math.random(),vx:(Math.random()-.5)*.0003,vy:(Math.random()-.5)*.0003}));
+  function resize(){W=c.width=window.innerWidth;H=c.height=window.innerHeight;}
+  window.addEventListener('resize',resize);resize();
+  function draw(){
+    ctx.clearRect(0,0,W,H);ctx.fillStyle=document.documentElement.getAttribute('data-theme')==='light'?'#f5f5f7':'#03030a';ctx.fillRect(0,0,W,H);
+    B.forEach(b=>{
+      b.x+=Math.sin(t*.0008+b.vy*4000)*b.vx*2.8;b.y+=Math.cos(t*.0006+b.vx*4000)*b.vy*2.8;b.a+=b.va;
+      b.x=Math.max(.03,Math.min(.97,b.x));b.y=Math.max(.03,Math.min(.97,b.y));
+      const cx=b.x*W,cy=b.y*H,R=b.rx*Math.max(W,H);
+      const g=ctx.createRadialGradient(cx,cy,0,cx,cy,R);
+      const[r,gr,bl]=b.col;
+      g.addColorStop(0,`rgba(${r},${gr},${bl},${b.alpha})`);
+      g.addColorStop(.38,`rgba(${r},${gr},${bl},${(b.alpha*.35).toFixed(3)})`);
+      g.addColorStop(1,`rgba(${r},${gr},${bl},0)`);
+      ctx.save();ctx.translate(cx,cy);ctx.rotate(b.a);ctx.scale(1,b.ry/b.rx);
+      ctx.beginPath();ctx.arc(0,0,R,0,Math.PI*2);ctx.fillStyle=g;ctx.fill();ctx.restore();
+    });
+    ctx.lineWidth=.5;
+    for(let i=0;i<MP.length;i++)for(let j=i+1;j<MP.length;j++){
+      const a=MP[i],b=MP[j],dist=Math.hypot((a.x-b.x)*W,(a.y-b.y)*H);
+      if(dist<300){ctx.beginPath();ctx.moveTo(a.x*W,a.y*H);ctx.lineTo(b.x*W,b.y*H);ctx.strokeStyle=`rgba(41,151,255,${(.06*(1-dist/300)).toFixed(3)})`;ctx.stroke();}
+    }
+    MP.forEach(p=>{p.x+=p.vx;p.y+=p.vy;if(p.x<0||p.x>1)p.vx*=-1;if(p.y<0||p.y>1)p.vy*=-1;});
+    for(let y=0;y<H;y+=4){ctx.fillStyle='rgba(0,0,0,.018)';ctx.fillRect(0,y,W,1);}
+    t++;requestAnimationFrame(draw);
+  }
+  draw();
+})();
+
+(function(){
+  const dot=document.getElementById('cd'),ring=document.getElementById('cr');
+  let mx=0,my=0,rx=0,ry=0;
+  document.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY;dot.style.left=mx+'px';dot.style.top=my+'px';});
+  (function loop(){rx+=(mx-rx)*.1;ry+=(my-ry)*.1;ring.style.left=rx+'px';ring.style.top=ry+'px';requestAnimationFrame(loop);})();
+})();
+
+window.addEventListener('scroll',()=>{document.getElementById('hdr').classList.toggle('scrolled',window.scrollY>40);});
+
+(function(){
+  const io=new IntersectionObserver(e=>e.forEach(x=>{if(x.isIntersecting){x.target.classList.add('anim-in');io.unobserve(x.target);}}),{threshold:.12});
+  document.querySelectorAll('[data-anim]').forEach(el=>io.observe(el));
+})();
+(function(){
+  const burger=document.getElementById('burger'),mobNav=document.getElementById('mobNav');
+  if(burger){
+    burger.addEventListener('click',()=>{burger.classList.toggle('open');mobNav.classList.toggle('active');});
+    mobNav.querySelectorAll('a').forEach(a=>{a.addEventListener('click',()=>{burger.classList.remove('open');mobNav.classList.remove('active');});});
+  }
+})();
+</script>
+  <script>
+  /* ── Theme toggle (persisted) ── */
+  (function(){
+    var root=document.documentElement;
+    var stored=localStorage.getItem('whirl-theme');
+    var prefersDark=window.matchMedia('(prefers-color-scheme:dark)').matches;
+    var initial=stored||(prefersDark?'dark':'light');
+    if(initial==='light') root.setAttribute('data-theme','light');
+    function applyCanvas(){
+      var canvas=document.getElementById('bgc');
+      if(!canvas) return;
+      /* canvas bg will auto-pick next frame via draw loop */
+      canvas._lightMode=(root.getAttribute('data-theme')==='light');
+    }
+    applyCanvas();
+    document.addEventListener('DOMContentLoaded',function(){
+      var btn=document.getElementById('themeToggle');
+      if(!btn) return;
+      btn.addEventListener('click',function(){
+        var isLight=root.getAttribute('data-theme')==='light';
+        if(isLight){
+          root.removeAttribute('data-theme');
+          localStorage.setItem('whirl-theme','dark');
+        } else {
+          root.setAttribute('data-theme','light');
+          localStorage.setItem('whirl-theme','light');
+        }
+        applyCanvas();
+        /* update canvas bg color reference */
+        if(window._canvasBg!==undefined){
+          window._canvasBg=root.getAttribute('data-theme')==='light'?'#f5f5f7':'#03030a';
+        }
+      });
+    });
+  })();
+  </script>
+
+</body>
+</html>

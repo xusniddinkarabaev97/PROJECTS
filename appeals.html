@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Whirl АЖ — Правила рассмотрения обращений</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+  <style>
+    :root{--bg:#03030a;--sf:rgba(255,255,255,.042);--sf2:rgba(255,255,255,.08);--bd:rgba(255,255,255,.08);--bd2:rgba(255,255,255,.18);--t:#f2f2f7;--t2:rgba(242,242,247,.55);--t3:rgba(242,242,247,.26);--ac:#2997ff;--acd:rgba(41,151,255,.12);--ease:cubic-bezier(.16,1,.3,1);}
+    *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+    html{scroll-behavior:smooth;}
+    body{background:var(--bg);color:var(--t);font-family:'DM Sans',-apple-system,sans-serif;overflow-x:hidden;cursor:none;-webkit-font-smoothing:antialiased;}
+    a{text-decoration:none;color:inherit;}
+    #bgc{position:fixed;inset:0;z-index:0;width:100%;height:100%;pointer-events:none;}
+    .grain{position:fixed;inset:-50%;z-index:1;width:200%;height:200%;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23g)' opacity='0.04'/%3E%3C/svg%3E");pointer-events:none;animation:grain .45s steps(1) infinite;}
+    @keyframes grain{0%,100%{transform:translate(0,0)}20%{transform:translate(-1%,-2%)}40%{transform:translate(2%,1%)}60%{transform:translate(-2%,2%)}80%{transform:translate(1%,-1%)}}
+    .cur-dot{width:8px;height:8px;background:white;border-radius:50%;position:fixed;z-index:9999;pointer-events:none;transform:translate(-50%,-50%);mix-blend-mode:difference;transition:transform .15s var(--ease);}
+    .cur-ring{width:36px;height:36px;border:1px solid rgba(255,255,255,.3);border-radius:50%;position:fixed;z-index:9998;pointer-events:none;transform:translate(-50%,-50%);}
+    body:has(a:hover) .cur-dot,body:has(button:hover) .cur-dot{transform:translate(-50%,-50%) scale(2.5);}
+    header{position:fixed;top:0;left:0;right:0;z-index:900;height:50px;display:flex;align-items:center;justify-content:space-between;padding:0 40px;background:rgba(3,3,10,.7);backdrop-filter:blur(24px) saturate(200%);-webkit-backdrop-filter:blur(24px) saturate(200%);border-bottom:1px solid var(--bd);transition:background .4s;opacity:0;transform:translateY(-10px);animation:hdrIn .6s ease forwards;}
+    @keyframes hdrIn{to{opacity:1;transform:translateY(0)}}
+    header.scrolled{background:rgba(3,3,10,.9);}
+    .logo-t{font-family:'DM Serif Display',serif;font-size:19px;letter-spacing:-.3px;color:var(--t);}
+    nav{position:absolute;left:50%;transform:translateX(-50%);display:flex;gap:36px;}
+    nav a{font-size:13px;font-weight:400;color:var(--t2);transition:color .2s;white-space:nowrap;}
+    nav a:hover, nav a.active{color:var(--t);}
+    .h-right{display:flex;align-items:center;}
+    .lang-pill{display:flex;background:var(--sf);border:1px solid var(--bd);border-radius:100px;padding:2px;gap:1px;}
+    .lang-pill button{background:none;border:none;color:var(--t2);font:500 11px/1 'DM Sans',sans-serif;padding:4px 11px;border-radius:100px;cursor:pointer;transition:all .2s;}
+    .lang-pill button.active{background:rgba(255,255,255,.14);color:var(--t);}
+    .burger { display: none; width: 38px; height: 38px; align-items: center; justify-content: center; cursor: pointer; margin-left: 14px; z-index: 1000; flex-shrink: 0; background: var(--sf); border: 1px solid var(--bd); border-radius: 50%; padding: 0; position: relative; transition: all 0.3s; }
+    .burger:hover { background: var(--sf2); border-color: var(--bd2); transform: scale(1.05); }
+    .burger span { position: absolute; display: block; width: 14px; height: 1.5px; background: var(--t); border-radius: 2px; transition: 0.3s cubic-bezier(.16,1,.3,1); pointer-events: none; }
+    .burger span:nth-child(1) { transform: translateY(-4px); }
+    .burger span:nth-child(2) { transform: translateY(0); }
+    .burger span:nth-child(3) { transform: translateY(4px); }
+    .burger.open span:nth-child(1) { transform: translateY(0) rotate(45deg); }
+    .burger.open span:nth-child(2) { opacity: 0; transform: scale(0); }
+    .burger.open span:nth-child(3) { transform: translateY(0) rotate(-45deg); }
+    .mob-nav { position: fixed; top: 0; left: 0; width: 100%; height: 100vh; background: rgba(3,3,10,0.85); backdrop-filter: blur(24px) saturate(200%); -webkit-backdrop-filter: blur(24px) saturate(200%); z-index: 800; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 32px; opacity: 0; visibility: hidden; transition: opacity 0.4s cubic-bezier(.16,1,.3,1), visibility 0.4s; }
+    .mob-nav::before { content: ''; position: absolute; inset: 0; background: radial-gradient(circle at 50% 50%, rgba(41,151,255,0.08), transparent 70%); pointer-events: none; }
+    .mob-nav.active { opacity: 1; visibility: visible; }
+    .mob-nav a { font-size: 26px; font-weight: 500; font-family: 'DM Sans', sans-serif; color: var(--t2); text-decoration: none; transform: translateY(20px); opacity: 0; transition: color 0.3s, transform 0.4s cubic-bezier(.16,1,.3,1), opacity 0.4s; }
+    .mob-nav a.active, .mob-nav a:hover { color: var(--t); transform: translateY(0) scale(1.05); }
+    .mob-nav.active a { transform: translateY(0); opacity: 1; }
+    .mob-nav a:nth-child(1) { transition-delay: 0.1s; }
+    .mob-nav a:nth-child(2) { transition-delay: 0.15s; }
+    .mob-nav a:nth-child(3) { transition-delay: 0.2s; }
+    @media(max-width:900px){nav{display:none;} .burger{display:flex;}}
+    .section{position:relative;z-index:2;padding:120px 80px 80px;}
+    @media(max-width:900px){.section{padding:90px 28px;}}
+    
+    .doc-container {
+      max-width: 800px;
+      margin: 0 auto;
+      background: var(--sf);
+      border: 1px solid var(--bd);
+      border-radius: 24px;
+      padding: 60px;
+      opacity: 0;
+      animation: fi 1s .2s forwards, up .8s .2s var(--ease) forwards;
+    }
+    .doc-container h1 { font-family: 'DM Serif Display', serif; font-size: clamp(28px, 4vw, 42px); margin-bottom: 32px; color: var(--t); letter-spacing: -1px; }
+    .doc-container h2 { font-size: 20px; font-weight: 600; margin-top: 32px; margin-bottom: 16px; color: var(--t); }
+    .doc-container p, .doc-container li { font-size: 16px; line-height: 1.7; color: var(--t2); margin-bottom: 12px; }
+    .doc-container ul, .doc-container ol { margin-left: 20px; margin-bottom: 16px; color: var(--t2); }
+    .doc-container li { margin-bottom: 8px; }
+    
+    .back-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--t2);
+      font-size: 14px;
+      margin-bottom: 32px;
+      transition: color 0.2s;
+    }
+    .back-btn:hover { color: var(--t); }
+    .back-btn svg { width: 16px; height: 16px; }
+
+    @keyframes up { from { transform: translateY(30px); } to { transform: translateY(0); } }
+    @keyframes fi { to { opacity: 1; } }
+
+    footer{position:relative;z-index:2;border-top:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between;padding:26px 80px;flex-wrap:wrap;gap:12px;margin-top: 80px;}
+    .ft-logo{font-family:'DM Serif Display',serif;font-size:15px;color:var(--t3);}
+    .ft-copy{font-size:11px;color:var(--t3);}
+    .ft-links{display:flex;gap:24px;}
+    .ft-links a{font-size:11px;color:var(--t3);transition:color .2s;}
+    .ft-links a:hover{color:var(--t2);}
+    @media(max-width:700px){footer{padding:24px 28px;flex-direction:column;}}
+    @media(max-width:700px){.doc-container { padding: 32px 20px; }}
+  
+    /* =========================================
+       LIGHT MODE — data-theme="light" on <html>
+       ========================================= */
+    [data-theme="light"]{
+      --bg:#f5f5f7;
+      --sf:rgba(0,0,0,.04);
+      --sf2:rgba(0,0,0,.08);
+      --bd:rgba(0,0,0,.1);
+      --bd2:rgba(0,0,0,.22);
+      --t:#1d1d1f;
+      --t2:rgba(29,29,31,.56);
+      --t3:rgba(29,29,31,.32);
+      --ac:#0071e3;
+      --acd:rgba(0,113,227,.1);
+    }
+    /* Header & nav overrides */
+    [data-theme="light"] header{background:rgba(245,245,247,.82)!important;}
+    [data-theme="light"] header.scrolled{background:rgba(245,245,247,.96)!important;}
+    [data-theme="light"] .mob-nav{background:rgba(245,245,247,.95)!important;}
+    [data-theme="light"] #intro{background:#f5f5f7!important;}
+    [data-theme="light"] .lang-pill button.active{background:rgba(0,0,0,.12);color:var(--t);}
+    [data-theme="light"] .cur-ring{border-color:rgba(0,0,0,.18);}
+    [data-theme="light"] .cur-dot{background:#1d1d1f;}
+    [data-theme="light"] .btn-w{background:#1d1d1f;color:#f5f5f7;}
+    [data-theme="light"] .btn-w:hover{background:#333;}
+    [data-theme="light"] .hero-grad{
+      background:linear-gradient(120deg,#003399 0%,#0055cc 35%,#7700cc 65%,#cc0066 100%);
+      -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;background-size:200%;
+    }
+    [data-theme="light"] .metrics-wrap,[data-theme="light"] .info-grid{background:var(--bd);}
+    [data-theme="light"] .met,[data-theme="light"] .info-cell{background:var(--bg);}
+    [data-theme="light"] .met:hover,[data-theme="light"] .info-cell:hover{background:var(--sf);}
+    /* Smooth transitions for theme switch */
+    body,header,.mob-nav,#intro,.pcard,.doc-row,.info-cell,.met,.ct-wrap,
+    .lang-pill,.doc-ico,.info-pill,.lbl,.ticker-item,.ft-logo,.ft-copy,.ft-links a{
+      transition:background .35s ease,color .35s ease,border-color .35s ease,box-shadow .35s ease!important;
+    }
+    /* ── Theme Toggle Button ── */
+    .theme-toggle{
+      position:relative;display:inline-flex;align-items:center;justify-content:center;
+      width:34px;height:34px;border-radius:50%;
+      background:var(--sf);border:1px solid var(--bd);
+      cursor:pointer;margin-left:8px;flex-shrink:0;
+      transition:background .25s,border-color .25s,transform .25s;
+      overflow:hidden;
+    }
+    .theme-toggle:hover{background:var(--sf2);border-color:var(--bd2);transform:scale(1.08);}
+    .theme-toggle .t-icon{
+      position:absolute;width:15px;height:15px;
+      color:var(--t2);transition:transform .4s cubic-bezier(.16,1,.3,1),opacity .3s;
+    }
+    .t-moon{opacity:1;transform:rotate(0deg) scale(1);}
+    .t-sun{opacity:0;transform:rotate(90deg) scale(.4);}
+    [data-theme="light"] .t-moon{opacity:0;transform:rotate(-90deg) scale(.4);}
+    [data-theme="light"] .t-sun{opacity:1;transform:rotate(0deg) scale(1);}
+    [data-theme="light"] .theme-toggle:hover{background:var(--sf2);}
+
+  </style>
+</head>
+<body>
+
+<canvas id="bgc"></canvas>
+<div class="grain"></div>
+<div class="cur-dot" id="cd"></div>
+<div class="cur-ring" id="cr"></div>
+
+<header id="hdr">
+  <a href="index.html" class="logo-t">Whirl</a>
+  <nav>
+    <a href="#" onclick="return false;" style="opacity:.5;cursor:default;">ODU</a>
+    <a href="about.html" class="active" data-tr="nav_about">О нас</a>
+    <a href="careers.html" data-tr="nav_careers">Карьера</a>
+  </nav>
+  <div class="h-right">
+    <div class="lang-pill">
+      <button data-lang="ru" class="active">RU</button>
+      <button data-lang="en">ENG</button>
+      <button data-lang="uz">UZ</button>
+    </div>
+    <button class="burger" id="burger"><span></span><span></span><span></span></button>
+    <button class="theme-toggle" id="themeToggle" title="Тема / Theme"><svg class="t-icon t-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg><svg class="t-icon t-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg></button>
+  </div>
+</header>
+
+<div class="mob-nav" id="mobNav">
+  <a href="#" onclick="return false;" style="opacity:.5;cursor:default;">ODU</a>
+  <a href="about.html" data-tr="nav_about">О нас</a>
+  <a href="careers.html" data-tr="nav_careers">Карьера</a>
+</div>
+
+<section class="section">
+  <div class="doc-container">
+    <a href="about.html" class="back-btn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+      <span data-tr="back_to_about">Назад к "О нас"</span>
+    </a>
+    
+    <h1 data-tr="doc_title">Правила рассмотрения обращений в АО «WHIRL»</h1>
+    
+    <h2 data-tr="h_1">1. Общие положения</h2>
+    <p data-tr="p_1">Настоящие Правила регулируют порядок приема и рассмотрения обращений физических и юридических лиц в Акционерном обществе «WHIRL» (далее — Общество).</p>
+    
+    <h2 data-tr="h_2">2. Случаи, при которых обращение не рассматривается</h2>
+    <p data-tr="p_2_desc">Обращения не подлежат рассмотрению в следующих случаях:</p>
+    <ul>
+      <li data-tr="p_2_1">2.1. если Общество не несет ответственности за последствия, вызванные действиями или бездействием третьих лиц;</li>
+      <li data-tr="p_2_2">2.2. если ранее Обществом уже был предоставлен ответ по существу обращения того же лица и по тем же основаниям, при отсутствии новых существенных обстоятельств;</li>
+      <li data-tr="p_2_3">2.3. если обращение является анонимным;</li>
+      <li data-tr="p_2_4">2.4. если обращение содержит оскорбительные выражения, нецензурную лексику или клевету в отношении Общества или его работников.</li>
+    </ul>
+
+    <h2 data-tr="h_3">3. Формы подачи обращений</h2>
+    <p data-tr="p_3_1">3.1. Обращения принимаются в следующих формах:</p>
+    <ul>
+      <li data-tr="p_3_1_1">устной форме (по телефону);</li>
+      <li data-tr="p_3_1_2">письменной форме (на бумажном носителе);</li>
+      <li data-tr="p_3_1_3">электронной форме (по электронной почте).</li>
+    </ul>
+    <p data-tr="p_3_2">3.2. Обращения юридических лиц принимаются в письменной и электронной форме.</p>
+
+    <h2 data-tr="h_4">4. Содержание обращения</h2>
+    <p data-tr="p_4_1">4.1. В обращении физического лица указываются:</p>
+    <ul>
+      <li data-tr="p_4_1_1">фамилия, имя (при наличии — отчество);</li>
+      <li data-tr="p_4_1_2">контактный номер телефона;</li>
+      <li data-tr="p_4_1_3">адрес электронной почты (при наличии);</li>
+      <li data-tr="p_4_1_4">суть обращения;</li>
+      <li data-tr="p_4_1_5">при необходимости — документы, подтверждающие изложенные обстоятельства.</li>
+    </ul>
+    <p data-tr="p_4_2">4.2. В обращении юридического лица указываются:</p>
+    <ul>
+      <li data-tr="p_4_2_1">полное наименование организации;</li>
+      <li data-tr="p_4_2_2">ИНН;</li>
+      <li data-tr="p_4_2_3">юридический (почтовый) адрес;</li>
+      <li data-tr="p_4_2_4">контактные данные;</li>
+      <li data-tr="p_4_2_5">ФИО и должность уполномоченного лица;</li>
+      <li data-tr="p_4_2_6">документ, подтверждающий полномочия представителя (при необходимости);</li>
+      <li data-tr="p_4_2_7">суть обращения.</li>
+    </ul>
+    <p data-tr="p_4_3">4.3. Письменное обращение должно быть подписано заявителем либо его уполномоченным представителем.</p>
+
+    <h2 data-tr="h_5">5. Язык обращения</h2>
+    <p data-tr="p_5">Обращения принимаются на государственном, русском или английском языках.</p>
+
+    <h2 data-tr="h_6">6. Порядок приема обращений</h2>
+    <p data-tr="p_6_1">6.1. Устные обращения принимаются по телефону, указанному на официальном сайте Общества. Факт обращения в устной форме означает согласие заявителя на запись телефонного разговора.</p>
+    <p data-tr="p_6_2">6.2. Письменные обращения принимаются по адресу Общества.</p>
+    <p data-tr="p_6_3">6.3. Электронные обращения принимаются по адресу электронной почты, указанному на сайте Общества.</p>
+
+    <h2 data-tr="h_7">7. Порядок рассмотрения обращений</h2>
+    <p data-tr="p_7_1">7.1. Обращения рассматриваются в соответствии с законодательством Республики Узбекистан, а также на принципах добросовестности, объективности и прозрачности.</p>
+    <p data-tr="p_7_2">7.2. Срок рассмотрения обращения составляет:</p>
+    <ul>
+      <li data-tr="p_7_2_1">до 15 (пятнадцати) календарных дней — для физических лиц;</li>
+      <li data-tr="p_7_2_2">до 15 (пятнадцати) рабочих дней — для юридических лиц,<br>с момента получения корректно оформленного обращения.</li>
+    </ul>
+    <p data-tr="p_7_3">7.3. В случае необходимости проведения дополнительной проверки, запроса документов или получения дополнительной информации срок рассмотрения может быть продлен, но не более чем на 30 (тридцать) календарных дней, с уведомлением заявителя.</p>
+
+    <h2 data-tr="h_8">8. Ответ на обращение</h2>
+    <p data-tr="p_8">Ответ на обращение предоставляется в форме, соответствующей способу его подачи, либо иным способом по усмотрению Общества.</p>
+
+    <h2 data-tr="h_9">9. Заключительные положения</h2>
+    <p data-tr="p_9">Общество оставляет за собой право вносить изменения в настоящие Правила. Актуальная версия размещается на официальном сайте Общества.</p>
+  </div>
+</section>
+
+<footer>
+  <span class="ft-logo">Whirl</span>
+  <div class="ft-links">
+    <a href="#" onclick="return false;" style="opacity:.5;cursor:default;">ODU</a>
+    <a href="privacy.html" data-tr="nav_privacy">Конфеденциальность</a>
+  </div>
+  <span class="ft-copy" data-tr="footer_copy">© 2025 АО "Whirl". Все права защищены.</span>
+</footer>
+
+<script>
+const T={
+  ru:{
+    nav_about:"О нас", nav_careers:"Карьера", nav_privacy:"Конфеденциальность",
+    footer_copy:'© 2025 АО "Whirl". Все права защищены.',
+    back_to_about:"Назад к \"О нас\"",
+    
+    doc_title:"Правила рассмотрения обращений в АО «WHIRL»",
+    h_1:"1. Общие положения",
+    p_1:"Настоящие Правила регулируют порядок приема и рассмотрения обращений физических и юридических лиц в Акционерном обществе «WHIRL» (далее — Общество).",
+    h_2:"2. Случаи, при которых обращение не рассматривается",
+    p_2_desc:"Обращения не подлежат рассмотрению в следующих случаях:",
+    p_2_1:"2.1. если Общество не несет ответственности за последствия, вызванные действиями или бездействием третьих лиц;",
+    p_2_2:"2.2. если ранее Обществом уже был предоставлен ответ по существу обращения того же лица и по тем же основаниям, при отсутствии новых существенных обстоятельств;",
+    p_2_3:"2.3. если обращение является анонимным;",
+    p_2_4:"2.4. если обращение содержит оскорбительные выражения, нецензурную лексику или клевету в отношении Общества или его работников.",
+    h_3:"3. Формы подачи обращений",
+    p_3_1:"3.1. Обращения принимаются в следующих формах:",
+    p_3_1_1:"устной форме (по телефону);",
+    p_3_1_2:"письменной форме (на бумажном носителе);",
+    p_3_1_3:"электронной форме (по электронной почте).",
+    p_3_2:"3.2. Обращения юридических лиц принимаются в письменной и электронной форме.",
+    h_4:"4. Содержание обращения",
+    p_4_1:"4.1. В обращении физического лица указываются:",
+    p_4_1_1:"фамилия, имя (при наличии — отчество);",
+    p_4_1_2:"контактный номер телефона;",
+    p_4_1_3:"адрес электронной почты (при наличии);",
+    p_4_1_4:"суть обращения;",
+    p_4_1_5:"при необходимости — документы, подтверждающие изложенные обстоятельства.",
+    p_4_2:"4.2. В обращении юридического лица указываются:",
+    p_4_2_1:"полное наименование организации;",
+    p_4_2_2:"ИНН;",
+    p_4_2_3:"юридический (почтовый) адрес;",
+    p_4_2_4:"контактные данные;",
+    p_4_2_5:"ФИО и должность уполномоченного лица;",
+    p_4_2_6:"документ, подтверждающий полномочия представителя (при необходимости);",
+    p_4_2_7:"суть обращения.",
+    p_4_3:"4.3. Письменное обращение должно быть подписано заявителем либо его уполномоченным представителем.",
+    h_5:"5. Язык обращения",
+    p_5:"Обращения принимаются на государственном, русском или английском языках.",
+    h_6:"6. Порядок приема обращений",
+    p_6_1:"6.1. Устные обращения принимаются по телефону, указанному на официальном сайте Общества. Факт обращения в устной форме означает согласие заявителя на запись телефонного разговора.",
+    p_6_2:"6.2. Письменные обращения принимаются по адресу Общества.",
+    p_6_3:"6.3. Электронные обращения принимаются по адресу электронной почты, указанному на сайте Общества.",
+    h_7:"7. Порядок рассмотрения обращений",
+    p_7_1:"7.1. Обращения рассматриваются в соответствии с законодательством Республики Узбекистан, а также на принципах добросовестности, объективности и прозрачности.",
+    p_7_2:"7.2. Срок рассмотрения обращения составляет:",
+    p_7_2_1:"до 15 (пятнадцати) календарных дней — для физических лиц;",
+    p_7_2_2:"до 15 (пятнадцати) рабочих дней — для юридических лиц,<br>с момента получения корректно оформленного обращения.",
+    p_7_3:"7.3. В случае необходимости проведения дополнительной проверки, запроса документов или получения дополнительной информации срок рассмотрения может быть продлен, но не более чем на 30 (тридцать) календарных дней, с уведомлением заявителя.",
+    h_8:"8. Ответ на обращение",
+    p_8:"Ответ на обращение предоставляется в форме, соответствующей способу его подачи, либо иным способом по усмотрению Общества.",
+    h_9:"9. Заключительные положения",
+    p_9:"Общество оставляет за собой право вносить изменения в настоящие Правила. Актуальная версия размещается на официальном сайте Общества."
+  },
+  en:{
+    nav_about:"About", nav_careers:"Careers", nav_privacy:"Privacy Policy",
+    footer_copy:'© 2025 "Whirl" JSC. All rights reserved.',
+    back_to_about:"Back to \"About\"",
+    
+    doc_title:"Rules for reviewing appeals to JSC «WHIRL»",
+    h_1:"1. General Provisions",
+    p_1:"These Rules regulate the procedure for receiving and reviewing appeals from individuals and legal entities to Joint Stock Company «WHIRL» (hereinafter — the Company).",
+    h_2:"2. Cases in which an appeal is not considered",
+    p_2_desc:"Appeals are not subject to consideration in the following cases:",
+    p_2_1:"2.1. if the Company is not responsible for the consequences caused by the actions or inaction of third parties;",
+    p_2_2:"2.2. if the Company has already provided an answer on the essence of the appeal of the same person and on the same grounds, in the absence of new material circumstances;",
+    p_2_3:"2.3. if the appeal is anonymous;",
+    p_2_4:"2.4. if the appeal contains offensive expressions, profanity or slander against the Company or its employees.",
+    h_3:"3. Forms of filing appeals",
+    p_3_1:"3.1. Appeals are accepted in the following forms:",
+    p_3_1_1:"oral form (by phone);",
+    p_3_1_2:"written form (on paper);",
+    p_3_1_3:"electronic form (by email).",
+    p_3_2:"3.2. Appeals from legal entities are accepted in written and electronic form.",
+    h_4:"4. Content of the appeal",
+    p_4_1:"4.1. The appeal of an individual shall indicate:",
+    p_4_1_1:"last name, first name (patronymic, if any);",
+    p_4_1_2:"contact phone number;",
+    p_4_1_3:"email address (if any);",
+    p_4_1_4:"essence of the appeal;",
+    p_4_1_5:"if necessary — documents confirming the stated circumstances.",
+    p_4_2:"4.2. The appeal of a legal entity shall indicate:",
+    p_4_2_1:"full name of the organization;",
+    p_4_2_2:"TIN;",
+    p_4_2_3:"legal (postal) address;",
+    p_4_2_4:"contact details;",
+    p_4_2_5:"full name and position of the authorized person;",
+    p_4_2_6:"document confirming the authority of the representative (if necessary);",
+    p_4_2_7:"essence of the appeal.",
+    p_4_3:"4.3. A written appeal must be signed by the applicant or their authorized representative.",
+    h_5:"5. Language of the appeal",
+    p_5:"Appeals are accepted in the state, Russian or English languages.",
+    h_6:"6. Procedure for receiving appeals",
+    p_6_1:"6.1. Oral appeals are accepted by the phone indicated on the official website of the Company. The fact of filing an appeal orally means the applicant's consent to the recording of the telephone conversation.",
+    p_6_2:"6.2. Written appeals are accepted at the Company's address.",
+    p_6_3:"6.3. Electronic appeals are accepted at the email address indicated on the Company's website.",
+    h_7:"7. Procedure for reviewing appeals",
+    p_7_1:"7.1. Appeals are considered in accordance with the legislation of the Republic of Uzbekistan, as well as on the principles of good faith, objectivity and transparency.",
+    p_7_2:"7.2. The term for reviewing an appeal is:",
+    p_7_2_1:"up to 15 (fifteen) calendar days — for individuals;",
+    p_7_2_2:"up to 15 (fifteen) working days — for legal entities,<br>from the moment of receipt of a correctly executed appeal.",
+    p_7_3:"7.3. If it is necessary to conduct an additional check, request documents or obtain additional information, the review period may be extended, but not by more than 30 (thirty) calendar days, with notification to the applicant.",
+    h_8:"8. Response to the appeal",
+    p_8:"The response to the appeal is provided in the form corresponding to the method of its filing, or in another way at the discretion of the Company.",
+    h_9:"9. Final provisions",
+    p_9:"The Company reserves the right to make changes to these Rules. The current version is posted on the official website of the Company."
+  },
+  uz:{
+    nav_about:"Biz haqimizda", nav_careers:"Karyera", nav_privacy:"Maxfiylik",
+    footer_copy:'© 2025 "Whirl" AJ. Barcha huquqlar himoyalangan.',
+    back_to_about:"\"Biz haqimizda\" ga qaytish",
+    
+    doc_title:"«WHIRL» AJga murojaatlarni ko'rib chiqish qoidalari",
+    h_1:"1. Umumiy qoidalar",
+    p_1:"Ushbu Qoidalar jismoniy va yuridik shaxslarning «WHIRL» Aksiyadorlik jamiyatiga (keyingi o'rinlarda — Jamiyat) murojaatlarini qabul qilish va ko'rib chiqish tartibini tartibga soladi.",
+    h_2:"2. Murojaat ko'rib chiqilmaydigan holatlar",
+    p_2_desc:"Quyidagi hollarda murojaatlar ko'rib chiqilmaydi:",
+    p_2_1:"2.1. agar Jamiyat uchinchi shaxslarning harakatlari yoki harakatsizligi oqibatida yuzaga kelgan oqibatlar uchun javobgar bo'lmasa;",
+    p_2_2:"2.2. agar ilgari Jamiyat tomonidan ayni shu shaxsning murojaati mazmuni bo'yicha va ayni shu asoslarga ko'ra, yangi muhim holatlar mavjud bo'lmaganda javob berilgan bo'lsa;",
+    p_2_3:"2.3. agar murojaat anonim bo'lsa;",
+    p_2_4:"2.4. agar murojaatda Jamiyat yoki uning xodimlariga nisbatan haqoratli iboralar, so'kinish yoki tuhmat bo'lsa.",
+    h_3:"3. Murojaatlarni berish shakllari",
+    p_3_1:"3.1. Murojaatlar quyidagi shakllarda qabul qilinadi:",
+    p_3_1_1:"og'zaki shaklda (telefon orqali);",
+    p_3_1_2:"yozma shaklda (qog'ozda);",
+    p_3_1_3:"elektron shaklda (elektron pochta orqali).",
+    p_3_2:"3.2. Yuridik shaxslarning murojaatlari yozma va elektron shaklda qabul qilinadi.",
+    h_4:"4. Murojaatning mazmuni",
+    p_4_1:"4.1. Jismoniy shaxsning murojaatida quyidagilar ko'rsatiladi:",
+    p_4_1_1:"familiyasi, ismi (agar mavjud bo'lsa — otasining ismi);",
+    p_4_1_2:"aloqa telefon raqami;",
+    p_4_1_3:"elektron pochta manzili (agar mavjud bo'lsa);",
+    p_4_1_4:"murojaatning mohiyati;",
+    p_4_1_5:"zarurat bo'lganda — bayon etilgan holatlarni tasdiqlovchi hujjatlar.",
+    p_4_2:"4.2. Yuridik shaxsning murojaatida quyidagilar ko'rsatiladi:",
+    p_4_2_1:"tashkilotning to'liq nomi;",
+    p_4_2_2:"STIR (INN);",
+    p_4_2_3:"yuridik (pochta) manzili;",
+    p_4_2_4:"aloqa ma'lumotlari;",
+    p_4_2_5:"vakolatli shaxsning F.I.O. va lavozimi;",
+    p_4_2_6:"vakilning vakolatlarini tasdiqlovchi hujjat (zarurat bo'lganda);",
+    p_4_2_7:"murojaatning mohiyati.",
+    p_4_3:"4.3. Yozma murojaat ariza beruvchi yoki uning vakolatli vakili tomonidan imzolanishi kerak.",
+    h_5:"5. Murojaat tili",
+    p_5:"Murojaatlar davlat, rus yoki ingliz tillarida qabul qilinadi.",
+    h_6:"6. Murojaatlarni qabul qilish tartibi",
+    p_6_1:"6.1. Og'zaki murojaatlar Jamiyatning rasmiy veb-saytida ko'rsatilgan telefon orqali qabul qilinadi. Og'zaki murojaat qilish fakti ariza beruvchining telefon suhbatini yozib olishga roziligini anglatadi.",
+    p_6_2:"6.2. Yozma murojaatlar Jamiyat manziliga qabul qilinadi.",
+    p_6_3:"6.3. Elektron murojaatlar Jamiyat veb-saytida ko'rsatilgan elektron pochta manziliga qabul qilinadi.",
+    h_7:"7. Murojaatlarni ko'rib chiqish tartibi",
+    p_7_1:"7.1. Murojaatlar O'zbekiston Respublikasi qonunchiligiga, shuningdek insof, xolislik va ochiqlik prinsiplariga muvofiq ko'rib chiqiladi.",
+    p_7_2:"7.2. Murojaatni ko'rib chiqish muddati:",
+    p_7_2_1:"15 (o'n besh) kalendar kunigacha — jismoniy shaxslar uchun;",
+    p_7_2_2:"15 (o'n besh) ish kunigacha — yuridik shaxslar uchun,<br>to'g'ri rasmiylashtirilgan murojaat olingan vaqtdan boshlab.",
+    p_7_3:"7.3. Qo'shimcha tekshirish, hujjatlarni so'rash yoki qo'shimcha ma'lumot olish zarurati tug'ilganda, ko'rib chiqish muddati ariza beruvchini xabardor qilgan holda 30 (o'ttiz) kalendar kunidan ko'p bo'lmagan muddatga uzaytirilishi mumkin.",
+    h_8:"8. Murojaatga javob",
+    p_8:"Murojaatga javob uni berish usuliga mos keladigan shaklda yoki Jamiyatning xohishiga ko'ra boshqa usulda taqdim etiladi.",
+    h_9:"9. Yakuniy qoidalar",
+    p_9:"Jamiyat ushbu Qoidalarga o'zgartirishlar kiritish huquqini o'zida saqlab qoladi. Amaldagi versiya Jamiyatning rasmiy veb-saytida joylashtiriladi."
+  }
+};
+
+let currentLang = localStorage.getItem('whirl_lang') || 'ru';
+function applyLang(lang) {
+  currentLang = lang; localStorage.setItem('whirl_lang', lang);
+  const d = T[lang];
+  document.querySelectorAll('[data-tr]').forEach(el => {
+    const key = el.getAttribute('data-tr');
+    if (d[key] !== undefined) el.innerHTML = d[key];
+  });
+  document.querySelectorAll('.lang-pill button').forEach(b => b.classList.toggle('active', b.getAttribute('data-lang') === lang));
+  document.documentElement.lang = lang;
+}
+applyLang(currentLang);
+document.querySelectorAll('.lang-pill button').forEach(btn => {
+  btn.addEventListener('click', () => applyLang(btn.getAttribute('data-lang')));
+});
+
+(function(){
+  const c=document.getElementById('bgc'),ctx=c.getContext('2d');
+  let W,H,t=0;
+  const B=[
+    {x:.10,y:.20,rx:.62,ry:.42,a:0,vx:.00015,vy:.00010,va:.000055,col:[15,100,255],alpha:.18},
+    {x:.82,y:.50,rx:.54,ry:.36,a:1.2,vx:-.00012,vy:.00017,va:-.00005,col:[140,60,255],alpha:.15},
+    {x:.42,y:.85,rx:.46,ry:.30,a:2.5,vx:.00020,vy:-.00013,va:.000080,col:[255,35,95],alpha:.14},
+    {x:.92,y:.12,rx:.34,ry:.24,a:.5,vx:-.00013,vy:.00009,va:-.00007,col:[0,185,145],alpha:.13},
+    {x:.58,y:.32,rx:.40,ry:.27,a:1.8,vx:.00009,vy:.00015,va:.000090,col:[255,130,0],alpha:.12},
+    {x:.22,y:.72,rx:.48,ry:.33,a:3.1,vx:-.00017,vy:-.00011,va:.000050,col:[0,195,255],alpha:.13},
+    {x:.70,y:.78,rx:.36,ry:.25,a:.8,vx:.00011,vy:.00013,va:-.000060,col:[255,80,180],alpha:.10},
+    {x:.35,y:.45,rx:.30,ry:.20,a:4.2,vx:-.00009,vy:.00007,va:.000070,col:[100,255,160],alpha:.09},
+  ];
+  const MP=Array.from({length:6},()=>({x:Math.random(),y:Math.random(),vx:(Math.random()-.5)*.0003,vy:(Math.random()-.5)*.0003}));
+  function resize(){W=c.width=window.innerWidth;H=c.height=window.innerHeight;}
+  window.addEventListener('resize',resize);resize();
+  function draw(){
+    ctx.clearRect(0,0,W,H);ctx.fillStyle=document.documentElement.getAttribute('data-theme')==='light'?'#f5f5f7':'#03030a';ctx.fillRect(0,0,W,H);
+    B.forEach(b=>{
+      b.x+=Math.sin(t*.0008+b.vy*4000)*b.vx*2.8;b.y+=Math.cos(t*.0006+b.vx*4000)*b.vy*2.8;b.a+=b.va;
+      b.x=Math.max(.03,Math.min(.97,b.x));b.y=Math.max(.03,Math.min(.97,b.y));
+      const cx=b.x*W,cy=b.y*H,R=b.rx*Math.max(W,H);
+      const g=ctx.createRadialGradient(cx,cy,0,cx,cy,R);
+      const[r,gr,bl]=b.col;
+      g.addColorStop(0,`rgba(${r},${gr},${bl},${b.alpha})`);
+      g.addColorStop(.38,`rgba(${r},${gr},${bl},${(b.alpha*.35).toFixed(3)})`);
+      g.addColorStop(1,`rgba(${r},${gr},${bl},0)`);
+      ctx.save();ctx.translate(cx,cy);ctx.rotate(b.a);ctx.scale(1,b.ry/b.rx);
+      ctx.beginPath();ctx.arc(0,0,R,0,Math.PI*2);ctx.fillStyle=g;ctx.fill();ctx.restore();
+    });
+    ctx.lineWidth=.5;
+    for(let i=0;i<MP.length;i++)for(let j=i+1;j<MP.length;j++){
+      const a=MP[i],b=MP[j],dist=Math.hypot((a.x-b.x)*W,(a.y-b.y)*H);
+      if(dist<300){ctx.beginPath();ctx.moveTo(a.x*W,a.y*H);ctx.lineTo(b.x*W,b.y*H);ctx.strokeStyle=`rgba(41,151,255,${(.06*(1-dist/300)).toFixed(3)})`;ctx.stroke();}
+    }
+    MP.forEach(p=>{p.x+=p.vx;p.y+=p.vy;if(p.x<0||p.x>1)p.vx*=-1;if(p.y<0||p.y>1)p.vy*=-1;});
+    for(let y=0;y<H;y+=4){ctx.fillStyle='rgba(0,0,0,.018)';ctx.fillRect(0,y,W,1);}
+    t++;requestAnimationFrame(draw);
+  }
+  draw();
+})();
+
+(function(){
+  const dot=document.getElementById('cd'),ring=document.getElementById('cr');
+  let mx=0,my=0,rx=0,ry=0;
+  document.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY;dot.style.left=mx+'px';dot.style.top=my+'px';});
+  (function loop(){rx+=(mx-rx)*.1;ry+=(my-ry)*.1;ring.style.left=rx+'px';ring.style.top=ry+'px';requestAnimationFrame(loop);})();
+})();
+
+window.addEventListener('scroll',()=>{document.getElementById('hdr').classList.toggle('scrolled',window.scrollY>40);});
+
+(function(){
+  const io=new IntersectionObserver(e=>e.forEach(x=>{if(x.isIntersecting){x.target.classList.add('anim-in');io.unobserve(x.target);}}),{threshold:.12});
+  document.querySelectorAll('[data-anim]').forEach(el=>io.observe(el));
+})();
+(function(){
+  const burger=document.getElementById('burger'),mobNav=document.getElementById('mobNav');
+  if(burger){
+    burger.addEventListener('click',()=>{burger.classList.toggle('open');mobNav.classList.toggle('active');});
+    mobNav.querySelectorAll('a').forEach(a=>{a.addEventListener('click',()=>{burger.classList.remove('open');mobNav.classList.remove('active');});});
+  }
+})();
+</script>
+  <script>
+  /* ── Theme toggle (persisted) ── */
+  (function(){
+    var root=document.documentElement;
+    var stored=localStorage.getItem('whirl-theme');
+    var prefersDark=window.matchMedia('(prefers-color-scheme:dark)').matches;
+    var initial=stored||(prefersDark?'dark':'light');
+    if(initial==='light') root.setAttribute('data-theme','light');
+    function applyCanvas(){
+      var canvas=document.getElementById('bgc');
+      if(!canvas) return;
+      /* canvas bg will auto-pick next frame via draw loop */
+      canvas._lightMode=(root.getAttribute('data-theme')==='light');
+    }
+    applyCanvas();
+    document.addEventListener('DOMContentLoaded',function(){
+      var btn=document.getElementById('themeToggle');
+      if(!btn) return;
+      btn.addEventListener('click',function(){
+        var isLight=root.getAttribute('data-theme')==='light';
+        if(isLight){
+          root.removeAttribute('data-theme');
+          localStorage.setItem('whirl-theme','dark');
+        } else {
+          root.setAttribute('data-theme','light');
+          localStorage.setItem('whirl-theme','light');
+        }
+        applyCanvas();
+        /* update canvas bg color reference */
+        if(window._canvasBg!==undefined){
+          window._canvasBg=root.getAttribute('data-theme')==='light'?'#f5f5f7':'#03030a';
+        }
+      });
+    });
+  })();
+  </script>
+
+</body>
+</html>

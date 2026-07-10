@@ -1,0 +1,1711 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>АО Whirl — Политика конфиденциальности</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=DM+Serif+Display:ital@0;1&display=swap"
+    rel="stylesheet">
+  <style>
+    :root {
+      --bg: #03030a;
+      --sf: rgba(255, 255, 255, .042);
+      --sf2: rgba(255, 255, 255, .08);
+      --bd: rgba(255, 255, 255, .08);
+      --bd2: rgba(255, 255, 255, .18);
+      --t: #f2f2f7;
+      --t2: rgba(242, 242, 247, .55);
+      --t3: rgba(242, 242, 247, .26);
+      --ac: #2997ff;
+      --acd: rgba(41, 151, 255, .12);
+      --ease: cubic-bezier(.16, 1, .3, 1);
+    }
+
+    *,
+    *::before,
+    *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--t);
+      font-family: 'DM Sans', -apple-system, sans-serif;
+      overflow-x: hidden;
+      cursor: none;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    a {
+      text-decoration: none;
+      color: inherit;
+    }
+
+    #bgc {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+
+    .grain {
+      position: fixed;
+      inset: -50%;
+      z-index: 1;
+      width: 200%;
+      height: 200%;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23g)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none;
+      animation: grain .45s steps(1) infinite;
+    }
+
+    @keyframes grain {
+
+      0%,
+      100% {
+        transform: translate(0, 0)
+      }
+
+      20% {
+        transform: translate(-1%, -2%)
+      }
+
+      40% {
+        transform: translate(2%, 1%)
+      }
+
+      60% {
+        transform: translate(-2%, 2%)
+      }
+
+      80% {
+        transform: translate(1%, -1%)
+      }
+    }
+
+    .cur-dot {
+      width: 8px;
+      height: 8px;
+      background: white;
+      border-radius: 50%;
+      position: fixed;
+      z-index: 9999;
+      pointer-events: none;
+      transform: translate(-50%, -50%);
+      mix-blend-mode: difference;
+      transition: transform .15s var(--ease);
+    }
+
+    .cur-ring {
+      width: 36px;
+      height: 36px;
+      border: 1px solid rgba(255, 255, 255, .3);
+      border-radius: 50%;
+      position: fixed;
+      z-index: 9998;
+      pointer-events: none;
+      transform: translate(-50%, -50%);
+    }
+
+    body:has(a:hover) .cur-dot,
+    body:has(button:hover) .cur-dot {
+      transform: translate(-50%, -50%) scale(2.5);
+    }
+
+    /* HEADER */
+    header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 900;
+      height: 50px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 40px;
+      background: rgba(3, 3, 10, .72);
+      backdrop-filter: blur(24px) saturate(200%);
+      -webkit-backdrop-filter: blur(24px) saturate(200%);
+      border-bottom: 1px solid var(--bd);
+      transition: background .4s;
+    }
+
+    header.scrolled {
+      background: rgba(3, 3, 10, .95);
+    }
+
+    .logo-t {
+      font-family: 'DM Serif Display', serif;
+      font-size: 19px;
+      letter-spacing: -.3px;
+      color: var(--t);
+    }
+
+    nav {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 36px;
+    }
+
+    nav a {
+      font-size: 13px;
+      font-weight: 400;
+      color: var(--t2);
+      transition: color .2s;
+      white-space: nowrap;
+    }
+
+    nav a:hover {
+      color: var(--t);
+    }
+
+    .h-right {
+      display: flex;
+      align-items: center;
+    }
+
+    .lang-pill {
+      display: flex;
+      background: var(--sf);
+      border: 1px solid var(--bd);
+      border-radius: 100px;
+      padding: 2px;
+      gap: 1px;
+    }
+
+    .lang-pill button {
+      background: none;
+      border: none;
+      color: var(--t2);
+      font: 500 11px/1 'DM Sans', sans-serif;
+      padding: 4px 11px;
+      border-radius: 100px;
+      cursor: pointer;
+      transition: all .2s;
+    }
+
+    .lang-pill button.active {
+      background: rgba(255, 255, 255, .14);
+      color: var(--t);
+    }
+
+    .burger { display: none; width: 38px; height: 38px; align-items: center; justify-content: center; cursor: pointer; margin-left: 14px; z-index: 1000; flex-shrink: 0; background: var(--sf); border: 1px solid var(--bd); border-radius: 50%; padding: 0; position: relative; transition: all 0.3s; }
+    .burger:hover { background: var(--sf2); border-color: var(--bd2); transform: scale(1.05); }
+    .burger span { position: absolute; display: block; width: 14px; height: 1.5px; background: var(--t); border-radius: 2px; transition: 0.3s cubic-bezier(.16,1,.3,1); pointer-events: none; }
+    .burger span:nth-child(1) { transform: translateY(-4px); }
+    .burger span:nth-child(2) { transform: translateY(0); }
+    .burger span:nth-child(3) { transform: translateY(4px); }
+    .burger.open span:nth-child(1) { transform: translateY(0) rotate(45deg); }
+    .burger.open span:nth-child(2) { opacity: 0; transform: scale(0); }
+    .burger.open span:nth-child(3) { transform: translateY(0) rotate(-45deg); }
+    .mob-nav { position: fixed; top: 0; left: 0; width: 100%; height: 100vh; background: rgba(3,3,10,0.85); backdrop-filter: blur(24px) saturate(200%); -webkit-backdrop-filter: blur(24px) saturate(200%); z-index: 800; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 32px; opacity: 0; visibility: hidden; transition: opacity 0.4s cubic-bezier(.16,1,.3,1), visibility 0.4s; }
+    .mob-nav::before { content: ''; position: absolute; inset: 0; background: radial-gradient(circle at 50% 50%, rgba(41,151,255,0.08), transparent 70%); pointer-events: none; }
+    .mob-nav.active { opacity: 1; visibility: visible; }
+    .mob-nav a { font-size: 26px; font-weight: 500; font-family: 'DM Sans', sans-serif; color: var(--t2); text-decoration: none; transform: translateY(20px); opacity: 0; transition: color 0.3s, transform 0.4s cubic-bezier(.16,1,.3,1), opacity 0.4s; }
+    .mob-nav a.active, .mob-nav a:hover { color: var(--t); transform: translateY(0) scale(1.05); }
+    .mob-nav.active a { transform: translateY(0); opacity: 1; }
+    .mob-nav a:nth-child(1) { transition-delay: 0.1s; }
+    .mob-nav a:nth-child(2) { transition-delay: 0.15s; }
+    .mob-nav a:nth-child(3) { transition-delay: 0.2s; }
+    @media(max-width:900px){nav{display:none;} .burger{display:flex;}}
+
+    /* SCROLL ANIM */
+    [data-anim] {
+      opacity: 0;
+      transition: opacity .9s var(--ease), transform .9s var(--ease);
+    }
+
+    [data-anim="fade-up"] {
+      transform: translateY(40px);
+    }
+
+    [data-anim="fade-in"] {
+      transform: none;
+    }
+
+    [data-anim="fade-left"] {
+      transform: translateX(-50px);
+    }
+
+    [data-anim].anim-in {
+      opacity: 1 !important;
+      transform: none !important;
+    }
+
+    /* HERO */
+    .hero {
+      position: relative;
+      z-index: 2;
+      padding: 140px 80px 80px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    @media(max-width:900px) {
+      .hero {
+        padding: 110px 28px 60px;
+      }
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border: 1px solid var(--bd);
+      background: var(--sf);
+      border-radius: 100px;
+      padding: 6px 18px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--ac);
+      margin-bottom: 28px;
+      backdrop-filter: blur(12px);
+      opacity: 0;
+      animation: up .7s .1s var(--ease) forwards;
+    }
+
+    .hero-badge svg {
+      width: 12px;
+      height: 12px;
+    }
+
+    .hero-h1 {
+      font-family: 'DM Serif Display', serif;
+      font-size: clamp(40px, 6vw, 72px);
+      letter-spacing: -2px;
+      line-height: .95;
+      color: var(--t);
+      margin-bottom: 24px;
+      opacity: 0;
+      animation: up .9s .2s var(--ease) forwards;
+    }
+
+    .hero-h1 em {
+      font-style: italic;
+      color: var(--t2);
+    }
+
+    .hero-meta {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      flex-wrap: wrap;
+      opacity: 0;
+      animation: up .7s .35s var(--ease) forwards;
+    }
+
+    .meta-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 6px 14px;
+      border-radius: 100px;
+      background: var(--sf);
+      border: 1px solid var(--bd);
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--t3);
+    }
+
+    .meta-pill svg {
+      width: 12px;
+      height: 12px;
+      color: var(--ac);
+    }
+
+    @keyframes up {
+      from {
+        opacity: 0;
+        transform: translateY(24px)
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0)
+      }
+    }
+
+    /* DIVIDER */
+    .page-divider {
+      position: relative;
+      z-index: 2;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 80px;
+    }
+
+    @media(max-width:900px) {
+      .page-divider {
+        padding: 0 28px;
+      }
+    }
+
+    .pdl {
+      display: block;
+      height: 1px;
+      background: linear-gradient(90deg, var(--ac), rgba(191, 100, 255, .5), transparent);
+      margin-bottom: 0;
+    }
+
+    /* LAYOUT */
+    .content-wrap {
+      position: relative;
+      z-index: 2;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 60px 80px 120px;
+      display: grid;
+      grid-template-columns: 260px 1fr;
+      gap: 60px;
+      align-items: start;
+    }
+
+    @media(max-width:1100px) {
+      .content-wrap {
+        grid-template-columns: 220px 1fr;
+        gap: 40px;
+      }
+    }
+
+    @media(max-width:800px) {
+      .content-wrap {
+        grid-template-columns: 1fr;
+        padding: 40px 28px 80px;
+        gap: 32px;
+      }
+    }
+
+    /* SIDEBAR NAV */
+    .sidebar {
+      position: sticky;
+      top: 80px;
+    }
+
+    @media(max-width:800px) {
+      .sidebar {
+        position: static;
+      }
+    }
+
+    .side-label {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--t3);
+      margin-bottom: 16px;
+    }
+
+    .side-nav {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .side-link {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 14px;
+      border-radius: 12px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--t3);
+      transition: all .2s;
+      cursor: pointer;
+      border: none;
+      background: none;
+      text-align: left;
+    }
+
+    .side-link:hover {
+      background: var(--sf);
+      color: var(--t2);
+    }
+
+    .side-link.active {
+      background: var(--acd);
+      color: var(--ac);
+      border: 1px solid rgba(41, 151, 255, .15);
+    }
+
+    .side-link-num {
+      width: 20px;
+      height: 20px;
+      border-radius: 6px;
+      background: rgba(255, 255, 255, .05);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--t3);
+      flex-shrink: 0;
+      transition: all .2s;
+    }
+
+    .side-link.active .side-link-num {
+      background: rgba(41, 151, 255, .2);
+      color: var(--ac);
+    }
+
+    .side-divider {
+      height: 1px;
+      background: var(--bd);
+      margin: 16px 0;
+    }
+
+    .side-version {
+      padding: 16px;
+      background: var(--sf);
+      border: 1px solid var(--bd);
+      border-radius: 14px;
+      margin-top: 16px;
+    }
+
+    .sv-label {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--t3);
+      margin-bottom: 8px;
+    }
+
+    .sv-val {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--t2);
+    }
+
+    /* MAIN CONTENT */
+    .main-content {
+      display: flex;
+      flex-direction: column;
+      gap: 48px;
+    }
+
+    /* SECTION BLOCK */
+    .sec-block {
+      background: var(--sf);
+      border: 1px solid var(--bd);
+      border-radius: 24px;
+      overflow: hidden;
+      transition: border-color .3s;
+    }
+
+    .sec-block:hover {
+      border-color: rgba(255, 255, 255, .12);
+    }
+
+    .sec-block-hdr {
+      padding: 28px 36px 24px;
+      border-bottom: 1px solid var(--bd);
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    @media(max-width:600px) {
+      .sec-block-hdr {
+        padding: 22px 22px 18px;
+      }
+    }
+
+    .sec-num {
+      width: 32px;
+      height: 32px;
+      flex-shrink: 0;
+      border-radius: 10px;
+      background: var(--acd);
+      border: 1px solid rgba(41, 151, 255, .18);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--ac);
+    }
+
+    .sec-title-text {
+      font-family: 'DM Serif Display', serif;
+      font-size: clamp(17px, 2.2vw, 22px);
+      letter-spacing: -.3px;
+      color: var(--t);
+    }
+
+    .sec-block-body {
+      padding: 28px 36px 32px;
+      font-size: 14px;
+      color: var(--t2);
+      line-height: 1.85;
+    }
+
+    @media(max-width:600px) {
+      .sec-block-body {
+        padding: 20px 22px 24px;
+      }
+    }
+
+    .sec-block-body p {
+      margin-bottom: 14px;
+    }
+
+    .sec-block-body p:last-child {
+      margin-bottom: 0;
+    }
+
+    /* UL LIST */
+    .policy-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin: 12px 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .policy-list li {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      font-size: 14px;
+      color: var(--t2);
+      line-height: 1.6;
+    }
+
+    .policy-list li::before {
+      content: '';
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: var(--ac);
+      flex-shrink: 0;
+      margin-top: 8px;
+    }
+
+    /* HIGHLIGHT BOX */
+    .hi-box {
+      background: var(--acd);
+      border: 1px solid rgba(41, 151, 255, .18);
+      border-radius: 16px;
+      padding: 20px 24px;
+      margin: 16px 0;
+    }
+
+    .hi-box-label {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--ac);
+      margin-bottom: 10px;
+    }
+
+    .hi-box-body {
+      font-size: 13px;
+      color: var(--t2);
+      line-height: 1.7;
+    }
+
+    /* INFO GRID inside sections */
+    .info-mini-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1px;
+      background: var(--bd);
+      border-radius: 16px;
+      overflow: hidden;
+      margin-top: 16px;
+    }
+
+    @media(max-width:600px) {
+      .info-mini-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .img-cell {
+      background: var(--bg);
+      padding: 18px 20px;
+    }
+
+    .img-cell-lbl {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--t3);
+      margin-bottom: 6px;
+    }
+
+    .img-cell-val {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--t);
+      line-height: 1.5;
+    }
+
+    /* CONTACT BLOCK */
+    .contact-final {
+      background: var(--sf);
+      border: 1px solid var(--bd);
+      border-radius: 24px;
+      padding: 44px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+      margin-top: 0;
+    }
+
+    .contact-final::before {
+      content: '';
+      position: absolute;
+      bottom: -80px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 400px;
+      height: 300px;
+      background: radial-gradient(ellipse, rgba(41, 151, 255, .1), transparent 70%);
+      pointer-events: none;
+    }
+
+    .cf-lbl {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--ac);
+      margin-bottom: 16px;
+    }
+
+    .cf-lbl-line {
+      display: inline-block;
+      width: 16px;
+      height: 1px;
+      background: var(--ac);
+    }
+
+    .cf-title {
+      font-family: 'DM Serif Display', serif;
+      font-size: clamp(22px, 3vw, 32px);
+      letter-spacing: -.8px;
+      margin-bottom: 12px;
+    }
+
+    .cf-sub {
+      font-size: 14px;
+      color: var(--t2);
+      line-height: 1.7;
+      margin-bottom: 28px;
+    }
+
+    .cf-pills {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .cf-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      padding: 11px 20px;
+      background: rgba(255, 255, 255, .04);
+      border: 1px solid var(--bd);
+      border-radius: 100px;
+      font-size: 13px;
+      font-weight: 500;
+      transition: all .2s;
+    }
+
+    .cf-pill svg {
+      width: 14px;
+      height: 14px;
+      color: var(--ac);
+      flex-shrink: 0;
+    }
+
+    .cf-pill:hover {
+      border-color: var(--bd2);
+      background: var(--sf2);
+      transform: translateY(-3px);
+    }
+
+    /* FOOTER */
+    footer {
+      position: relative;
+      z-index: 2;
+      border-top: 1px solid var(--bd);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 26px 80px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .ft-logo {
+      font-family: 'DM Serif Display', serif;
+      font-size: 15px;
+      color: var(--t3);
+    }
+
+    .ft-copy {
+      font-size: 11px;
+      color: var(--t3);
+    }
+
+    .ft-links {
+      display: flex;
+      gap: 24px;
+    }
+
+    .ft-links a {
+      font-size: 11px;
+      color: var(--t3);
+      transition: color .2s;
+    }
+
+    .ft-links a:hover {
+      color: var(--t2);
+    }
+
+    @media(max-width:700px) {
+      footer {
+        padding: 24px 28px;
+        flex-direction: column;
+      }
+    }
+
+    /* BACK TO TOP */
+    .back-top {
+      position: fixed;
+      bottom: 32px;
+      right: 32px;
+      z-index: 800;
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      background: var(--sf);
+      border: 1px solid var(--bd);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--t3);
+      cursor: pointer;
+      transition: all .3s;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .back-top.show {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    .back-top:hover {
+      background: var(--sf2);
+      border-color: var(--bd2);
+      color: var(--t);
+      transform: translateY(-3px);
+    }
+
+    .back-top svg {
+      width: 16px;
+      height: 16px;
+    }
+  
+    /* =========================================
+       LIGHT MODE — data-theme="light" on <html>
+       ========================================= */
+    [data-theme="light"]{
+      --bg:#f5f5f7;
+      --sf:rgba(0,0,0,.04);
+      --sf2:rgba(0,0,0,.08);
+      --bd:rgba(0,0,0,.1);
+      --bd2:rgba(0,0,0,.22);
+      --t:#1d1d1f;
+      --t2:rgba(29,29,31,.56);
+      --t3:rgba(29,29,31,.32);
+      --ac:#0071e3;
+      --acd:rgba(0,113,227,.1);
+    }
+    /* Header & nav overrides */
+    [data-theme="light"] header{background:rgba(245,245,247,.82)!important;}
+    [data-theme="light"] header.scrolled{background:rgba(245,245,247,.96)!important;}
+    [data-theme="light"] .mob-nav{background:rgba(245,245,247,.95)!important;}
+    [data-theme="light"] #intro{background:#f5f5f7!important;}
+    [data-theme="light"] .lang-pill button.active{background:rgba(0,0,0,.12);color:var(--t);}
+    [data-theme="light"] .cur-ring{border-color:rgba(0,0,0,.18);}
+    [data-theme="light"] .cur-dot{background:#1d1d1f;}
+    [data-theme="light"] .btn-w{background:#1d1d1f;color:#f5f5f7;}
+    [data-theme="light"] .btn-w:hover{background:#333;}
+    [data-theme="light"] .hero-grad{
+      background:linear-gradient(120deg,#003399 0%,#0055cc 35%,#7700cc 65%,#cc0066 100%);
+      -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;background-size:200%;
+    }
+    [data-theme="light"] .metrics-wrap,[data-theme="light"] .info-grid{background:var(--bd);}
+    [data-theme="light"] .met,[data-theme="light"] .info-cell{background:var(--bg);}
+    [data-theme="light"] .met:hover,[data-theme="light"] .info-cell:hover{background:var(--sf);}
+    /* Smooth transitions for theme switch */
+    body,header,.mob-nav,#intro,.pcard,.doc-row,.info-cell,.met,.ct-wrap,
+    .lang-pill,.doc-ico,.info-pill,.lbl,.ticker-item,.ft-logo,.ft-copy,.ft-links a{
+      transition:background .35s ease,color .35s ease,border-color .35s ease,box-shadow .35s ease!important;
+    }
+    /* ── Theme Toggle Button ── */
+    .theme-toggle{
+      position:relative;display:inline-flex;align-items:center;justify-content:center;
+      width:34px;height:34px;border-radius:50%;
+      background:var(--sf);border:1px solid var(--bd);
+      cursor:pointer;margin-left:8px;flex-shrink:0;
+      transition:background .25s,border-color .25s,transform .25s;
+      overflow:hidden;
+    }
+    .theme-toggle:hover{background:var(--sf2);border-color:var(--bd2);transform:scale(1.08);}
+    .theme-toggle .t-icon{
+      position:absolute;width:15px;height:15px;
+      color:var(--t2);transition:transform .4s cubic-bezier(.16,1,.3,1),opacity .3s;
+    }
+    .t-moon{opacity:1;transform:rotate(0deg) scale(1);}
+    .t-sun{opacity:0;transform:rotate(90deg) scale(.4);}
+    [data-theme="light"] .t-moon{opacity:0;transform:rotate(-90deg) scale(.4);}
+    [data-theme="light"] .t-sun{opacity:1;transform:rotate(0deg) scale(1);}
+    [data-theme="light"] .theme-toggle:hover{background:var(--sf2);}
+
+  </style>
+</head>
+
+<body>
+
+  <canvas id="bgc"></canvas>
+  <div class="grain"></div>
+  <div class="cur-dot" id="cd"></div>
+  <div class="cur-ring" id="cr"></div>
+
+  <!-- HEADER -->
+  <header id="hdr">
+    <a href="index.html" class="logo-t">Whirl</a>
+    <nav>
+      <a href="index.html" data-tr="nav_home">Главная</a>
+      <a href="#" onclick="return false;" style="opacity:.5;cursor:default;">ODU</a>
+      <!-- <a href="disclosure.html" data-tr="nav_disc">Существенный факт</a> -->
+      <a href="careers.html" data-tr="nav_careers">Карьера</a>
+    </nav>
+    <div class="h-right">
+      <div class="lang-pill">
+        <button data-lang="ru" class="active">RU</button>
+        <button data-lang="en">ENG</button>
+        <button data-lang="uz">UZ</button>
+      </div>
+      <button class="burger" id="burger"><span></span><span></span><span></span></button>
+      <button class="theme-toggle" id="themeToggle" title="Тема / Theme"><svg class="t-icon t-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg><svg class="t-icon t-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg></button>
+    </div>
+  </header>
+
+  <div class="mob-nav" id="mobNav">
+    <a href="#" onclick="return false;" style="opacity:.5;cursor:default;">ODU</a>
+    <a href="about.html" data-tr="nav_about">О нас</a>
+    <a href="careers.html" data-tr="nav_careers">Карьера</a>
+  </div>
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="hero-badge">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+        stroke-linejoin="round">
+        <rect x="3" y="11" width="18" height="11" rx="2" />
+        <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+      </svg>
+      <span data-tr="badge">Политика конфиденциальности</span>
+    </div>
+    <h1 class="hero-h1">
+      <span data-tr="h1a">Защита</span><br>
+      <em data-tr="h1b">персональных данных</em>
+    </h1>
+    <div class="hero-meta">
+      <div class="meta-pill">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+          stroke-linejoin="round">
+          <rect x="3" y="4" width="18" height="18" rx="2" />
+          <line x1="16" y1="2" x2="16" y2="6" />
+          <line x1="8" y1="2" x2="8" y2="6" />
+          <line x1="3" y1="10" x2="21" y2="10" />
+        </svg>
+        <span data-tr="meta_ver">Версия от 15 июня 2025 г.</span>
+      </div>
+      <div class="meta-pill">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+          stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10" />
+          <polyline points="12 6 12 12 16 14" />
+        </svg>
+        <span data-tr="meta_law">ЗРУ-547 от 02.07.2019</span>
+      </div>
+      <div class="meta-pill">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+          stroke-linejoin="round">
+          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+          <circle cx="12" cy="10" r="3" />
+        </svg>
+        <span>Ташкент, 2025</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="page-divider">
+    <div class="pdl" data-anim="fade-in"></div>
+  </div>
+
+  <!-- MAIN LAYOUT -->
+  <div class="content-wrap">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar" data-anim="fade-up">
+      <div class="side-label" data-tr="side_nav">Разделы</div>
+      <!-- <nav class="side-nav">
+      <button class="side-link active" onclick="scrollTo('s1')"><span class="side-link-num">1</span><span data-tr="s1_nav">Общие положения</span></button>
+      <button class="side-link" onclick="scrollTo('s2')"><span class="side-link-num">2</span><span data-tr="s2_nav">Оператор данных</span></button>
+      <button class="side-link" onclick="scrollTo('s3')"><span class="side-link-num">3</span><span data-tr="s3_nav">Категории данных</span></button>
+      <button class="side-link" onclick="scrollTo('s4')"><span class="side-link-num">4</span><span data-tr="s4_nav">Цели обработки</span></button>
+      <button class="side-link" onclick="scrollTo('s5')"><span class="side-link-num">5</span><span data-tr="s5_nav">Правовые основания</span></button>
+      <button class="side-link" onclick="scrollTo('s6')"><span class="side-link-num">6</span><span data-tr="s6_nav">Передача данных</span></button>
+      <button class="side-link" onclick="scrollTo('s7')"><span class="side-link-num">7</span><span data-tr="s7_nav">Сроки хранения</span></button>
+      <button class="side-link" onclick="scrollTo('s8')"><span class="side-link-num">8</span><span data-tr="s8_nav">Права пользователя</span></button>
+      <button class="side-link" onclick="scrollTo('s9')"><span class="side-link-num">9</span><span data-tr="s9_nav">Cookies</span></button>
+      <button class="side-link" onclick="scrollTo('s10')"><span class="side-link-num">10</span><span data-tr="s10_nav">Защита данных</span></button>
+      <button class="side-link" onclick="scrollTo('s11')"><span class="side-link-num">11</span><span data-tr="s11_nav">Обратная связь</span></button>
+      <button class="side-link" onclick="scrollTo('s12')"><span class="side-link-num">12</span><span data-tr="s12_nav">Изменения политики</span></button>
+    </nav> -->
+      <div class="side-divider"></div>
+      <div class="side-version">
+        <div class="sv-label" data-tr="sv_lbl">Действует с</div>
+        <div class="sv-val">15 июня 2025 г.</div>
+      </div>
+    </aside>
+
+    <!-- CONTENT -->
+    <main class="main-content">
+
+      <!-- 1 -->
+      <div class="sec-block" id="s1" data-anim="fade-up">
+        <div class="sec-block-hdr">
+          <div class="sec-num">1</div>
+          <div class="sec-title-text" data-tr="s1_title">Общие положения</div>
+        </div>
+        <div class="sec-block-body">
+          <p data-tr="s1_p1">Настоящая Политика конфиденциальности и обработки персональных данных разработана
+            Акционерным обществом «WHIRL», зарегистрированным в соответствии с законодательством Республики Узбекистан,
+            и определяет порядок обработки персональных данных пользователей корпоративного сайта Общества.</p>
+          <p data-tr="s1_p2">Политика разработана в соответствии с Законом Республики Узбекистан «О персональных данных»
+            (ЗРУ-547 от 02.07.2019 г.) и иными нормативными актами.</p>
+          <div class="hi-box">
+            <div class="hi-box-label" data-tr="note">Важно</div>
+            <div class="hi-box-body" data-tr="s1_note">Настоящая Политика применяется исключительно к корпоративному
+              сайту АО «WHIRL» и не распространяется на иные сайты, продукты или сервисы, в том числе платёжные сервисы,
+              реализуемые Обществом под отдельными брендами.</div>
+          </div>
+          <p data-tr="s1_p3">Использование сайта означает безусловное согласие Пользователя с настоящей Политикой и
+            условиями обработки его персональных данных. В случае несогласия Пользователь обязан прекратить
+            использование сайта.</p>
+        </div>
+      </div>
+
+      <!-- 2 -->
+      <div class="sec-block" id="s2" data-anim="fade-up" style="transition-delay:.05s">
+        <div class="sec-block-hdr">
+          <div class="sec-num">2</div>
+          <div class="sec-title-text" data-tr="s2_title">Оператор персональных данных</div>
+        </div>
+        <div class="sec-block-body">
+          <p data-tr="s2_p1">Оператором персональных данных является Акционерное общество «WHIRL».</p>
+          <div class="info-mini-grid">
+            <div class="img-cell">
+              <div class="img-cell-lbl" data-tr="op_addr_lbl">Юридический адрес</div>
+              <div class="img-cell-val" data-tr="op_addr">г. Ташкент, Шайхантахурский р-н, ул. А. Наваи, д. 28Б</div>
+            </div>
+            <div class="img-cell">
+              <div class="img-cell-lbl" data-tr="op_fact_lbl">Фактический адрес</div>
+              <div class="img-cell-val" data-tr="op_fact">г. Ташкент, М. Улугбекский р-н, ул. Муминова, д. 7/2</div>
+            </div>
+            <div class="img-cell">
+              <div class="img-cell-lbl">ИНН</div>
+              <div class="img-cell-val">304 785 326</div>
+            </div>
+            <div class="img-cell">
+              <div class="img-cell-lbl">МФО / Р/С</div>
+              <div class="img-cell-val">01088 / 2020 8000 1007 5456 6001</div>
+            </div>
+            <div class="img-cell">
+              <div class="img-cell-lbl" data-tr="op_tel_lbl">Телефон</div>
+              <div class="img-cell-val">(99) 253-53-53</div>
+            </div>
+            <div class="img-cell">
+              <div class="img-cell-lbl">E-mail</div>
+              <div class="img-cell-val"><a href="mailto:info@whirl.uz">info@whirl.uz</a></div>
+            </div>
+          </div>
+          <p style="margin-top:16px;" data-tr="s2_p2">Общество осуществляет обработку персональных данных
+            самостоятельно, а также вправе поручить обработку третьим лицам на основании договоров при условии
+            соблюдения требований законодательства.</p>
+        </div>
+      </div>
+
+      <!-- 3 -->
+      <div class="sec-block" id="s3" data-anim="fade-up" style="transition-delay:.08s">
+        <div class="sec-block-hdr">
+          <div class="sec-num">3</div>
+          <div class="sec-title-text" data-tr="s3_title">Персональные данные, обрабатываемые Обществом</div>
+        </div>
+        <div class="sec-block-body">
+          <p style="font-weight:600;color:var(--t);margin-bottom:8px;" data-tr="s3_sub1">3.1. Данные, предоставляемые
+            Пользователем:</p>
+          <ul class="policy-list">
+            <li data-tr="s3_l1">ФИО</li>
+            <li data-tr="s3_l2">Номер телефона</li>
+            <li data-tr="s3_l3">Адрес электронной почты</li>
+            <li data-tr="s3_l4">Информация, содержащаяся в обращениях и формах обратной связи</li>
+            <li data-tr="s3_l5">Данные, содержащиеся в резюме (при отклике на вакансии)</li>
+            <li data-tr="s3_l6">Иные данные, добровольно предоставленные Пользователем</li>
+          </ul>
+          <p style="font-weight:600;color:var(--t);margin:20px 0 8px;" data-tr="s3_sub2">3.2. Данные, собираемые
+            автоматически:</p>
+          <ul class="policy-list">
+            <li data-tr="s3_a1">IP-адрес</li>
+            <li data-tr="s3_a2">Данные файлов cookies</li>
+            <li data-tr="s3_a3">Информация о браузере и устройстве</li>
+            <li data-tr="s3_a4">Сведения о действиях Пользователя на сайте (дата, время, страницы, переходы)</li>
+          </ul>
+          <div class="hi-box" style="margin-top:20px;">
+            <div class="hi-box-label" data-tr="note">Важно</div>
+            <div class="hi-box-body" data-tr="s3_note">Общество не осуществляет целенаправленный сбор специальных
+              категорий персональных данных без отдельного согласия Пользователя.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 4 -->
+      <div class="sec-block" id="s4" data-anim="fade-up" style="transition-delay:.05s">
+        <div class="sec-block-hdr">
+          <div class="sec-num">4</div>
+          <div class="sec-title-text" data-tr="s4_title">Цели обработки персональных данных</div>
+        </div>
+        <div class="sec-block-body">
+          <p data-tr="s4_p">Общество осуществляет обработку персональных данных исключительно в следующих целях:</p>
+          <ul class="policy-list" style="margin-top:12px;">
+            <li data-tr="s4_l1">Рассмотрение обращений и заявок Пользователей</li>
+            <li data-tr="s4_l2">Обеспечение обратной связи с Пользователем</li>
+            <li data-tr="s4_l3">Рассмотрение кандидатов на трудоустройство</li>
+            <li data-tr="s4_l4">Обеспечение функционирования и улучшения работы сайта</li>
+            <li data-tr="s4_l5">Соблюдение требований законодательства Республики Узбекистан</li>
+            <li data-tr="s4_l6">Защита прав и законных интересов Общества</li>
+          </ul>
+          <p style="margin-top:16px;" data-tr="s4_p2">Общество не осуществляет обработку персональных данных в целях,
+            несовместимых с указанными выше.</p>
+        </div>
+      </div>
+
+      <!-- 5 -->
+      <div class="sec-block" id="s5" data-anim="fade-up" style="transition-delay:.05s">
+        <div class="sec-block-hdr">
+          <div class="sec-num">5</div>
+          <div class="sec-title-text" data-tr="s5_title">Правовые основания обработки</div>
+        </div>
+        <div class="sec-block-body">
+          <p data-tr="s5_p">Обработка персональных данных осуществляется на следующих основаниях:</p>
+          <ul class="policy-list" style="margin-top:12px;">
+            <li data-tr="s5_l1">Согласие Пользователя</li>
+            <li data-tr="s5_l2">Необходимость исполнения обязательств перед Пользователем</li>
+            <li data-tr="s5_l3">Выполнение требований законодательства Республики Узбекистан</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- 6 -->
+      <div class="sec-block" id="s6" data-anim="fade-up" style="transition-delay:.05s">
+        <div class="sec-block-hdr">
+          <div class="sec-num">6</div>
+          <div class="sec-title-text" data-tr="s6_title">Условия обработки и передачи персональных данных</div>
+        </div>
+        <div class="sec-block-body">
+          <p data-tr="s6_p1">Общество обеспечивает конфиденциальность персональных данных. Передача персональных данных
+            третьим лицам допускается исключительно в следующих случаях:</p>
+          <ul class="policy-list" style="margin-top:12px;">
+            <li data-tr="s6_l1">При наличии согласия Пользователя</li>
+            <li data-tr="s6_l2">При необходимости исполнения запроса Пользователя</li>
+            <li data-tr="s6_l3">При привлечении подрядчиков (хостинг, IT-поддержка и др.)</li>
+            <li data-tr="s6_l4">В случаях, предусмотренных законодательством Республики Узбекистан</li>
+          </ul>
+          <p style="margin-top:16px;" data-tr="s6_p2">При этом Общество обеспечивает, чтобы такие лица соблюдали
+            требования по защите персональных данных. Трансграничная передача персональных данных осуществляется только
+            при соблюдении требований законодательства.</p>
+        </div>
+      </div>
+
+      <!-- 7 -->
+      <div class="sec-block" id="s7" data-anim="fade-up" style="transition-delay:.05s">
+        <div class="sec-block-hdr">
+          <div class="sec-num">7</div>
+          <div class="sec-title-text" data-tr="s7_title">Сроки хранения персональных данных</div>
+        </div>
+        <div class="sec-block-body">
+          <p data-tr="s7_p1">Персональные данные хранятся не дольше, чем это необходимо для достижения целей обработки,
+            либо в течение сроков, установленных законодательством Республики Узбекистан.</p>
+          <p data-tr="s7_p2">По достижении целей обработки персональные данные подлежат удалению или обезличиванию.</p>
+        </div>
+      </div>
+
+      <!-- 8 -->
+      <div class="sec-block" id="s8" data-anim="fade-up" style="transition-delay:.05s">
+        <div class="sec-block-hdr">
+          <div class="sec-num">8</div>
+          <div class="sec-title-text" data-tr="s8_title">Права Пользователя</div>
+        </div>
+        <div class="sec-block-body">
+          <p data-tr="s8_p">Пользователь имеет право:</p>
+          <ul class="policy-list" style="margin-top:12px;">
+            <li data-tr="s8_l1">Получать информацию об обработке своих персональных данных</li>
+            <li data-tr="s8_l2">Требовать уточнения, блокирования или удаления данных</li>
+            <li data-tr="s8_l3">Отозвать согласие на обработку персональных данных</li>
+            <li data-tr="s8_l4">Обжаловать действия Общества в уполномоченный орган</li>
+          </ul>
+          <div class="hi-box" style="margin-top:20px;">
+            <div class="hi-box-label" data-tr="note">Важно</div>
+            <div class="hi-box-body" data-tr="s8_note">Запросы направляются по контактам, указанным в разделе 11
+              настоящей Политики: <a href="mailto:info@whirl.uz">info@whirl.uz</a></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 9 -->
+      <div class="sec-block" id="s9" data-anim="fade-up" style="transition-delay:.05s">
+        <div class="sec-block-hdr">
+          <div class="sec-num">9</div>
+          <div class="sec-title-text" data-tr="s9_title">Файлы cookies и аналитика</div>
+        </div>
+        <div class="sec-block-body">
+          <p data-tr="s9_p1">Сайт может использовать cookies и аналогичные технологии для:</p>
+          <ul class="policy-list" style="margin-top:12px;">
+            <li data-tr="s9_l1">Обеспечения корректной работы сайта</li>
+            <li data-tr="s9_l2">Анализа пользовательского поведения</li>
+            <li data-tr="s9_l3">Повышения удобства использования</li>
+          </ul>
+          <p style="margin-top:16px;" data-tr="s9_p2">Пользователь вправе ограничить или отключить cookies в настройках
+            браузера, однако это может повлиять на работоспособность сайта.</p>
+        </div>
+      </div>
+
+      <!-- 10 -->
+      <div class="sec-block" id="s10" data-anim="fade-up" style="transition-delay:.05s">
+        <div class="sec-block-hdr">
+          <div class="sec-num">10</div>
+          <div class="sec-title-text" data-tr="s10_title">Меры по защите персональных данных</div>
+        </div>
+        <div class="sec-block-body">
+          <p data-tr="s10_p1">Общество принимает необходимые и достаточные организационные и технические меры для защиты
+            персональных данных, включая:</p>
+          <ul class="policy-list" style="margin-top:12px;">
+            <li data-tr="s10_l1">Ограничение доступа к данным</li>
+            <li data-tr="s10_l2">Применение средств защиты информации</li>
+            <li data-tr="s10_l3">Контроль и аудит обработки данных</li>
+            <li data-tr="s10_l4">Предотвращение несанкционированного доступа</li>
+          </ul>
+          <p style="margin-top:16px;" data-tr="s10_p2">Обработка персональных данных осуществляется с соблюдением
+            требований законодательства и внутренних нормативных документов Общества.</p>
+        </div>
+      </div>
+
+      <!-- 11 -->
+      <div class="sec-block" id="s11" data-anim="fade-up" style="transition-delay:.05s">
+        <div class="sec-block-hdr">
+          <div class="sec-num">11</div>
+          <div class="sec-title-text" data-tr="s11_title">Обратная связь</div>
+        </div>
+        <div class="sec-block-body">
+          <p data-tr="s11_p">По вопросам обработки персональных данных Пользователь может обратиться:</p>
+          <div class="info-mini-grid" style="margin-top:16px;">
+            <div class="img-cell">
+              <div class="img-cell-lbl">Email</div>
+              <div class="img-cell-val"><a href="mailto:info@whirl.uz">info@whirl.uz</a></div>
+            </div>
+            <div class="img-cell">
+              <div class="img-cell-lbl" data-tr="s11_tel">Телефон</div>
+              <div class="img-cell-val">(99) 253-53-53</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 12 -->
+      <div class="sec-block" id="s12" data-anim="fade-up" style="transition-delay:.05s">
+        <div class="sec-block-hdr">
+          <div class="sec-num">12</div>
+          <div class="sec-title-text" data-tr="s12_title">Изменение Политики</div>
+        </div>
+        <div class="sec-block-body">
+          <p data-tr="s12_p1">Общество вправе вносить изменения в настоящую Политику путём размещения новой редакции на
+            сайте.</p>
+          <p data-tr="s12_p2">Продолжение использования сайта после внесения изменений означает согласие Пользователя с
+            обновлённой Политикой.</p>
+        </div>
+      </div>
+
+      <!-- CONTACT FINAL -->
+      <div class="contact-final" data-anim="fade-up">
+        <div class="cf-lbl"><span class="cf-lbl-line"></span><span data-tr="cf_lbl">Контакты</span><span
+            class="cf-lbl-line"></span></div>
+        <div class="cf-title" data-tr="cf_title">Есть вопросы?</div>
+        <p class="cf-sub" data-tr="cf_sub">Свяжитесь с нами по вопросам<br>обработки персональных данных.</p>
+        <div class="cf-pills">
+          <div class="cf-pill">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
+              stroke-linejoin="round">
+              <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+              <polyline points="22,6 12,13 2,6" />
+            </svg>
+            <a href="mailto:info@whirl.uz" style="color: inherit; text-decoration: none;">info@whirl.uz</a>
+          </div>
+          <div class="cf-pill">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
+              stroke-linejoin="round">
+              <path
+                d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 11.5a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.6a16 16 0 0 0 5.55 5.55l.96-.96a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 21 16.92z" />
+            </svg>
+            (99) 253-53-53
+          </div>
+          <div class="cf-pill">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
+              stroke-linejoin="round">
+              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+              <circle cx="12" cy="10" r="3" />
+            </svg>
+            <span data-tr="cf_addr">Ташкент, ул. А. Наваи, 28Б</span>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <footer>
+    <span class="ft-logo">Whirl</span>
+    <div class="ft-links">
+      <a href="index.html" data-tr="nav_home">Главная</a>
+      <a href="#" onclick="return false;" style="opacity:.5;cursor:default;">ODU</a>
+      <a href="careers.html" data-tr="nav_careers">Карьера</a>
+    </div>
+    <span class="ft-copy" data-tr="footer_copy">© 2017 АО «WHIRL». Все права защищены.</span>
+  </footer>
+
+  <!-- BACK TO TOP -->
+  <button class="back-top" id="backTop" onclick="window.scrollTo({top:0,behavior:'smooth'})">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+      stroke-linejoin="round">
+      <polyline points="18 15 12 9 6 15" />
+    </svg>
+  </button>
+
+  <script>
+    /* ══ TRANSLATIONS ══ */
+    const T = {
+      ru: {
+        nav_home: "Главная", nav_disc: "Существенный факт", nav_careers: "Карьера",
+        badge: "Политика конфиденциальности",
+        h1a: "Защита", h1b: "персональных данных",
+        meta_ver: "Версия от 15 июня 2025 г.", meta_law: "ЗРУ-547 от 02.07.2019",
+        side_nav: "Разделы", sv_lbl: "Действует с",
+        note: "Важно",
+        s1_nav: "Общие положения", s2_nav: "Оператор данных", s3_nav: "Категории данных",
+        s4_nav: "Цели обработки", s5_nav: "Правовые основания", s6_nav: "Передача данных",
+        s7_nav: "Сроки хранения", s8_nav: "Права пользователя", s9_nav: "Cookies",
+        s10_nav: "Защита данных", s11_nav: "Обратная связь", s12_nav: "Изменения политики",
+        s1_title: "Общие положения",
+        s1_p1: 'Настоящая Политика конфиденциальности и обработки персональных данных разработана Акционерным обществом «WHIRL», зарегистрированным в соответствии с законодательством Республики Узбекистан, и определяет порядок обработки персональных данных пользователей корпоративного сайта Общества.',
+        s1_p2: 'Политика разработана в соответствии с Законом Республики Узбекистан «О персональных данных» (ЗРУ-547 от 02.07.2019 г.) и иными нормативными актами.',
+        s1_note: 'Настоящая Политика применяется исключительно к корпоративному сайту АО «WHIRL» и не распространяется на иные сайты, продукты или сервисы, в том числе платёжные сервисы, реализуемые Обществом под отдельными брендами.',
+        s1_p3: 'Использование сайта означает безусловное согласие Пользователя с настоящей Политикой. В случае несогласия Пользователь обязан прекратить использование сайта.',
+        s2_title: "Оператор персональных данных",
+        s2_p1: 'Оператором персональных данных является Акционерное общество «WHIRL».',
+        op_addr_lbl: "Юридический адрес", op_addr: "г. Ташкент, Шайхантахурский р-н, ул. А. Наваи, д. 28Б",
+        op_fact_lbl: "Фактический адрес", op_fact: "г. Ташкент, М. Улугбекский р-н, ул. Муминова, д. 7/2",
+        op_tel_lbl: "Телефон",
+        s2_p2: 'Общество осуществляет обработку персональных данных самостоятельно, а также вправе поручить обработку третьим лицам на основании договоров при условии соблюдения требований законодательства.',
+        s3_title: "Персональные данные, обрабатываемые Обществом",
+        s3_sub1: "3.1. Данные, предоставляемые Пользователем:",
+        s3_l1: "ФИО", s3_l2: "Номер телефона", s3_l3: "Адрес электронной почты",
+        s3_l4: "Информация, содержащаяся в обращениях и формах обратной связи",
+        s3_l5: "Данные, содержащиеся в резюме (при отклике на вакансии)",
+        s3_l6: "Иные данные, добровольно предоставленные Пользователем",
+        s3_sub2: "3.2. Данные, собираемые автоматически:",
+        s3_a1: "IP-адрес", s3_a2: "Данные файлов cookies",
+        s3_a3: "Информация о браузере и устройстве",
+        s3_a4: "Сведения о действиях Пользователя на сайте (дата, время, страницы, переходы)",
+        s3_note: "Общество не осуществляет целенаправленный сбор специальных категорий персональных данных без отдельного согласия Пользователя.",
+        s4_title: "Цели обработки персональных данных",
+        s4_p: "Общество осуществляет обработку персональных данных исключительно в следующих целях:",
+        s4_l1: "Рассмотрение обращений и заявок Пользователей", s4_l2: "Обеспечение обратной связи с Пользователем",
+        s4_l3: "Рассмотрение кандидатов на трудоустройство", s4_l4: "Обеспечение функционирования и улучшения работы сайта",
+        s4_l5: "Соблюдение требований законодательства Республики Узбекистан",
+        s4_l6: "Защита прав и законных интересов Общества",
+        s4_p2: "Общество не осуществляет обработку персональных данных в целях, несовместимых с указанными выше.",
+        s5_title: "Правовые основания обработки",
+        s5_p: "Обработка персональных данных осуществляется на следующих основаниях:",
+        s5_l1: "Согласие Пользователя", s5_l2: "Необходимость исполнения обязательств перед Пользователем",
+        s5_l3: "Выполнение требований законодательства Республики Узбекистан",
+        s6_title: "Условия обработки и передачи персональных данных",
+        s6_p1: "Общество обеспечивает конфиденциальность персональных данных. Передача третьим лицам допускается исключительно в следующих случаях:",
+        s6_l1: "При наличии согласия Пользователя", s6_l2: "При необходимости исполнения запроса Пользователя",
+        s6_l3: "При привлечении подрядчиков (хостинг, IT-поддержка и др.)",
+        s6_l4: "В случаях, предусмотренных законодательством Республики Узбекистан",
+        s6_p2: "При этом Общество обеспечивает, чтобы такие лица соблюдали требования по защите персональных данных. Трансграничная передача осуществляется только при соблюдении требований законодательства.",
+        s7_title: "Сроки хранения персональных данных",
+        s7_p1: "Персональные данные хранятся не дольше, чем это необходимо для достижения целей обработки, либо в течение сроков, установленных законодательством Республики Узбекистан.",
+        s7_p2: "По достижении целей обработки персональные данные подлежат удалению или обезличиванию.",
+        s8_title: "Права Пользователя",
+        s8_p: "Пользователь имеет право:",
+        s8_l1: "Получать информацию об обработке своих персональных данных",
+        s8_l2: "Требовать уточнения, блокирования или удаления данных",
+        s8_l3: "Отозвать согласие на обработку персональных данных",
+        s8_l4: "Обжаловать действия Общества в уполномоченный орган",
+        s8_note: "Запросы направляются по контактам, указанным в разделе 11 настоящей Политики: <a href='mailto:info@whirl.uz'>info@whirl.uz</a>",
+        s9_title: "Файлы cookies и аналитика",
+        s9_p1: "Сайт может использовать cookies и аналогичные технологии для:",
+        s9_l1: "Обеспечения корректной работы сайта", s9_l2: "Анализа пользовательского поведения",
+        s9_l3: "Повышения удобства использования",
+        s9_p2: "Пользователь вправе ограничить или отключить cookies в настройках браузера, однако это может повлиять на работоспособность сайта.",
+        s10_title: "Меры по защите персональных данных",
+        s10_p1: "Общество принимает необходимые организационные и технические меры для защиты персональных данных, включая:",
+        s10_l1: "Ограничение доступа к данным", s10_l2: "Применение средств защиты информации",
+        s10_l3: "Контроль и аудит обработки данных", s10_l4: "Предотвращение несанкционированного доступа",
+        s10_p2: "Обработка персональных данных осуществляется с соблюдением требований законодательства и внутренних нормативных документов Общества.",
+        s11_title: "Обратная связь",
+        s11_p: "По вопросам обработки персональных данных Пользователь может обратиться:", s11_tel: "Телефон",
+        s12_title: "Изменение Политики",
+        s12_p1: "Общество вправе вносить изменения в настоящую Политику путём размещения новой редакции на сайте.",
+        s12_p2: "Продолжение использования сайта после внесения изменений означает согласие Пользователя с обновлённой Политикой.",
+        cf_lbl: "Контакты", cf_title: "Есть вопросы?",
+        cf_sub: "Свяжитесь с нами по вопросам<br>обработки персональных данных.",
+        cf_addr: "Ташкент, ул. А. Наваи, 28Б",
+        footer_copy: '© 2017 АО «WHIRL». Все права защищены.',
+      },
+      en: {
+        nav_home: "Home", nav_disc: "Material Fact", nav_careers: "Careers",
+        badge: "Privacy Policy", h1a: "Personal Data", h1b: "Protection",
+        meta_ver: "Version of June 15, 2025", meta_law: "Law No. 547 of 02.07.2019",
+        side_nav: "Sections", sv_lbl: "Effective from", note: "Important",
+        s1_nav: "General Provisions", s2_nav: "Data Operator", s3_nav: "Data Categories",
+        s4_nav: "Processing Purposes", s5_nav: "Legal Grounds", s6_nav: "Data Transfer",
+        s7_nav: "Retention Periods", s8_nav: "User Rights", s9_nav: "Cookies",
+        s10_nav: "Data Protection", s11_nav: "Contact", s12_nav: "Policy Changes",
+        s1_title: "General Provisions",
+        s1_p1: 'This Privacy and Personal Data Processing Policy was developed by Joint Stock Company "WHIRL", registered under the laws of the Republic of Uzbekistan, and defines the procedure for processing personal data of users of the Company\'s corporate website.',
+        s1_p2: 'The Policy was developed in accordance with the Law of the Republic of Uzbekistan "On Personal Data" (Law No. 547 of 02.07.2019) and other regulations.',
+        s1_note: 'This Policy applies exclusively to the corporate website of JSC "WHIRL" and does not extend to other websites, products or services, including payment services provided by the Company under separate brands.',
+        s1_p3: 'Use of the website constitutes unconditional acceptance of this Policy. If you disagree, you must stop using the website.',
+        s2_title: "Personal Data Operator",
+        s2_p1: 'The personal data operator is Joint Stock Company "WHIRL".',
+        op_addr_lbl: "Legal address", op_addr: "Tashkent, Shaykhantakhur district, A. Navoi st., 28B",
+        op_fact_lbl: "Actual address", op_fact: "Tashkent, M. Ulugbek district, Muminova st., 7/2",
+        op_tel_lbl: "Phone",
+        s2_p2: 'The Company processes personal data independently and may also entrust processing to third parties under contracts subject to compliance with legal requirements.',
+        s3_title: "Personal Data Processed by the Company",
+        s3_sub1: "3.1. Data provided by the User:",
+        s3_l1: "Full name", s3_l2: "Phone number", s3_l3: "Email address",
+        s3_l4: "Information contained in requests and feedback forms",
+        s3_l5: "Data contained in CVs (when applying for vacancies)",
+        s3_l6: "Other data voluntarily provided by the User",
+        s3_sub2: "3.2. Automatically collected data:",
+        s3_a1: "IP address", s3_a2: "Cookie files data",
+        s3_a3: "Browser and device information",
+        s3_a4: "User activity on the website (date, time, pages, transitions)",
+        s3_note: "The Company does not deliberately collect special categories of personal data without separate consent from the User.",
+        s4_title: "Purposes of Personal Data Processing",
+        s4_p: "The Company processes personal data exclusively for the following purposes:",
+        s4_l1: "Reviewing user requests and applications", s4_l2: "Providing feedback to the User",
+        s4_l3: "Reviewing employment candidates", s4_l4: "Ensuring website functionality and improvement",
+        s4_l5: "Compliance with Uzbekistan legislation", s4_l6: "Protecting the Company's rights and legitimate interests",
+        s4_p2: "The Company does not process personal data for purposes incompatible with those listed above.",
+        s5_title: "Legal Grounds for Processing",
+        s5_p: "Personal data processing is carried out on the following grounds:",
+        s5_l1: "User's consent", s5_l2: "Necessity to fulfill obligations to the User",
+        s5_l3: "Compliance with Uzbekistan legislation",
+        s6_title: "Conditions for Processing and Transfer of Personal Data",
+        s6_p1: "The Company ensures confidentiality of personal data. Transfer to third parties is permitted only in the following cases:",
+        s6_l1: "With the User's consent", s6_l2: "When necessary to fulfill the User's request",
+        s6_l3: "When engaging contractors (hosting, IT support, etc.)",
+        s6_l4: "In cases provided for by Uzbekistan legislation",
+        s6_p2: "The Company ensures that such parties comply with personal data protection requirements. Cross-border transfer is carried out only in compliance with legal requirements.",
+        s7_title: "Personal Data Retention Periods",
+        s7_p1: "Personal data is stored no longer than necessary to achieve the processing purposes, or within the periods established by Uzbekistan legislation.",
+        s7_p2: "Upon achieving the processing purposes, personal data is subject to deletion or anonymization.",
+        s8_title: "User Rights",
+        s8_p: "The User has the right to:",
+        s8_l1: "Receive information about the processing of their personal data",
+        s8_l2: "Request clarification, blocking or deletion of data",
+        s8_l3: "Withdraw consent to personal data processing",
+        s8_l4: "Appeal the Company's actions to the authorized body",
+        s8_note: "Requests should be sent to the contacts specified in section 11 of this Policy: <a href='mailto:info@whirl.uz'>info@whirl.uz</a>",
+        s9_title: "Cookies and Analytics",
+        s9_p1: "The website may use cookies and similar technologies to:",
+        s9_l1: "Ensure proper website operation", s9_l2: "Analyze user behavior",
+        s9_l3: "Improve usability",
+        s9_p2: "Users may restrict or disable cookies in browser settings, however this may affect website functionality.",
+        s10_title: "Personal Data Protection Measures",
+        s10_p1: "The Company takes necessary organizational and technical measures to protect personal data, including:",
+        s10_l1: "Restricting access to data", s10_l2: "Applying information security tools",
+        s10_l3: "Monitoring and auditing data processing", s10_l4: "Preventing unauthorized access",
+        s10_p2: "Personal data processing complies with legal requirements and the Company's internal regulations.",
+        s11_title: "Contact Information",
+        s11_p: "For questions regarding personal data processing, the User may contact:", s11_tel: "Phone",
+        s12_title: "Policy Changes",
+        s12_p1: "The Company may amend this Policy by posting a new version on the website.",
+        s12_p2: "Continued use of the website after changes constitutes the User's acceptance of the updated Policy.",
+        cf_lbl: "Contact", cf_title: "Have questions?",
+        cf_sub: "Contact us regarding<br>personal data processing.",
+        cf_addr: "Tashkent, A. Navoi st., 28B",
+        footer_copy: '© 2017 «WHIRL» JSC. All rights reserved.',
+      },
+      uz: {
+        nav_home: "Bosh sahifa", nav_disc: "Muhim fakt", nav_careers: "Karyera",
+        badge: "Maxfiylik siyosati", h1a: "Shaxsiy ma'lumotlarni", h1b: "himoya qilish",
+        meta_ver: "2025 yil 15 iyundan kuchga kirgan versiya", meta_law: "547-son qonun 02.07.2019",
+        side_nav: "Bo'limlar", sv_lbl: "Kuchga kirgan sana", note: "Muhim",
+        s1_nav: "Umumiy qoidalar", s2_nav: "Ma'lumotlar operatori", s3_nav: "Ma'lumot kategoriyalari",
+        s4_nav: "Qayta ishlash maqsadlari", s5_nav: "Huquqiy asoslar", s6_nav: "Ma'lumot uzatish",
+        s7_nav: "Saqlash muddatlari", s8_nav: "Foydalanuvchi huquqlari", s9_nav: "Cookies",
+        s10_nav: "Ma'lumot himoyasi", s11_nav: "Aloqa", s12_nav: "Siyosat o'zgarishlari",
+        s1_title: "Umumiy qoidalar",
+        s1_p1: 'Ushbu Maxfiylik va shaxsiy ma\'lumotlarni qayta ishlash siyosati O\'zbekiston Respublikasi qonunchiligiga muvofiq ro\'yxatga olingan "WHIRL" aksiyadorlik jamiyati tomonidan ishlab chiqilgan.',
+        s1_p2: 'Siyosat O\'zbekiston Respublikasining "Shaxsiy ma\'lumotlar to\'g\'risida" gi qonuniga (547-son, 02.07.2019) muvofiq ishlab chiqilgan.',
+        s1_note: '"WHIRL" AJ korporativ saytiga eksklyuziv ravishda qo\'llaniladi va Jamiyatning alohida brendlar ostida taqdim etadigan boshqa saytlar, mahsulotlar yoki xizmatlarga taalluqli emas.',
+        s1_p3: "Saytdan foydalanish foydalanuvchining ushbu siyosat bilan so'zsiz roziligini bildiradi.",
+        s2_title: "Shaxsiy ma'lumotlar operatori",
+        s2_p1: '"WHIRL" aksiyadorlik jamiyati shaxsiy ma\'lumotlar operatori hisoblanadi.',
+        op_addr_lbl: "Yuridik manzil", op_addr: "Toshkent sh., Shayxontohur tumani, A. Navoiy ko'ch., 28B",
+        op_fact_lbl: "Haqiqiy manzil", op_fact: "Toshkent sh., M. Ulug'bek tumani, Muminov ko'ch., 7/2",
+        op_tel_lbl: "Telefon",
+        s2_p2: "Jamiyat shaxsiy ma'lumotlarni mustaqil ravishda qayta ishlaydi va qonunchilik talablariga rioya qilgan holda uchinchi shaxslarga ishlov berishni topshirish huquqiga ega.",
+        s3_title: "Jamiyat tomonidan qayta ishlanadigan shaxsiy ma'lumotlar",
+        s3_sub1: "3.1. Foydalanuvchi tomonidan taqdim etiladigan ma'lumotlar:",
+        s3_l1: "Ism-sharif", s3_l2: "Telefon raqami", s3_l3: "Elektron pochta manzili",
+        s3_l4: "Murojaatlar va fikr-mulohaza shakllarida mavjud ma'lumotlar",
+        s3_l5: "Rezyumedagi ma'lumotlar (vakansiyalarga murojaat qilganda)",
+        s3_l6: "Foydalanuvchi tomonidan ixtiyoriy ravishda taqdim etilgan boshqa ma'lumotlar",
+        s3_sub2: "3.2. Avtomatik to'planadigan ma'lumotlar:",
+        s3_a1: "IP-manzil", s3_a2: "Cookies fayllari ma'lumotlari",
+        s3_a3: "Brauzer va qurilma haqida ma'lumot",
+        s3_a4: "Saytdagi foydalanuvchi harakatlari (sana, vaqt, sahifalar)",
+        s3_note: "Jamiyat foydalanuvchining alohida roziligisiz maxsus toifadagi shaxsiy ma'lumotlarni maqsadli to'plamaydi.",
+        s4_title: "Shaxsiy ma'lumotlarni qayta ishlash maqsadlari",
+        s4_p: "Jamiyat shaxsiy ma'lumotlarni faqat quyidagi maqsadlarda qayta ishlaydi:",
+        s4_l1: "Foydalanuvchilarning murojaatlari va arizalarini ko'rib chiqish", s4_l2: "Foydalanuvchi bilan aloqa ta'minlash",
+        s4_l3: "Ish uchun nomzodlarni ko'rib chiqish", s4_l4: "Saytni yaxshilash va ishlashini ta'minlash",
+        s4_l5: "O'zbekiston Respublikasi qonunchilik talablariga rioya qilish",
+        s4_l6: "Jamiyatning huquq va qonuniy manfaatlarini himoya qilish",
+        s4_p2: "Jamiyat yuqorida ko'rsatilgan maqsadlar bilan nomuvofiq bo'lgan maqsadlarda shaxsiy ma'lumotlarni qayta ishlashni amalga oshirmaydi.",
+        s5_title: "Qayta ishlashning huquqiy asoslari",
+        s5_p: "Shaxsiy ma'lumotlarni qayta ishlash quyidagi asoslar bo'yicha amalga oshiriladi:",
+        s5_l1: "Foydalanuvchining roziligi", s5_l2: "Foydalanuvchi oldidagi majburiyatlarni bajarish zarurati",
+        s5_l3: "O'zbekiston Respublikasi qonunchilik talablarini bajarish",
+        s6_title: "Shaxsiy ma'lumotlarni qayta ishlash va uzatish shartlari",
+        s6_p1: "Jamiyat shaxsiy ma'lumotlar maxfiyligini ta'minlaydi. Uchinchi shaxslarga uzatish faqat quyidagi hollarda ruxsat etiladi:",
+        s6_l1: "Foydalanuvchining roziligi mavjud bo'lganda", s6_l2: "Foydalanuvchi so'rovini bajarish uchun zarur bo'lganda",
+        s6_l3: "Pudratchilarni jalb etishda (hosting, IT-qo'llab-quvvatlash va boshq.)",
+        s6_l4: "O'zbekiston Respublikasi qonunchiligida nazarda tutilgan hollarda",
+        s6_p2: "Bunday shaxslar shaxsiy ma'lumotlarni himoya qilish talablariga rioya etishini Jamiyat ta'minlaydi.",
+        s7_title: "Shaxsiy ma'lumotlarni saqlash muddatlari",
+        s7_p1: "Shaxsiy ma'lumotlar qayta ishlash maqsadlariga erishish uchun zarur bo'lganidan yoki O'zbekiston Respublikasi qonunchiligida belgilangan muddatlardan ko'proq saqlanmaydi.",
+        s7_p2: "Qayta ishlash maqsadlariga erishilgandan so'ng shaxsiy ma'lumotlar o'chiriladi yoki anonimlashtiri.",
+        s8_title: "Foydalanuvchi huquqlari",
+        s8_p: "Foydalanuvchi quyidagi huquqlarga ega:",
+        s8_l1: "Shaxsiy ma'lumotlarining qayta ishlanishi haqida ma'lumot olish",
+        s8_l2: "Ma'lumotlarni aniqlashtirish, bloklash yoki o'chirish talabini qo'yish",
+        s8_l3: "Shaxsiy ma'lumotlarni qayta ishlashga rozilikni qaytarib olish",
+        s8_l4: "Jamiyat harakatlarini vakolatli organga shikoyat qilish",
+        s8_note: "So'rovlar ushbu Siyosatning 11-bo'limida ko'rsatilgan kontaktlar orqali yuboriladi: <a href='mailto:info@whirl.uz'>info@whirl.uz</a>",
+        s9_title: "Cookies fayllari va tahliliyoti",
+        s9_p1: "Sayt quyidagi maqsadlarda cookies va shunga o'xshash texnologiyalardan foydalanishi mumkin:",
+        s9_l1: "Saytning to'g'ri ishlashini ta'minlash", s9_l2: "Foydalanuvchi xatti-harakatlarini tahlil qilish",
+        s9_l3: "Foydalanish qulayligini oshirish",
+        s9_p2: "Foydalanuvchi brauzer sozlamalarida cookiesni cheklashi yoki o'chirib qo'yishi mumkin, lekin bu sayt ishlashiga ta'sir qilishi mumkin.",
+        s10_title: "Shaxsiy ma'lumotlarni himoya qilish choralari",
+        s10_p1: "Jamiyat shaxsiy ma'lumotlarni himoya qilish uchun zarur tashkiliy va texnik choralarni ko'radi:",
+        s10_l1: "Ma'lumotlarga kirishni cheklash", s10_l2: "Axborot himoyasi vositalarini qo'llash",
+        s10_l3: "Ma'lumotlarni qayta ishlashni nazorat qilish va audit", s10_l4: "Ruxsatsiz kirishning oldini olish",
+        s10_p2: "Shaxsiy ma'lumotlarni qayta ishlash qonunchilik talablari va Jamiyatning ichki me'yoriy hujjatlariga muvofiq amalga oshiriladi.",
+        s11_title: "Aloqa ma'lumotlari",
+        s11_p: "Shaxsiy ma'lumotlarni qayta ishlash bo'yicha savollar uchun foydalanuvchi murojaat qilishi mumkin:", s11_tel: "Telefon",
+        s12_title: "Siyosatga o'zgartirishlar",
+        s12_p1: "Jamiyat saytda yangi tahririyatni joylashtirish orqali ushbu Siyosatga o'zgartirishlar kiritish huquqiga ega.",
+        s12_p2: "O'zgartirishlardan so'ng saytdan foydalanishni davom ettirish foydalanuvchining yangilangan Siyosat bilan roziligini bildiradi.",
+        cf_lbl: "Aloqa", cf_title: "Savollaringiz bormi?",
+        cf_sub: "Shaxsiy ma'lumotlarni qayta ishlash<br>bo'yicha biz bilan bog'laning.",
+        cf_addr: "Toshkent, A. Navoiy ko'ch., 28B",
+        footer_copy: '© 2017 «WHIRL» AJ. Barcha huquqlar himoyalangan.',
+      }
+    };
+
+    let lang = localStorage.getItem('whirl_lang') || 'ru';
+    function applyLang(l) {
+      lang = l; localStorage.setItem('whirl_lang', l);
+      const d = T[l];
+      document.querySelectorAll('[data-tr]').forEach(el => {
+        const k = el.getAttribute('data-tr');
+        if (d[k] !== undefined) el.innerHTML = d[k];
+      });
+      document.querySelectorAll('.lang-pill button').forEach(b => b.classList.toggle('active', b.getAttribute('data-lang') === l));
+      document.documentElement.lang = l;
+    }
+    applyLang(lang);
+    document.querySelectorAll('.lang-pill button').forEach(btn => {
+      btn.addEventListener('click', () => applyLang(btn.getAttribute('data-lang')));
+    });
+
+    /* AURORA */
+    (function () {
+      const c = document.getElementById('bgc'), ctx = c.getContext('2d');
+      let W, H, t = 0;
+      const B = [
+        { x: .10, y: .20, rx: .62, ry: .42, a: 0, vx: .00015, vy: .00010, va: .000055, col: [15, 100, 255], alpha: .15 },
+        { x: .82, y: .50, rx: .54, ry: .36, a: 1.2, vx: -.00012, vy: .00017, va: -.00005, col: [140, 60, 255], alpha: .12 },
+        { x: .42, y: .85, rx: .46, ry: .30, a: 2.5, vx: .00020, vy: -.00013, va: .000080, col: [255, 35, 95], alpha: .11 },
+        { x: .92, y: .12, rx: .34, ry: .24, a: .5, vx: -.00013, vy: .00009, va: -.00007, col: [0, 185, 145], alpha: .10 },
+        { x: .58, y: .32, rx: .40, ry: .27, a: 1.8, vx: .00009, vy: .00015, va: .000090, col: [255, 130, 0], alpha: .09 },
+        { x: .22, y: .72, rx: .48, ry: .33, a: 3.1, vx: -.00017, vy: -.00011, va: .000050, col: [0, 195, 255], alpha: .10 },
+      ];
+      const MP = Array.from({ length: 5 }, () => ({ x: Math.random(), y: Math.random(), vx: (Math.random() - .5) * .0003, vy: (Math.random() - .5) * .0003 }));
+      function resize() { W = c.width = window.innerWidth; H = c.height = window.innerHeight; }
+      window.addEventListener('resize', resize); resize();
+      function draw() {
+        ctx.clearRect(0, 0, W, H); ctx.fillStyle=document.documentElement.getAttribute('data-theme')==='light'?'#f5f5f7':'#03030a';ctx.fillRect(0,0,W,H);
+        B.forEach(b => {
+          b.x += Math.sin(t * .0008 + b.vy * 4000) * b.vx * 2.8; b.y += Math.cos(t * .0006 + b.vx * 4000) * b.vy * 2.8; b.a += b.va;
+          b.x = Math.max(.03, Math.min(.97, b.x)); b.y = Math.max(.03, Math.min(.97, b.y));
+          const cx = b.x * W, cy = b.y * H, R = b.rx * Math.max(W, H);
+          const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, R);
+          const [r, gr, bl] = b.col;
+          g.addColorStop(0, `rgba(${r},${gr},${bl},${b.alpha})`);
+          g.addColorStop(.4, `rgba(${r},${gr},${bl},${(b.alpha * .3).toFixed(3)})`);
+          g.addColorStop(1, `rgba(${r},${gr},${bl},0)`);
+          ctx.save(); ctx.translate(cx, cy); ctx.rotate(b.a); ctx.scale(1, b.ry / b.rx);
+          ctx.beginPath(); ctx.arc(0, 0, R, 0, Math.PI * 2); ctx.fillStyle = g; ctx.fill(); ctx.restore();
+        });
+        ctx.lineWidth = .4;
+        for (let i = 0; i < MP.length; i++)for (let j = i + 1; j < MP.length; j++) {
+          const a = MP[i], b = MP[j], dist = Math.hypot((a.x - b.x) * W, (a.y - b.y) * H);
+          if (dist < 280) { ctx.beginPath(); ctx.moveTo(a.x * W, a.y * H); ctx.lineTo(b.x * W, b.y * H); ctx.strokeStyle = `rgba(41,151,255,${(.05 * (1 - dist / 280)).toFixed(3)})`; ctx.stroke(); }
+        }
+        MP.forEach(p => { p.x += p.vx; p.y += p.vy; if (p.x < 0 || p.x > 1) p.vx *= -1; if (p.y < 0 || p.y > 1) p.vy *= -1; });
+        for (let y = 0; y < H; y += 4) { ctx.fillStyle = 'rgba(0,0,0,.018)'; ctx.fillRect(0, y, W, 1); }
+        t++; requestAnimationFrame(draw);
+      }
+      draw();
+    })();
+
+    /* CURSOR */
+    (function () {
+      const dot = document.getElementById('cd'), ring = document.getElementById('cr');
+      let mx = 0, my = 0, rx = 0, ry = 0;
+      document.addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; dot.style.left = mx + 'px'; dot.style.top = my + 'px'; });
+      (function loop() { rx += (mx - rx) * .1; ry += (my - ry) * .1; ring.style.left = rx + 'px'; ring.style.top = ry + 'px'; requestAnimationFrame(loop); })();
+    })();
+
+    /* HEADER */
+    window.addEventListener('scroll', () => {
+      document.getElementById('hdr').classList.toggle('scrolled', scrollY > 40);
+      document.getElementById('backTop').classList.toggle('show', scrollY > 400);
+    });
+
+    /* SCROLL REVEAL */
+    const io = new IntersectionObserver(e => e.forEach(x => { if (x.isIntersecting) { x.target.classList.add('anim-in'); io.unobserve(x.target); } }), { threshold: .1 });
+    document.querySelectorAll('[data-anim]').forEach(el => io.observe(el));
+
+    /* SIDEBAR ACTIVE on scroll */
+    const sections = document.querySelectorAll('.sec-block[id]');
+    const sideLinks = document.querySelectorAll('.side-link');
+    const obs = new IntersectionObserver(entries => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          sideLinks.forEach(l => l.classList.remove('active'));
+          const active = document.querySelector(`.side-link[onclick="scrollTo('${e.target.id}')"]`);
+          if (active) active.classList.add('active');
+        }
+      });
+    }, { threshold: .4, rootMargin: '-80px 0px -40% 0px' });
+    sections.forEach(s => obs.observe(s));
+
+    function scrollTo(id) {
+      const el = document.getElementById(id);
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    (function(){
+      const burger=document.getElementById('burger'),mobNav=document.getElementById('mobNav');
+      if(burger){
+        burger.addEventListener('click',()=>{burger.classList.toggle('open');mobNav.classList.toggle('active');});
+        mobNav.querySelectorAll('a').forEach(a=>{a.addEventListener('click',()=>{burger.classList.remove('open');mobNav.classList.remove('active');});});
+      }
+    })();
+  </script>
+  <script>
+  /* ── Theme toggle (persisted) ── */
+  (function(){
+    var root=document.documentElement;
+    var stored=localStorage.getItem('whirl-theme');
+    var prefersDark=window.matchMedia('(prefers-color-scheme:dark)').matches;
+    var initial=stored||(prefersDark?'dark':'light');
+    if(initial==='light') root.setAttribute('data-theme','light');
+    function applyCanvas(){
+      var canvas=document.getElementById('bgc');
+      if(!canvas) return;
+      /* canvas bg will auto-pick next frame via draw loop */
+      canvas._lightMode=(root.getAttribute('data-theme')==='light');
+    }
+    applyCanvas();
+    document.addEventListener('DOMContentLoaded',function(){
+      var btn=document.getElementById('themeToggle');
+      if(!btn) return;
+      btn.addEventListener('click',function(){
+        var isLight=root.getAttribute('data-theme')==='light';
+        if(isLight){
+          root.removeAttribute('data-theme');
+          localStorage.setItem('whirl-theme','dark');
+        } else {
+          root.setAttribute('data-theme','light');
+          localStorage.setItem('whirl-theme','light');
+        }
+        applyCanvas();
+        /* update canvas bg color reference */
+        if(window._canvasBg!==undefined){
+          window._canvasBg=root.getAttribute('data-theme')==='light'?'#f5f5f7':'#03030a';
+        }
+      });
+    });
+  })();
+  </script>
+
+</body>
+
+</html>

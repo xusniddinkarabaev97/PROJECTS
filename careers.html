@@ -1,0 +1,2159 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>АО Whirl — Вакансии</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=DM+Serif+Display:ital@0;1&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg: #03030a;
+            --sf: rgba(255, 255, 255, .042);
+            --sf2: rgba(255, 255, 255, .08);
+            --bd: rgba(255, 255, 255, .08);
+            --bd2: rgba(255, 255, 255, .18);
+            --t: #f2f2f7;
+            --t2: rgba(242, 242, 247, .55);
+            --t3: rgba(242, 242, 247, .26);
+            --ac: #2997ff;
+            --acd: rgba(41, 151, 255, .12);
+            --ease: cubic-bezier(.16, 1, .3, 1);
+        }
+
+        *,
+        *::before,
+        *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--t);
+            font-family: 'DM Sans', -apple-system, sans-serif;
+            overflow-x: hidden;
+            cursor: none;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        #bgc {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        .grain {
+            position: fixed;
+            inset: -50%;
+            z-index: 1;
+            width: 200%;
+            height: 200%;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23g)' opacity='0.04'/%3E%3C/svg%3E");
+            pointer-events: none;
+            animation: grain .45s steps(1) infinite;
+        }
+
+        @keyframes grain {
+
+            0%,
+            100% {
+                transform: translate(0, 0)
+            }
+
+            20% {
+                transform: translate(-1%, -2%)
+            }
+
+            40% {
+                transform: translate(2%, 1%)
+            }
+
+            60% {
+                transform: translate(-2%, 2%)
+            }
+
+            80% {
+                transform: translate(1%, -1%)
+            }
+        }
+
+        .cur-dot {
+            width: 8px;
+            height: 8px;
+            background: white;
+            border-radius: 50%;
+            position: fixed;
+            z-index: 9999;
+            pointer-events: none;
+            transform: translate(-50%, -50%);
+            mix-blend-mode: difference;
+            transition: transform .15s var(--ease);
+        }
+
+        .cur-ring {
+            width: 36px;
+            height: 36px;
+            border: 1px solid rgba(255, 255, 255, .3);
+            border-radius: 50%;
+            position: fixed;
+            z-index: 9998;
+            pointer-events: none;
+            transform: translate(-50%, -50%);
+        }
+
+        body:has(a:hover) .cur-dot,
+        body:has(button:hover) .cur-dot {
+            transform: translate(-50%, -50%) scale(2.5);
+        }
+
+        header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 900;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 40px;
+            background: rgba(3, 3, 10, .72);
+            backdrop-filter: blur(24px) saturate(200%);
+            -webkit-backdrop-filter: blur(24px) saturate(200%);
+            border-bottom: 1px solid var(--bd);
+            transition: background .4s;
+        }
+
+        header.scrolled {
+            background: rgba(3, 3, 10, .92);
+        }
+
+        .logo-t {
+            font-family: 'DM Serif Display', serif;
+            font-size: 19px;
+            letter-spacing: -.3px;
+            color: var(--t);
+        }
+
+        nav {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 36px;
+        }
+
+        nav a {
+            font-size: 13px;
+            font-weight: 400;
+            color: var(--t2);
+            transition: color .2s;
+            white-space: nowrap;
+        }
+
+        nav a:hover,
+        nav a.active {
+            color: var(--t);
+        }
+
+        nav a.active {
+            border-bottom: 1px solid var(--ac);
+            padding-bottom: 2px;
+        }
+
+        .h-right {
+            display: flex;
+            align-items: center;
+        }
+
+        .lang-pill {
+            display: flex;
+            background: var(--sf);
+            border: 1px solid var(--bd);
+            border-radius: 100px;
+            padding: 2px;
+            gap: 1px;
+        }
+
+        .lang-pill button {
+            background: none;
+            border: none;
+            color: var(--t2);
+            font: 500 11px/1 'DM Sans', sans-serif;
+            padding: 4px 11px;
+            border-radius: 100px;
+            cursor: pointer;
+            transition: all .2s;
+        }
+
+        .lang-pill button.active {
+            background: rgba(255, 255, 255, .14);
+            color: var(--t);
+        }
+
+    .burger { display: none; width: 38px; height: 38px; align-items: center; justify-content: center; cursor: pointer; margin-left: 14px; z-index: 1000; flex-shrink: 0; background: var(--sf); border: 1px solid var(--bd); border-radius: 50%; padding: 0; position: relative; transition: all 0.3s; }
+    .burger:hover { background: var(--sf2); border-color: var(--bd2); transform: scale(1.05); }
+    .burger span { position: absolute; display: block; width: 14px; height: 1.5px; background: var(--t); border-radius: 2px; transition: 0.3s cubic-bezier(.16,1,.3,1); pointer-events: none; }
+    .burger span:nth-child(1) { transform: translateY(-4px); }
+    .burger span:nth-child(2) { transform: translateY(0); }
+    .burger span:nth-child(3) { transform: translateY(4px); }
+    .burger.open span:nth-child(1) { transform: translateY(0) rotate(45deg); }
+    .burger.open span:nth-child(2) { opacity: 0; transform: scale(0); }
+    .burger.open span:nth-child(3) { transform: translateY(0) rotate(-45deg); }
+    .mob-nav { position: fixed; top: 0; left: 0; width: 100%; height: 100vh; background: rgba(3,3,10,0.85); backdrop-filter: blur(24px) saturate(200%); -webkit-backdrop-filter: blur(24px) saturate(200%); z-index: 800; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 32px; opacity: 0; visibility: hidden; transition: opacity 0.4s cubic-bezier(.16,1,.3,1), visibility 0.4s; }
+    .mob-nav::before { content: ''; position: absolute; inset: 0; background: radial-gradient(circle at 50% 50%, rgba(41,151,255,0.08), transparent 70%); pointer-events: none; }
+    .mob-nav.active { opacity: 1; visibility: visible; }
+    .mob-nav a { font-size: 26px; font-weight: 500; font-family: 'DM Sans', sans-serif; color: var(--t2); text-decoration: none; transform: translateY(20px); opacity: 0; transition: color 0.3s, transform 0.4s cubic-bezier(.16,1,.3,1), opacity 0.4s; }
+    .mob-nav a.active, .mob-nav a:hover { color: var(--t); transform: translateY(0) scale(1.05); }
+    .mob-nav.active a { transform: translateY(0); opacity: 1; }
+    .mob-nav a:nth-child(1) { transition-delay: 0.1s; }
+    .mob-nav a:nth-child(2) { transition-delay: 0.15s; }
+    .mob-nav a:nth-child(3) { transition-delay: 0.2s; }
+    @media(max-width:900px){nav{display:none;} .burger{display:flex;}}
+
+        [data-anim] {
+            opacity: 0;
+            transition: opacity .9s var(--ease), transform .9s var(--ease);
+            will-change: transform, opacity;
+        }
+
+        [data-anim="fade-up"] {
+            transform: translateY(50px);
+        }
+
+        [data-anim="fade-left"] {
+            transform: translateX(-60px);
+        }
+
+        [data-anim="scale-up"] {
+            transform: scale(.92) translateY(30px);
+        }
+
+        [data-anim="fade-in"] {
+            transform: none;
+        }
+
+        [data-anim].anim-in {
+            opacity: 1 !important;
+            transform: none !important;
+        }
+
+        [data-stagger]>* {
+            opacity: 0;
+            transform: translateY(28px) scale(.97);
+            transition: opacity .7s var(--ease), transform .7s var(--ease);
+        }
+
+        [data-stagger].anim-in>* {
+            opacity: 1;
+            transform: none;
+        }
+
+        .draw-line {
+            display: block;
+            height: 1px;
+            width: 0;
+            background: linear-gradient(90deg, var(--ac), rgba(191, 100, 255, .6), transparent);
+            transition: width 1.2s var(--ease);
+            margin-bottom: 52px;
+        }
+
+        .draw-line.anim-in {
+            width: 100%;
+        }
+
+        .section {
+            position: relative;
+            z-index: 2;
+            padding: 130px 80px;
+        }
+
+        @media(max-width:900px) {
+            .section {
+                padding: 90px 28px;
+            }
+        }
+
+        .lbl {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 2.5px;
+            text-transform: uppercase;
+            color: var(--ac);
+            margin-bottom: 16px;
+        }
+
+        .lbl-line {
+            display: inline-block;
+            width: 18px;
+            height: 1px;
+            background: var(--ac);
+            opacity: .6;
+        }
+
+        .sec-title {
+            font-family: 'DM Serif Display', serif;
+            font-size: clamp(34px, 5vw, 58px);
+            letter-spacing: -1px;
+            line-height: 1.05;
+            margin-bottom: 52px;
+            color: var(--t);
+        }
+
+        .sec-title em {
+            font-style: italic;
+            color: var(--t2);
+        }
+
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 120px 40px 100px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .hero-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            border: 1px solid var(--bd);
+            background: var(--sf);
+            border-radius: 100px;
+            padding: 6px 18px;
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--t2);
+            margin-bottom: 40px;
+            backdrop-filter: blur(12px);
+            opacity: 0;
+            animation: up .7s .2s var(--ease) forwards;
+        }
+
+        .pulse {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--ac);
+            box-shadow: 0 0 8px var(--ac);
+            animation: pa 2s ease-in-out infinite;
+        }
+
+        @keyframes pa {
+
+            0%,
+            100% {
+                opacity: 1;
+                transform: scale(1)
+            }
+
+            50% {
+                opacity: .35;
+                transform: scale(.55)
+            }
+        }
+
+        .hero-h1 {
+            font-family: 'DM Serif Display', serif;
+            font-size: clamp(54px, 9.5vw, 108px);
+            letter-spacing: -3.5px;
+            line-height: .93;
+            color: var(--t);
+            opacity: 0;
+            animation: up .9s .35s var(--ease) forwards;
+        }
+
+        .hero-grad {
+            background: linear-gradient(120deg, #e0e8ff 0%, #90b8ff 35%, #c08bff 65%, #ff8acd 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            background-size: 200%;
+            animation: gm 6s ease infinite;
+        }
+
+        @keyframes gm {
+
+            0%,
+            100% {
+                background-position: 0%
+            }
+
+            50% {
+                background-position: 100%
+            }
+        }
+
+        .hero-sub {
+            max-width: 500px;
+            margin: 28px auto 0;
+            font-size: 17px;
+            font-weight: 300;
+            color: var(--t2);
+            line-height: 1.65;
+            opacity: 0;
+            animation: up .9s .5s var(--ease) forwards;
+        }
+
+        .scroll-cue {
+            position: absolute;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 9px;
+            color: var(--t3);
+            font-size: 10px;
+            font-weight: 600;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            opacity: 0;
+            animation: fi .8s 1.2s forwards;
+        }
+
+        .scroll-cue svg {
+            width: 16px;
+            height: 16px;
+            animation: bounce 2s ease-in-out infinite;
+        }
+
+        @keyframes bounce {
+
+            0%,
+            100% {
+                transform: translateY(0)
+            }
+
+            50% {
+                transform: translateY(5px)
+            }
+        }
+
+        @keyframes up {
+            from {
+                opacity: 0;
+                transform: translateY(28px)
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0)
+            }
+        }
+
+        @keyframes fi {
+            to {
+                opacity: 1
+            }
+        }
+
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1px;
+            background: var(--bd);
+            border: 1px solid var(--bd);
+            border-radius: 24px;
+            overflow: hidden;
+        }
+
+        .stat-c {
+            background: var(--bg);
+            padding: 36px;
+            transition: background .3s;
+        }
+
+        .stat-c:hover {
+            background: var(--sf);
+        }
+
+        .stat-n {
+            font-family: 'DM Serif Display', serif;
+            font-size: clamp(32px, 4vw, 52px);
+            letter-spacing: -2px;
+            color: var(--t);
+            line-height: 1;
+        }
+
+        .stat-d {
+            margin-top: 8px;
+            font-size: 13px;
+            color: var(--t2);
+        }
+
+        @media(max-width:700px) {
+            .stats-row {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .filter-wrap {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 40px;
+        }
+
+        .filter-btn {
+            padding: 8px 18px;
+            border-radius: 100px;
+            border: 1px solid var(--bd);
+            background: var(--sf);
+            color: var(--t2);
+            font: 500 13px/1 'DM Sans', sans-serif;
+            cursor: pointer;
+            transition: all .25s var(--ease);
+        }
+
+        .filter-btn:hover {
+            border-color: var(--bd2);
+            color: var(--t);
+        }
+
+        .filter-btn.active {
+            background: var(--ac);
+            border-color: var(--ac);
+            color: #fff;
+        }
+
+        .jobs-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .job-card {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+            padding: 28px 32px;
+            background: var(--sf);
+            border: 1px solid var(--bd);
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all .35s var(--ease);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .job-card::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: var(--ac);
+            transform: scaleY(0);
+            transition: transform .3s var(--ease);
+            border-radius: 0 3px 3px 0;
+        }
+
+        .job-card:hover {
+            border-color: var(--bd2);
+            background: var(--sf2);
+            transform: translateX(6px);
+        }
+
+        .job-card:hover::before {
+            transform: scaleY(1);
+        }
+
+        .job-icon {
+            width: 48px;
+            height: 48px;
+            flex-shrink: 0;
+            border-radius: 14px;
+            background: var(--acd);
+            border: 1px solid rgba(41, 151, 255, .18);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--ac);
+            transition: all .3s;
+        }
+
+        .job-icon svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        .job-card:hover .job-icon {
+            background: rgba(41, 151, 255, .22);
+            border-color: rgba(41, 151, 255, .4);
+        }
+
+        .job-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .job-title {
+            font-size: 16px;
+            font-weight: 600;
+            letter-spacing: -.2px;
+            margin-bottom: 6px;
+        }
+
+        .job-meta {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .job-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 3px 10px;
+            border-radius: 100px;
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: .3px;
+        }
+
+        .tag-dept {
+            background: rgba(41, 151, 255, .1);
+            border: 1px solid rgba(41, 151, 255, .2);
+            color: var(--ac);
+        }
+
+        .tag-type {
+            background: rgba(255, 255, 255, .05);
+            border: 1px solid var(--bd);
+            color: var(--t3);
+        }
+
+        .tag-hot {
+            background: rgba(255, 80, 80, .1);
+            border: 1px solid rgba(255, 80, 80, .25);
+            color: #ff5050;
+        }
+
+        .job-right {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+
+        .job-loc {
+            font-size: 12px;
+            color: var(--t3);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .job-loc svg {
+            width: 12px;
+            height: 12px;
+        }
+
+        .job-arrow {
+            color: var(--t3);
+            transition: all .3s;
+        }
+
+        .job-arrow svg {
+            width: 18px;
+            height: 18px;
+            transition: transform .3s;
+        }
+
+        .job-card:hover .job-arrow {
+            color: var(--ac);
+        }
+
+        @media(max-width:700px) {
+            .job-card {
+                flex-wrap: wrap;
+            }
+
+            .job-right {
+                flex-direction: row;
+                align-items: center;
+                width: 100%;
+            }
+        }
+
+        .job-detail {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height .55s var(--ease), padding .4s var(--ease);
+            background: rgba(41, 151, 255, .035);
+            border-radius: 0 0 20px 20px;
+            margin-top: -12px;
+            border: 1px solid rgba(41, 151, 255, .1);
+            border-top: none;
+        }
+
+        .job-detail.open {
+            max-height: 700px;
+            padding: 28px 32px;
+        }
+
+        .job-detail-body {
+            font-size: 14px;
+            color: var(--t2);
+            line-height: 1.8;
+        }
+
+        .jdb-h4 {
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: var(--t3);
+            margin: 20px 0 10px;
+        }
+
+        .jdb-h4:first-child {
+            margin-top: 0;
+        }
+
+        .job-detail-body ul {
+            padding-left: 20px;
+        }
+
+        .job-detail-body li {
+            margin-bottom: 5px;
+        }
+
+        .apply-btn {
+            margin-top: 22px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 11px 22px;
+            border-radius: 100px;
+            background: var(--ac);
+            color: #fff;
+            font: 600 13px/1 'DM Sans', sans-serif;
+            border: none;
+            cursor: pointer;
+            transition: all .25s var(--ease);
+        }
+
+        .apply-btn:hover {
+            transform: scale(1.04);
+            background: #1a87ef;
+            box-shadow: 0 0 24px rgba(41, 151, 255, .4);
+        }
+
+        .apply-btn svg {
+            width: 14px;
+            height: 14px;
+        }
+
+        /* APPLY FORM */
+        .apply-wrap {
+            position: relative;
+            z-index: 2;
+            padding: 0 80px 120px;
+        }
+
+        @media(max-width:900px) {
+            .apply-wrap {
+                padding: 0 28px 80px;
+            }
+        }
+
+        .apply-grid {
+            display: grid;
+            grid-template-columns: 1fr 1.2fr;
+            gap: 2px;
+            border: 1px solid var(--bd);
+            border-radius: 32px;
+            overflow: hidden;
+            background: var(--bd);
+        }
+
+        @media(max-width:900px) {
+            .apply-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .ap-left {
+            background: var(--bg);
+            padding: 60px 52px;
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .ap-left::before {
+            content: '';
+            position: absolute;
+            bottom: -100px;
+            left: -80px;
+            width: 420px;
+            height: 420px;
+            background: radial-gradient(ellipse, rgba(41, 151, 255, .1), transparent 68%);
+            pointer-events: none;
+        }
+
+        .ap-left::after {
+            content: '';
+            position: absolute;
+            top: -50px;
+            right: -50px;
+            width: 250px;
+            height: 250px;
+            background: radial-gradient(ellipse, rgba(140, 60, 255, .07), transparent 68%);
+            pointer-events: none;
+        }
+
+        .ap-lbl {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            color: var(--ac);
+            margin-bottom: 18px;
+        }
+
+        .ap-lbl-line {
+            display: inline-block;
+            width: 16px;
+            height: 1px;
+            background: var(--ac);
+        }
+
+        .ap-title {
+            font-family: 'DM Serif Display', serif;
+            font-size: clamp(28px, 3vw, 42px);
+            letter-spacing: -1.2px;
+            line-height: 1.1;
+            margin-bottom: 18px;
+        }
+
+        .ap-sub {
+            font-size: 13px;
+            font-weight: 300;
+            color: var(--t2);
+            line-height: 1.75;
+            margin-bottom: 36px;
+        }
+
+        .tg-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 20px;
+            background: rgba(36, 159, 255, .08);
+            border: 1px solid rgba(36, 159, 255, .2);
+            border-radius: 16px;
+            margin-bottom: 40px;
+        }
+
+        .tg-badge-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #2AABEE, #229ED9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .tg-badge-icon svg {
+            width: 18px;
+            height: 18px;
+            fill: white;
+        }
+
+        .tg-badge-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--t);
+        }
+
+        .tg-badge-sub {
+            font-size: 11px;
+            color: var(--t3);
+            margin-top: 2px;
+        }
+
+        .ap-tips {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            margin-top: auto;
+        }
+
+        .ap-tip {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .ap-tip-ico {
+            width: 30px;
+            height: 30px;
+            flex-shrink: 0;
+            border-radius: 9px;
+            background: var(--sf2);
+            border: 1px solid var(--bd);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--ac);
+        }
+
+        .ap-tip-ico svg {
+            width: 14px;
+            height: 14px;
+        }
+
+        .ap-tip-txt {
+            font-size: 12px;
+            color: var(--t2);
+            line-height: 1.55;
+            padding-top: 4px;
+        }
+
+        .ap-tip-txt strong {
+            color: var(--t);
+            font-weight: 600;
+            display: block;
+            margin-bottom: 2px;
+        }
+
+        .ap-right {
+            background: rgba(255, 255, 255, .022);
+            padding: 60px 52px;
+        }
+
+        @media(max-width:600px) {
+
+            .ap-left,
+            .ap-right {
+                padding: 36px 24px;
+            }
+        }
+
+        .form-head {
+            margin-bottom: 36px;
+        }
+
+        .form-head-title {
+            font-family: 'DM Serif Display', serif;
+            font-size: 22px;
+            letter-spacing: -.4px;
+            margin-bottom: 6px;
+        }
+
+        .form-head-sub {
+            font-size: 12px;
+            color: var(--t3);
+        }
+
+        .fgroup {
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+            margin-bottom: 24px;
+        }
+
+        .frow {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+        }
+
+        @media(max-width:500px) {
+            .frow {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .field {
+            display: flex;
+            flex-direction: column;
+            gap: 7px;
+        }
+
+        .field label {
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 1.8px;
+            text-transform: uppercase;
+            color: var(--t3);
+        }
+
+        .field input,
+        .field select,
+        .field textarea {
+            background: rgba(255, 255, 255, .035);
+            border: 1px solid var(--bd);
+            border-radius: 12px;
+            padding: 13px 16px;
+            color: var(--t);
+            font: 400 14px/1.4 'DM Sans', sans-serif;
+            outline: none;
+            transition: all .25s var(--ease);
+            width: 100%;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+
+        .field input::placeholder,
+        .field textarea::placeholder {
+            color: var(--t3);
+        }
+
+        .field input:focus,
+        .field select:focus,
+        .field textarea:focus {
+            border-color: var(--ac);
+            background: rgba(41, 151, 255, .07);
+            box-shadow: 0 0 0 3px rgba(41, 151, 255, .1);
+        }
+
+        .field select {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='rgba(242,242,247,0.35)' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 14px center;
+            padding-right: 40px;
+            cursor: pointer;
+        }
+
+        .field select option {
+            background: #0d0d1a;
+        }
+
+        .field textarea {
+            resize: vertical;
+            min-height: 90px;
+            line-height: 1.65;
+        }
+
+        .srow {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .fnote {
+            font-size: 11px;
+            color: var(--t3);
+            line-height: 1.55;
+            max-width: 240px;
+        }
+
+        .sbtn {
+            position: relative;
+            overflow: hidden;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 14px 30px;
+            border-radius: 100px;
+            background: var(--ac);
+            color: #fff;
+            font: 600 14px/1 'DM Sans', sans-serif;
+            border: none;
+            cursor: pointer;
+            flex-shrink: 0;
+            transition: all .3s var(--ease);
+        }
+
+        .sbtn::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(120deg, transparent, rgba(255, 255, 255, .18), transparent);
+            transform: translateX(-100%);
+            transition: transform .5s var(--ease);
+        }
+
+        .sbtn:hover {
+            transform: scale(1.04);
+            box-shadow: 0 0 36px rgba(41, 151, 255, .55);
+        }
+
+        .sbtn:hover::before {
+            transform: translateX(100%);
+        }
+
+        .sbtn.loading {
+            opacity: .7;
+            pointer-events: none;
+        }
+
+        .sbtn svg {
+            width: 16px;
+            height: 16px;
+            transition: transform .25s;
+        }
+
+        .sbtn:hover svg {
+            transform: translateX(4px);
+        }
+
+        .sbtn .tg-ico {
+            width: 16px;
+            height: 16px;
+            fill: white;
+            flex-shrink: 0;
+        }
+
+        .form-success {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 48px 20px;
+            gap: 18px;
+        }
+
+        .form-success.show {
+            display: flex;
+        }
+
+        .suc-ring {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            background: rgba(0, 210, 100, .08);
+            border: 1px solid rgba(0, 210, 100, .25);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #00d264;
+            animation: popIn .5s var(--ease) forwards;
+        }
+
+        @keyframes popIn {
+            from {
+                transform: scale(0) rotate(-10deg);
+            }
+
+            to {
+                transform: scale(1) rotate(0deg);
+            }
+        }
+
+        .suc-ring svg {
+            width: 30px;
+            height: 30px;
+        }
+
+        .suc-h {
+            font-family: 'DM Serif Display', serif;
+            font-size: 24px;
+            letter-spacing: -.5px;
+        }
+
+        .suc-p {
+            font-size: 13px;
+            color: var(--t2);
+            line-height: 1.6;
+            max-width: 280px;
+        }
+
+        .suc-tg {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 18px;
+            background: rgba(41, 151, 255, .1);
+            border: 1px solid rgba(41, 151, 255, .2);
+            border-radius: 100px;
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--ac);
+            margin-top: 4px;
+        }
+
+        .suc-tg svg {
+            width: 13px;
+            height: 13px;
+        }
+
+        .suc-back {
+            padding: 10px 22px;
+            border-radius: 100px;
+            background: var(--sf);
+            border: 1px solid var(--bd);
+            color: var(--t2);
+            font: 500 12px/1 'DM Sans', sans-serif;
+            cursor: pointer;
+            transition: all .2s;
+            margin-top: 4px;
+        }
+
+        .suc-back:hover {
+            background: var(--sf2);
+            color: var(--t);
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 32px;
+            left: 50%;
+            transform: translateX(-50%) translateY(80px);
+            z-index: 9000;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 13px 22px;
+            border-radius: 100px;
+            background: #1a0a0a;
+            border: 1px solid rgba(255, 80, 80, .3);
+            font-size: 13px;
+            font-weight: 500;
+            color: #ff6b6b;
+            transition: transform .4s var(--ease), opacity .4s;
+            pointer-events: none;
+            opacity: 0;
+        }
+
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+
+        .toast svg {
+            width: 14px;
+            height: 14px;
+            flex-shrink: 0;
+        }
+
+        footer {
+            position: relative;
+            z-index: 2;
+            border-top: 1px solid var(--bd);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 26px 80px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .ft-logo {
+            font-family: 'DM Serif Display', serif;
+            font-size: 15px;
+            color: var(--t3);
+        }
+
+        .ft-copy {
+            font-size: 11px;
+            color: var(--t3);
+        }
+
+        .ft-links {
+            display: flex;
+            gap: 24px;
+        }
+
+        .ft-links a {
+            font-size: 11px;
+            color: var(--t3);
+            transition: color .2s;
+        }
+
+        .ft-links a:hover {
+            color: var(--t2);
+        }
+
+        @media(max-width:700px) {
+            footer {
+                padding: 24px 28px;
+                flex-direction: column;
+            }
+        }
+
+        /* ── No Vacancies Empty State ── */
+        .no-vac-wrap {
+            text-align: center;
+            padding: 80px 40px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            background: var(--sf);
+            border: 1px solid var(--bd);
+            border-radius: 28px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .no-vac-wrap::before {
+            content: '';
+            position: absolute;
+            top: -120px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 600px;
+            height: 400px;
+            background: radial-gradient(ellipse, rgba(41, 151, 255, .07), transparent 70%);
+            pointer-events: none;
+        }
+
+        .no-vac-icon {
+            width: 80px;
+            height: 80px;
+            border-radius: 22px;
+            background: var(--acd);
+            border: 1px solid rgba(41, 151, 255, .18);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--ac);
+            margin-bottom: 4px;
+        }
+
+        .no-vac-icon svg {
+            width: 34px;
+            height: 34px;
+        }
+
+        .no-vac-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            padding: 5px 16px;
+            border-radius: 100px;
+            background: rgba(255, 190, 60, .08);
+            border: 1px solid rgba(255, 190, 60, .25);
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 1.8px;
+            text-transform: uppercase;
+            color: #ffbe3c;
+        }
+
+        .no-vac-badge::before {
+            content: '';
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #ffbe3c;
+            box-shadow: 0 0 8px #ffbe3c;
+            animation: pa 2s ease-in-out infinite;
+        }
+
+        .no-vac-h {
+            font-family: 'DM Serif Display', serif;
+            font-size: clamp(24px, 3.5vw, 36px);
+            letter-spacing: -1px;
+            color: var(--t);
+            line-height: 1.15;
+        }
+
+        .no-vac-p {
+            font-size: 15px;
+            font-weight: 300;
+            color: var(--t2);
+            line-height: 1.7;
+            max-width: 460px;
+        }
+
+        .no-vac-actions {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            margin-top: 8px;
+        }
+
+        .no-vac-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 13px 30px;
+            border-radius: 100px;
+            background: var(--ac);
+            color: #fff;
+            font: 600 14px/1 'DM Sans', sans-serif;
+            transition: all .3s var(--ease);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .no-vac-btn::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(120deg, transparent, rgba(255,255,255,.18), transparent);
+            transform: translateX(-100%);
+            transition: transform .5s var(--ease);
+        }
+
+        .no-vac-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 36px rgba(41, 151, 255, .5);
+        }
+
+        .no-vac-btn:hover::before {
+            transform: translateX(100%);
+        }
+
+        .no-vac-hint {
+            font-size: 11px;
+            color: var(--t3);
+        }
+
+        @media(max-width:600px) {
+            .no-vac-wrap {
+                padding: 52px 24px;
+            }
+        }
+    
+    /* =========================================
+       LIGHT MODE — data-theme="light" on <html>
+       ========================================= */
+    [data-theme="light"]{
+      --bg:#f5f5f7;
+      --sf:rgba(0,0,0,.04);
+      --sf2:rgba(0,0,0,.08);
+      --bd:rgba(0,0,0,.1);
+      --bd2:rgba(0,0,0,.22);
+      --t:#1d1d1f;
+      --t2:rgba(29,29,31,.56);
+      --t3:rgba(29,29,31,.32);
+      --ac:#0071e3;
+      --acd:rgba(0,113,227,.1);
+    }
+    /* Header & nav overrides */
+    [data-theme="light"] header{background:rgba(245,245,247,.82)!important;}
+    [data-theme="light"] header.scrolled{background:rgba(245,245,247,.96)!important;}
+    [data-theme="light"] .mob-nav{background:rgba(245,245,247,.95)!important;}
+    [data-theme="light"] #intro{background:#f5f5f7!important;}
+    [data-theme="light"] .lang-pill button.active{background:rgba(0,0,0,.12);color:var(--t);}
+    [data-theme="light"] .cur-ring{border-color:rgba(0,0,0,.18);}
+    [data-theme="light"] .cur-dot{background:#1d1d1f;}
+    [data-theme="light"] .btn-w{background:#1d1d1f;color:#f5f5f7;}
+    [data-theme="light"] .btn-w:hover{background:#333;}
+    [data-theme="light"] .hero-grad{
+      background:linear-gradient(120deg,#003399 0%,#0055cc 35%,#7700cc 65%,#cc0066 100%);
+      -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;background-size:200%;
+    }
+    [data-theme="light"] .metrics-wrap,[data-theme="light"] .info-grid{background:var(--bd);}
+    [data-theme="light"] .met,[data-theme="light"] .info-cell{background:var(--bg);}
+    [data-theme="light"] .met:hover,[data-theme="light"] .info-cell:hover{background:var(--sf);}
+    /* Smooth transitions for theme switch */
+    body,header,.mob-nav,#intro,.pcard,.doc-row,.info-cell,.met,.ct-wrap,
+    .lang-pill,.doc-ico,.info-pill,.lbl,.ticker-item,.ft-logo,.ft-copy,.ft-links a{
+      transition:background .35s ease,color .35s ease,border-color .35s ease,box-shadow .35s ease!important;
+    }
+    /* ── Theme Toggle Button ── */
+    .theme-toggle{
+      position:relative;display:inline-flex;align-items:center;justify-content:center;
+      width:34px;height:34px;border-radius:50%;
+      background:var(--sf);border:1px solid var(--bd);
+      cursor:pointer;margin-left:8px;flex-shrink:0;
+      transition:background .25s,border-color .25s,transform .25s;
+      overflow:hidden;
+    }
+    .theme-toggle:hover{background:var(--sf2);border-color:var(--bd2);transform:scale(1.08);}
+    .theme-toggle .t-icon{
+      position:absolute;width:15px;height:15px;
+      color:var(--t2);transition:transform .4s cubic-bezier(.16,1,.3,1),opacity .3s;
+    }
+    .t-moon{opacity:1;transform:rotate(0deg) scale(1);}
+    .t-sun{opacity:0;transform:rotate(90deg) scale(.4);}
+    [data-theme="light"] .t-moon{opacity:0;transform:rotate(-90deg) scale(.4);}
+    [data-theme="light"] .t-sun{opacity:1;transform:rotate(0deg) scale(1);}
+    [data-theme="light"] .theme-toggle:hover{background:var(--sf2);}
+
+  </style>
+</head>
+
+<body>
+
+    <canvas id="bgc"></canvas>
+    <div class="grain"></div>
+    <div class="cur-dot" id="cd"></div>
+    <div class="cur-ring" id="cr"></div>
+
+    <header id="hdr">
+        <a href="index.html" class="logo-t">Whirl</a>
+        <nav>
+            <a href="index.html" data-tr="nav_home">Главная</a>
+            <a href="#" onclick="return false;" style="opacity:.5;cursor:default;">ODU</a>
+            <a href="about.html" data-tr="nav_about">О нас</a>
+            <a href="careers.html" class="active" data-tr="nav_careers">Карьера</a>
+        </nav>
+        <div class="h-right">
+            <div class="lang-pill">
+                <button data-lang="ru" class="active">RU</button>
+                <button data-lang="en">ENG</button>
+                <button data-lang="uz">UZ</button>
+            </div>
+            <button class="burger" id="burger"><span></span><span></span><span></span></button>
+            <button class="theme-toggle" id="themeToggle" title="Тема / Theme"><svg class="t-icon t-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg><svg class="t-icon t-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg></button>
+        </div>
+    </header>
+
+    <div class="mob-nav" id="mobNav">
+        <a href="#" onclick="return false;" style="opacity:.5;cursor:default;">ODU</a>
+        <a href="about.html" data-tr="nav_about">О нас</a>
+        <a href="careers.html" data-tr="nav_careers">Карьера</a>
+    </div>
+
+    <!-- HERO -->
+    <section class="hero">
+        <div class="hero-tag"><span class="pulse"></span><span data-tr="hero_tag">АО «WHIRL» · Вакансии</span></div>
+        <h1 class="hero-h1">
+            <span data-tr="hero_h1a">Работайте</span><br>
+            <span class="hero-grad" data-tr="hero_h1b">с нами</span>
+        </h1>
+        <p class="hero-sub" data-tr="hero_sub">Мы строим финансовую инфраструктуру нового поколения. Присоединяйтесь к
+            команде профессионалов.</p>
+        <div class="scroll-cue">
+            <span data-tr="scroll">Прокрутить</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
+                stroke-linejoin="round">
+                <polyline points="6 9 12 15 18 9" />
+            </svg>
+        </div>
+    </section>
+
+    <!-- STATS -->
+    <section class="section" style="padding-top:0;">
+        <div class="stats-row" data-stagger>
+            <div class="stat-c">
+                <div class="stat-n">2</div>
+                <div class="stat-d" data-tr="stat1">Открытых вакансий</div>
+            </div>
+            <div class="stat-c">
+                <div class="stat-n">2017</div>
+                <div class="stat-d" data-tr="stat2">Год основания</div>
+            </div>
+            <div class="stat-c">
+                <div class="stat-n" data-tr="stat3_city">Ташкент</div>
+                <div class="stat-d" data-tr="stat3">Расположение офиса</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- VACANCIES -->
+    <section class="section" id="vacancies">
+        <div data-anim="fade-left"><span class="lbl"><span class="lbl-line"></span><span
+                    data-tr="lbl_vac">Вакансии</span></span></div>
+        <div data-anim="fade-left" style="transition-delay:.1s">
+            <h2 class="sec-title"><span data-tr="vac_t1">Открытые</span><br><em data-tr="vac_t2">позиции</em></h2>
+        </div>
+        <div class="draw-line" data-anim="fade-in"></div>
+
+        <div class="no-vac-wrap" data-anim="fade-up" style="transition-delay:.1s; display:none">
+            <div class="no-vac-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="3"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg>
+            </div>
+            <div class="no-vac-badge" data-tr="no_vac_badge">В разработке</div>
+            <h3 class="no-vac-h" data-tr="no_vac_h">Свободных вакансий пока нет</h3>
+            <p class="no-vac-p" data-tr="no_vac_p">Мы постоянно растём и скоро откроем новые позиции.<br>Оставьте заявку — мы свяжемся, когда появится подходящая вакансия.</p>
+            <div class="no-vac-actions">
+                <a href="#apply" class="no-vac-btn" data-tr="no_vac_btn">Отправить резюме</a>
+                <div class="no-vac-hint" data-tr="no_vac_hint">Ответим в течение 3 рабочих дней</div>
+            </div>
+        </div>
+
+        <div class="jobs-grid" id="jobsGrid" data-anim="fade-up" style="transition-delay:.2s">
+
+            <!-- 1 — Специалист по эквайрингу -->
+            <div class="job-card" data-cat="payment" onclick="toggleJob(this)">
+                <div class="job-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="2" y="5" width="20" height="14" rx="2" />
+                        <line x1="2" y1="10" x2="22" y2="10" />
+                    </svg></div>
+                <div class="job-info">
+                    <div class="job-title" data-tr="j1t">Специалист по эквайрингу</div>
+                    <div class="job-meta"><span class="job-tag tag-dept" data-tr="f_pay">Платёжные системы</span><span
+                            class="job-tag tag-type" data-tr="full">Полная занятость</span><span class="job-tag tag-hot"
+                            data-tr="hot">Горячая</span></div>
+                </div>
+                <div class="job-right">
+                    <div class="job-loc"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                            <circle cx="12" cy="10" r="3" />
+                        </svg><span data-tr="loc">Ташкент</span></div>
+                    <div class="job-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="6 9 12 15 18 9" />
+                        </svg></div>
+                </div>
+            </div>
+            <div class="job-detail">
+                <div class="job-detail-body">
+                    <div class="jdb-h4" data-tr="resp">Обязанности</div>
+                    <ul>
+                        <li data-tr="j1r1">Подключение и сопровождение торговых точек к эквайрингу</li>
+                        <li data-tr="j1r2">Настройка POS-терминалов и интеграция с платёжными системами</li>
+                        <li data-tr="j1r3">Мониторинг транзакций и разрешение диспутов</li>
+                    </ul>
+                    <div class="jdb-h4" data-tr="req">Требования</div>
+                    <ul>
+                        <li data-tr="j1q1">Опыт работы в эквайринге или платёжных системах от 1 года</li>
+                        <li data-tr="j1q2">Знание протоколов карточных платежей (Uzcard, Humo, Visa, MC)</li>
+                        <li data-tr="j1q3">Внимательность к деталям, аналитический склад ума</li>
+                    </ul>
+                    <button class="apply-btn" onclick="openForm(event,'j1t')"><svg viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M22 2L11 13" />
+                            <path d="M22 2L15 22 11 13 2 9l20-7z" />
+                        </svg><span data-tr="apply_btn">Откликнуться</span></button>
+                </div>
+            </div>
+
+            <!-- 2 — Project Manager -->
+            <div class="job-card" data-cat="payment" onclick="toggleJob(this)">
+                <div class="job-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                        <polyline points="14 2 14 8 20 8" />
+                        <line x1="16" y1="13" x2="8" y2="13" />
+                        <line x1="16" y1="17" x2="8" y2="17" />
+                    </svg></div>
+                <div class="job-info">
+                    <div class="job-title" data-tr="j2t">Project Manager (Fintech)</div>
+                    <div class="job-meta"><span class="job-tag tag-dept" data-tr="f_pay">Платёжные системы</span><span
+                            class="job-tag tag-type" data-tr="full">Полная занятость</span><span class="job-tag tag-hot"
+                            data-tr="hot">Горячая</span></div>
+                </div>
+                <div class="job-right">
+                    <div class="job-loc"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                            <circle cx="12" cy="10" r="3" />
+                        </svg><span data-tr="loc">Ташкент</span></div>
+                    <div class="job-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="6 9 12 15 18 9" />
+                        </svg></div>
+                </div>
+            </div>
+            <div class="job-detail">
+                <div class="job-detail-body">
+                    <div class="jdb-h4" data-tr="resp">Обязанности</div>
+                    <ul>
+                        <li data-tr="j2r1">Управление проектами в сфере платёжных технологий</li>
+                        <li data-tr="j2r2">Координация команды разработки, дизайна и бизнеса</li>
+                        <li data-tr="j2r3">Контроль сроков, бюджета и качества продукта</li>
+                    </ul>
+                    <div class="jdb-h4" data-tr="req">Требования</div>
+                    <ul>
+                        <li data-tr="j2q1">Опыт управления проектами от 2 лет (Fintech — плюс)</li>
+                        <li data-tr="j2q2">Знание Agile / Scrum методологий</li>
+                        <li data-tr="j2q3">Навыки работы с Jira, Confluence, Figma</li>
+                    </ul>
+                    <button class="apply-btn" onclick="openForm(event,'j2t')"><svg viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M22 2L11 13" />
+                            <path d="M22 2L15 22 11 13 2 9l20-7z" />
+                        </svg><span data-tr="apply_btn">Откликнуться</span></button>
+                </div>
+            </div>
+
+
+
+        </div>
+    </section>
+
+    <!-- APPLY FORM -->
+    <div class="apply-wrap" id="apply">
+        <div data-anim="scale-up">
+            <div class="apply-grid">
+                <div class="ap-left">
+                    <div>
+                        <div class="ap-lbl"><span class="ap-lbl-line"></span><span data-tr="ap_lbl">Отклик</span></div>
+                        <h2 class="ap-title" data-tr="ap_title">Отправьте заявку<br>прямо сейчас</h2>
+                        <p class="ap-sub" data-tr="ap_sub">Заполните форму — ответ придёт в течение 3 рабочих дней. Все
+                            заявки поступают напрямую в HR через Telegram.</p>
+                        <div class="tg-badge">
+                            <div class="tg-badge-icon"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path
+                                        d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12L7.28 13.4l-2.96-.924c-.643-.204-.657-.643.136-.953l11.57-4.461c.537-.194 1.006.131.868.159z" />
+                                </svg></div>
+                            <div>
+                                <div class="tg-badge-title" data-tr="tg_title">Уведомления в Telegram</div>
+                                <div class="tg-badge-sub" data-tr="tg_sub">HR получает заявку мгновенно</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="ap-tips">
+                        <div class="ap-tip">
+                            <div class="ap-tip-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <polyline points="20 6 9 17 4 12" />
+                                </svg></div>
+                            <div class="ap-tip-txt"><strong data-tr="tip1h">Укажите контакт</strong><span
+                                    data-tr="tip1b">Telegram @username или номер — для быстрой связи</span></div>
+                        </div>
+                        <div class="ap-tip">
+                            <div class="ap-tip-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <polyline points="20 6 9 17 4 12" />
+                                </svg></div>
+                            <div class="ap-tip-txt"><strong data-tr="tip2h">Опишите опыт</strong><span
+                                    data-tr="tip2b">Кратко — ключевые навыки и мотивация</span></div>
+                        </div>
+                        <div class="ap-tip">
+                            <div class="ap-tip-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <polyline points="20 6 9 17 4 12" />
+                                </svg></div>
+                            <div class="ap-tip-txt"><strong data-tr="tip3h">Ответ за 3 дня</strong><span
+                                    data-tr="tip3b">Рассматриваем каждую анкету лично</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="ap-right">
+                    <div id="formWrap">
+                        <div class="form-head">
+                            <div class="form-head-title" data-tr="form_title">Анкета кандидата</div>
+                            <div class="form-head-sub" data-tr="form_sub">Все поля обязательны для заполнения</div>
+                        </div>
+                        <div class="fgroup">
+                            <div class="frow">
+                                <div class="field"><label data-tr="fl_name">Имя и фамилия</label><input type="text"
+                                        id="fName" placeholder="Sardor Yusupov"></div>
+                                <div class="field"><label data-tr="fl_contact">Telegram / Телефон</label><input
+                                        type="text" id="fContact" placeholder="@username или +998..."></div>
+                            </div>
+                            <div class="field">
+                                <label data-tr="fl_pos">Желаемая должность</label>
+                                <select id="fPos">
+                                    <option value="" data-tr="pos_ph">— Выберите вакансию —</option>
+                                    <option value="Специалист по эквайрингу" data-tr="j1t">Специалист по эквайрингу
+                                    </option>
+                                    <option value="Project Manager (Fintech)" data-tr="j2t">Project Manager (Fintech)
+                                    </option>
+                                    <option value="Открытый отклик" data-tr="pos_open">Открытый отклик</option>
+                                </select>
+                            </div>
+                            <div class="frow">
+                                <div class="field">
+                                    <label data-tr="fl_exp">Опыт работы</label>
+                                    <select id="fExp">
+                                        <option value="" data-tr="exp_ph">— Выберите —</option>
+                                        <option value="Без опыта" data-tr="e0">Без опыта</option>
+                                        <option value="До 1 года" data-tr="e1">До 1 года</option>
+                                        <option value="1–3 года" data-tr="e2">1–3 года</option>
+                                        <option value="3–5 лет" data-tr="e3">3–5 лет</option>
+                                        <option value="5+ лет" data-tr="e4">5+ лет</option>
+                                    </select>
+                                </div>
+                                <div class="field"><label data-tr="fl_salary">Ожидаемая зарплата</label><input
+                                        type="text" id="fSalary" placeholder="2 500 000 сум"></div>
+                            </div>
+                            <div class="field"><label data-tr="fl_about">О себе (кратко)</label><textarea id="fAbout"
+                                    placeholder="Ключевые навыки, опыт, почему хотите работать в Whirl..."></textarea>
+                            </div>
+                        </div>
+                        <div class="srow">
+                            <div class="fnote" data-tr="fnote">Отправляя форму, вы соглашаетесь на обработку
+                                персональных данных.</div>
+                            <button class="sbtn" id="submitBtn" onclick="submitToTelegram()">
+                                <svg class="tg-ico" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path
+                                        d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12L7.28 13.4l-2.96-.924c-.643-.204-.657-.643.136-.953l11.57-4.461c.537-.194 1.006.131.868.159z" />
+                                </svg>
+                                <span data-tr="submit_btn">Отправить в Telegram</span>
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                    stroke-linecap="round" stroke-linejoin="round">
+                                    <line x1="5" y1="12" x2="19" y2="12" />
+                                    <polyline points="12 5 19 12 12 19" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="form-success" id="formSuccess">
+                        <div class="suc-ring"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="20 6 9 17 4 12" />
+                            </svg></div>
+                        <div class="suc-h" data-tr="suc_h">Заявка отправлена!</div>
+                        <div class="suc-p" data-tr="suc_p">HR-команда получила вашу анкету в Telegram и свяжется с вами
+                            в течение 3 рабочих дней.</div>
+                        <div class="suc-tg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M22 2L11 13" />
+                                <path d="M22 2L15 22 11 13 2 9l20-7z" />
+                            </svg><span data-tr="suc_tg">Сообщение доставлено в HR-канал</span></div>
+                        <button class="suc-back" onclick="resetForm()" data-tr="suc_back">← Отправить ещё одну
+                            заявку</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+            stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10" />
+            <line x1="12" y1="8" x2="12" y2="12" />
+            <line x1="12" y1="16" x2="12.01" y2="16" />
+        </svg>
+        <span id="toastMsg"></span>
+    </div>
+
+    <footer>
+        <span class="ft-logo">Whirl</span>
+        <div class="ft-links">
+            <a href="index.html" data-tr="nav_home">Главная</a>
+            <a href="#" onclick="return false;" style="opacity:.5;cursor:default;">ODU</a>
+            <a href="privacy.html" data-tr="nav_privacy">Конфиденциальность</a>
+        </div>
+        <span class="ft-copy" data-tr="footer_copy">© 2025 АО «WHIRL». Все права защищены.</span>
+    </footer>
+
+    <script>
+        const TG_TOKEN = '8681020877:AAHsXOWYbIixL1ibEfOI6xcFKsLzB3ieq5M';
+        const TG_CHAT_ID = '7806213916';
+
+        const TR = {
+            ru: {
+                nav_home: "Главная", nav_about: "О нас", nav_careers: "Карьера", nav_privacy: "Конфиденциальность",
+                hero_tag: 'АО «WHIRL» · Вакансии', hero_h1a: "Работайте", hero_h1b: "с нами",
+                hero_sub: "Мы строим финансовую инфраструктуру нового поколения. Присоединяйтесь к команде профессионалов.",
+                scroll: "Прокрутить", stat1: "Открытых вакансий", stat2: "Год основания", stat3: "Расположение офиса", stat3_city: "Ташкент",
+                lbl_vac: "Вакансии", vac_t1: "Открытые", vac_t2: "позиции",
+                no_vac_badge: "В разработке", no_vac_h: "Свободных вакансий пока нет",
+                no_vac_p: "Мы постоянно растём и скоро откроем новые позиции.<br>Оставьте заявку — мы свяжемся, когда появится подходящая вакансия.",
+                no_vac_btn: "Отправить резюме", no_vac_hint: "Ответим в течение 3 рабочих дней",
+                f_all: "Все", f_pay: "Платёжные системы",
+                full: "Полная занятость", hot: "Горячая", loc: "Ташкент", hybrid: "Гибрид",
+                resp: "Обязанности", req: "Требования", apply_btn: "Откликнуться",
+                j1t: "Специалист по эквайрингу", j2t: "Project Manager (Fintech)", j3t: "Системный администратор", j4t: "Backend-разработчик (Fintech)",
+                j1r1: "Подключение и сопровождение торговых точек к эквайрингу", j1r2: "Настройка POS-терминалов и интеграция с платёжными системами", j1r3: "Мониторинг транзакций и разрешение диспутов",
+                j1q1: "Опыт работы в эквайринге или платёжных системах от 1 года", j1q2: "Знание протоколов карточных платежей (Uzcard, Humo, Visa, MC)", j1q3: "Внимательность к деталям, аналитический склад ума",
+                j2r1: "Управление проектами в сфере платёжных технологий", j2r2: "Координация команды разработки, дизайна и бизнеса", j2r3: "Контроль сроков, бюджета и качества продукта",
+                j2q1: "Опыт управления проектами от 2 лет (Fintech — плюс)", j2q2: "Знание Agile / Scrum методологий", j2q3: "Навыки работы с Jira, Confluence, Figma",
+                j3r1: "Администрирование серверной инфраструктуры платёжной системы", j3r2: "Обеспечение информационной безопасности и отказоустойчивости", j3r3: "Поддержка пользователей, сетевого оборудования и ПО",
+                j3q1: "Опыт системного администрирования от 2 лет", j3q2: "Linux, Windows Server, сетевые технологии", j3q3: "Опыт в финансовом / платёжном секторе — плюс",
+                j4r1: "Разработка и поддержка финансовых API и платёжных модулей", j4r2: "Интеграция с банками, Uzcard, Humo, Visa, Mastercard", j4r3: "Обеспечение безопасности и стабильности транзакций",
+                j4q1: "Python / Java / Go / Node.js — опыт от 3 лет", j4q2: "Опыт работы с REST API, микросервисами, очередями", j4q3: "Понимание финансовых протоколов и стандартов PCI DSS",
+                ap_lbl: "Отклик", ap_title: "Отправьте заявку<br>прямо сейчас",
+                ap_sub: "Заполните форму — ответ придёт в течение 3 рабочих дней. Все заявки поступают напрямую в HR через Telegram.",
+                tg_title: "Уведомления в Telegram", tg_sub: "HR получает заявку мгновенно",
+                tip1h: "Укажите контакт", tip1b: "Telegram @username или номер — для быстрой связи",
+                tip2h: "Опишите опыт", tip2b: "Кратко — ключевые навыки и мотивация",
+                tip3h: "Ответ за 3 дня", tip3b: "Рассматриваем каждую анкету лично",
+                form_title: "Анкета кандидата", form_sub: "Все поля обязательны для заполнения",
+                fl_name: "Имя и фамилия", fl_contact: "Telegram / Телефон", fl_pos: "Желаемая должность",
+                pos_ph: "— Выберите вакансию —", pos_open: "Открытый отклик",
+                fl_exp: "Опыт работы", exp_ph: "— Выберите —", e0: "Без опыта", e1: "До 1 года", e2: "1–3 года", e3: "3–5 лет", e4: "5+ лет",
+                fl_salary: "Ожидаемая зарплата", fl_about: "О себе (кратко)",
+                fnote: "Отправляя форму, вы соглашаетесь на обработку персональных данных.",
+                submit_btn: "Отправить в Telegram",
+                suc_h: "Заявка отправлена!", suc_p: "HR-команда получила вашу анкету в Telegram и свяжется с вами в течение 3 рабочих дней.",
+                suc_tg: "Сообщение доставлено в HR-канал", suc_back: "← Отправить ещё одну заявку",
+                err_fill: "Пожалуйста, заполните все поля", err_send: "Ошибка отправки. Проверьте токен бота.",
+                footer_copy: '© 2025 АО «WHIRL». Все права защищены.',
+            },
+            en: {
+                nav_home: "Home", nav_about: "About", nav_careers: "Vacancies", nav_privacy: "Privacy Policy",
+                hero_tag: 'JSC «WHIRL» · Vacancies', hero_h1a: "Work", hero_h1b: "with us",
+                hero_sub: "We are building next-generation financial infrastructure. Join our team.",
+                scroll: "Scroll", stat1: "Open positions", stat2: "Founded", stat3: "Office location", stat3_city: "Tashkent",
+                lbl_vac: "Vacancies", vac_t1: "Open", vac_t2: "positions",
+                no_vac_badge: "Coming soon", no_vac_h: "No open positions yet",
+                no_vac_p: "We are growing rapidly and will post new roles soon.<br>Send your CV — we'll reach out when the right vacancy opens.",
+                no_vac_btn: "Send resume", no_vac_hint: "We respond within 3 business days",
+                f_all: "All", f_pay: "Payment Systems",
+                full: "Full-time", hot: "Hot", loc: "Tashkent", hybrid: "Hybrid",
+                resp: "Responsibilities", req: "Requirements", apply_btn: "Apply",
+                j1t: "Acquiring Specialist", j2t: "Project Manager (Fintech)", j3t: "System Administrator", j4t: "Backend Developer (Fintech)",
+                j1r1: "Merchant onboarding and acquiring support", j1r2: "POS terminal setup and payment system integration", j1r3: "Transaction monitoring and dispute resolution",
+                j1q1: "1+ year in acquiring or payment systems", j1q2: "Knowledge of card payment protocols (Uzcard, Humo, Visa, MC)", j1q3: "Attention to detail, analytical mindset",
+                j2r1: "Managing payment technology projects", j2r2: "Coordinating development, design and business teams", j2r3: "Timeline, budget and product quality control",
+                j2q1: "2+ years project management (Fintech a plus)", j2q2: "Agile / Scrum methodologies", j2q3: "Jira, Confluence, Figma skills",
+                j3r1: "Payment system server infrastructure administration", j3r2: "Information security and fault tolerance", j3r3: "User support, network equipment and software",
+                j3q1: "2+ years system administration", j3q2: "Linux, Windows Server, networking", j3q3: "Finance / payment sector experience a plus",
+                j4r1: "Financial API and payment module development", j4r2: "Integration with banks, Uzcard, Humo, Visa, Mastercard", j4r3: "Transaction security and stability",
+                j4q1: "Python / Java / Go / Node.js — 3+ years", j4q2: "REST API, microservices, message queues", j4q3: "Financial protocols and PCI DSS standards",
+                ap_lbl: "Apply", ap_title: "Send your application<br>right now",
+                ap_sub: "Fill the form — you'll hear back within 3 business days. All applications go directly to HR via Telegram.",
+                tg_title: "Telegram notifications", tg_sub: "HR receives your application instantly",
+                tip1h: "Add your contact", tip1b: "Telegram @username or phone for quick reply",
+                tip2h: "Describe your experience", tip2b: "Key skills and motivation briefly",
+                tip3h: "Reply in 3 days", tip3b: "We review every application personally",
+                form_title: "Candidate Form", form_sub: "All fields are required",
+                fl_name: "Full name", fl_contact: "Telegram / Phone", fl_pos: "Desired position",
+                pos_ph: "— Select vacancy —", pos_open: "Open application",
+                fl_exp: "Work experience", exp_ph: "— Select —", e0: "No experience", e1: "Under 1 year", e2: "1–3 years", e3: "3–5 years", e4: "5+ years",
+                fl_salary: "Salary expectation", fl_about: "About yourself (briefly)",
+                fnote: "By submitting you agree to personal data processing.",
+                submit_btn: "Send via Telegram",
+                suc_h: "Application sent!", suc_p: "The HR team received your form in Telegram and will contact you within 3 business days.",
+                suc_tg: "Message delivered to HR channel", suc_back: "← Submit another application",
+                err_fill: "Please fill in all fields", err_send: "Send error. Check bot token.",
+                footer_copy: '© 2025 JSC «WHIRL». All rights reserved.',
+            },
+            uz: {
+                nav_home: "Bosh sahifa", nav_about: "Biz haqida", nav_careers: "Vakansiyalar", nav_privacy: "Maxfiylik siyosati",
+                hero_tag: 'AJ «WHIRL» · Vakansiyalar', hero_h1a: "Biz bilan", hero_h1b: "ishlang",
+                hero_sub: "Yangi avlod moliyaviy infratuzilmasini quryapmiz. Jamoamizga qo'shiling.",
+                scroll: "Pastga", stat1: "Ochiq lavozimlar", stat2: "Tashkil etilgan yil", stat3: "Ofis joylashuvi", stat3_city: "Toshkent",
+                lbl_vac: "Vakansiyalar", vac_t1: "Ochiq", vac_t2: "lavozimlar",
+                no_vac_badge: "Tez kunda", no_vac_h: "Hozircha bo'sh lavozimlar yo'q",
+                no_vac_p: "Biz doimiy o'smoqdamiz va tez orada yangi lavozimlar ochamiz.<br>Rezyumengizni yuboring — mos vakansiya paydo bo'lganda murojaat qilamiz.",
+                no_vac_btn: "Rezyume yuborish", no_vac_hint: "3 ish kuni ichida javob beramiz",
+                f_all: "Barchasi", f_pay: "To'lov tizimlari",
+                full: "To'liq stavka", hot: "Shoshilinch", loc: "Toshkent", hybrid: "Gibrid",
+                resp: "Vazifalar", req: "Talablar", apply_btn: "Murojaat qilish",
+                j1t: "Ekvayring mutaxassisi", j2t: "Project Manager (Fintech)", j3t: "Tizim administratori", j4t: "Backend dasturchi (Fintech)",
+                j1r1: "Savdo nuqtalarini ekvayringga ulash va qo'llab-quvvatlash", j1r2: "POS-terminallarni sozlash va to'lov tizimlari bilan integratsiya", j1r3: "Tranzaksiyalarni monitoring va nizolarni hal qilish",
+                j1q1: "Ekvayring yoki to'lov tizimlarida 1+ yil tajriba", j1q2: "Karta to'lov protokollarini bilish (Uzcard, Humo, Visa, MC)", j1q3: "Diqqatlilik, tahliliy fikrlash",
+                j2r1: "To'lov texnologiyalari loyihalarini boshqarish", j2r2: "Ishlab chiqish, dizayn va biznes jamoalarini muvofiqlashtirish", j2r3: "Muddat, byudjet va mahsulot sifatini nazorat qilish",
+                j2q1: "Loyiha boshqaruvida 2+ yil (Fintech — afzallik)", j2q2: "Agile / Scrum metodologiyalari", j2q3: "Jira, Confluence, Figma bilan ishlash",
+                j3r1: "To'lov tizimi server infratuzilmasini boshqarish", j3r2: "Axborot xavfsizligi va nosozliklarga chidamlilik", j3r3: "Foydalanuvchilar, tarmoq uskunalari va dasturiy ta'minotni qo'llab-quvvatlash",
+                j3q1: "Tizim administratsiyasida 2+ yil", j3q2: "Linux, Windows Server, tarmoq texnologiyalari", j3q3: "Moliya / to'lov sohasi tajribasi — afzallik",
+                j4r1: "Moliyaviy API va to'lov modullarini ishlab chiqish", j4r2: "Banklar, Uzcard, Humo, Visa, Mastercard bilan integratsiya", j4r3: "Tranzaksiyalar xavfsizligi va barqarorligini ta'minlash",
+                j4q1: "Python / Java / Go / Node.js — 3+ yil", j4q2: "REST API, mikroservislar, navbatlar", j4q3: "Moliyaviy protokollar va PCI DSS standartalari",
+                ap_lbl: "Murojaat", ap_title: "Arizangizni hoziroq<br>yuboring",
+                ap_sub: "Shaklni to'ldiring — 3 ish kuni ichida javob beramiz. Barcha arizalar Telegram orqali HR ga boradi.",
+                tg_title: "Telegram bildirishnomalar", tg_sub: "HR arizani darhol oladi",
+                tip1h: "Aloqa ma'lumoti", tip1b: "Telegram @username yoki telefon raqami",
+                tip2h: "Tajribangizni tasvirlab bering", tip2b: "Qisqacha — asosiy ko'nikmalar va motivatsiya",
+                tip3h: "3 kunda javob", tip3b: "Har bir anketani shaxsan ko'rib chiqamiz",
+                form_title: "Nomzod anketi", form_sub: "Barcha maydonlar majburiy",
+                fl_name: "Ism va familiya", fl_contact: "Telegram / Telefon", fl_pos: "Istalgan lavozim",
+                pos_ph: "— Vakansiyani tanlang —", pos_open: "Ochiq murojaat",
+                fl_exp: "Ish tajribasi", exp_ph: "— Tanlang —", e0: "Tajribasiz", e1: "1 yilgacha", e2: "1–3 yil", e3: "3–5 yil", e4: "5+ yil",
+                fl_salary: "Ish haqi kutilmalari", fl_about: "O'zingiz haqingizda (qisqacha)",
+                fnote: "Shaklni yuborib, shaxsiy ma'lumotlarni qayta ishlashga rozilik bildirasiz.",
+                submit_btn: "Telegram orqali yuborish",
+                suc_h: "Ariza yuborildi!", suc_p: "HR jamoasi Telegram da arizangizni oldi va 3 ish kuni ichida murojaat qiladi.",
+                suc_tg: "Xabar HR kanaliga yetkazildi", suc_back: "← Yana ariza yuborish",
+                err_fill: "Iltimos, barcha maydonlarni to'ldiring", err_send: "Yuborishda xatolik. Botni tekshiring.",
+                footer_copy: '© 2025 AJ «WHIRL». Barcha huquqlar himoyalangan.',
+            }
+        };
+
+        let lang = localStorage.getItem('whirl_lang') || 'ru';
+        function applyLang(l) {
+            lang = l; localStorage.setItem('whirl_lang', l);
+            const d = TR[l];
+            document.querySelectorAll('[data-tr]').forEach(el => { const k = el.getAttribute('data-tr'); if (d[k] !== undefined) el.innerHTML = d[k]; });
+            document.querySelectorAll('.lang-pill button').forEach(b => b.classList.toggle('active', b.getAttribute('data-lang') === l));
+            document.documentElement.lang = l;
+        }
+        applyLang(lang);
+        document.querySelectorAll('.lang-pill button').forEach(btn => {
+            btn.addEventListener('click', () => applyLang(btn.getAttribute('data-lang')));
+        });
+
+        (function () {
+            const c = document.getElementById('bgc'), ctx = c.getContext('2d');
+            let W, H, t = 0;
+            const B = [
+                { x: .10, y: .20, rx: .62, ry: .42, a: 0, vx: .00015, vy: .00010, va: .000055, col: [15, 100, 255], alpha: .17 },
+                { x: .82, y: .50, rx: .54, ry: .36, a: 1.2, vx: -.00012, vy: .00017, va: -.00005, col: [140, 60, 255], alpha: .14 },
+                { x: .42, y: .85, rx: .46, ry: .30, a: 2.5, vx: .00020, vy: -.00013, va: .000080, col: [255, 35, 95], alpha: .13 },
+                { x: .92, y: .12, rx: .34, ry: .24, a: .5, vx: -.00013, vy: .00009, va: -.00007, col: [0, 185, 145], alpha: .12 },
+                { x: .58, y: .32, rx: .40, ry: .27, a: 1.8, vx: .00009, vy: .00015, va: .000090, col: [255, 130, 0], alpha: .11 },
+                { x: .22, y: .72, rx: .48, ry: .33, a: 3.1, vx: -.00017, vy: -.00011, va: .00005, col: [0, 195, 255], alpha: .12 },
+                { x: .70, y: .78, rx: .36, ry: .25, a: .8, vx: .00011, vy: .00013, va: -.00006, col: [255, 80, 180], alpha: .09 },
+            ];
+            const MP = Array.from({ length: 5 }, () => ({ x: Math.random(), y: Math.random(), vx: (Math.random() - .5) * .0003, vy: (Math.random() - .5) * .0003 }));
+            function resize() { W = c.width = window.innerWidth; H = c.height = window.innerHeight; }
+            window.addEventListener('resize', resize); resize();
+            function draw() {
+                ctx.clearRect(0, 0, W, H); ctx.fillStyle=document.documentElement.getAttribute('data-theme')==='light'?'#f5f5f7':'#03030a';ctx.fillRect(0,0,W,H);
+                B.forEach(b => {
+                    b.x += Math.sin(t * .0008 + b.vy * 4000) * b.vx * 2.8; b.y += Math.cos(t * .0006 + b.vx * 4000) * b.vy * 2.8; b.a += b.va;
+                    b.x = Math.max(.03, Math.min(.97, b.x)); b.y = Math.max(.03, Math.min(.97, b.y));
+                    const cx = b.x * W, cy = b.y * H, R = b.rx * Math.max(W, H);
+                    const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, R);
+                    const [r, gr, bl] = b.col;
+                    g.addColorStop(0, `rgba(${r},${gr},${bl},${b.alpha})`);
+                    g.addColorStop(.4, `rgba(${r},${gr},${bl},${(b.alpha * .3).toFixed(3)})`);
+                    g.addColorStop(1, `rgba(${r},${gr},${bl},0)`);
+                    ctx.save(); ctx.translate(cx, cy); ctx.rotate(b.a); ctx.scale(1, b.ry / b.rx);
+                    ctx.beginPath(); ctx.arc(0, 0, R, 0, Math.PI * 2); ctx.fillStyle = g; ctx.fill(); ctx.restore();
+                });
+                ctx.lineWidth = .4;
+                for (let i = 0; i < MP.length; i++)for (let j = i + 1; j < MP.length; j++) {
+                    const a = MP[i], b = MP[j], dist = Math.hypot((a.x - b.x) * W, (a.y - b.y) * H);
+                    if (dist < 280) { ctx.beginPath(); ctx.moveTo(a.x * W, a.y * H); ctx.lineTo(b.x * W, b.y * H); ctx.strokeStyle = `rgba(41,151,255,${(.055 * (1 - dist / 280)).toFixed(3)})`; ctx.stroke(); }
+                }
+                MP.forEach(p => { p.x += p.vx; p.y += p.vy; if (p.x < 0 || p.x > 1) p.vx *= -1; if (p.y < 0 || p.y > 1) p.vy *= -1; });
+                for (let y = 0; y < H; y += 4) { ctx.fillStyle = 'rgba(0,0,0,.018)'; ctx.fillRect(0, y, W, 1); }
+                t++; requestAnimationFrame(draw);
+            }
+            draw();
+        })();
+
+        (function () {
+            const dot = document.getElementById('cd'), ring = document.getElementById('cr');
+            let mx = 0, my = 0, rx = 0, ry = 0;
+            document.addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; dot.style.left = mx + 'px'; dot.style.top = my + 'px'; });
+            (function loop() { rx += (mx - rx) * .1; ry += (my - ry) * .1; ring.style.left = rx + 'px'; ring.style.top = ry + 'px'; requestAnimationFrame(loop); })();
+        })();
+
+        window.addEventListener('scroll', () => document.getElementById('hdr').classList.toggle('scrolled', scrollY > 40));
+
+        const io = new IntersectionObserver(e => e.forEach(x => { if (x.isIntersecting) { x.target.classList.add('anim-in'); io.unobserve(x.target); } }), { threshold: .12 });
+        document.querySelectorAll('[data-anim]').forEach(el => io.observe(el));
+        const io2 = new IntersectionObserver(e => e.forEach(x => { if (x.isIntersecting) { x.target.classList.add('anim-in'); Array.from(x.target.children).forEach((c, i) => c.style.transitionDelay = (i * .1) + 's'); io2.unobserve(x.target); } }), { threshold: .1 });
+        document.querySelectorAll('[data-stagger]').forEach(el => io2.observe(el));
+        const io3 = new IntersectionObserver(e => e.forEach(x => { if (x.isIntersecting) { x.target.classList.add('anim-in'); io3.unobserve(x.target); } }), { threshold: .3 });
+        document.querySelectorAll('.draw-line').forEach(el => io3.observe(el));
+
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                const cat = btn.getAttribute('data-cat');
+                document.querySelectorAll('.job-card').forEach(card => {
+                    const show = cat === 'all' || card.getAttribute('data-cat') === cat;
+                    card.style.display = show ? 'flex' : 'none';
+                    const det = card.nextElementSibling;
+                    if (det && det.classList.contains('job-detail') && !show) det.classList.remove('open');
+                });
+            });
+        });
+
+        function toggleJob(card) {
+            const det = card.nextElementSibling;
+            if (!det || !det.classList.contains('job-detail')) return;
+            const wasOpen = det.classList.contains('open');
+            document.querySelectorAll('.job-detail.open').forEach(d => d.classList.remove('open'));
+            document.querySelectorAll('.job-arrow svg').forEach(s => s.style.transform = '');
+            if (!wasOpen) {
+                det.classList.add('open');
+                card.querySelector('.job-arrow svg').style.transform = 'rotate(180deg)';
+                setTimeout(() => card.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 100);
+            }
+        }
+
+        function openForm(e, trKey) {
+            e.stopPropagation();
+            const title = TR[lang][trKey] || trKey;
+            const sel = document.getElementById('fPos');
+            for (let i = 0; i < sel.options.length; i++) { if (sel.options[i].text === title || sel.options[i].value === title) { sel.selectedIndex = i; break; } }
+            document.getElementById('apply').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            document.getElementById('toastMsg').textContent = msg;
+            t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 3500);
+        }
+
+        async function submitToTelegram() {
+            const d = TR[lang];
+            const name = document.getElementById('fName').value.trim();
+            const contact = document.getElementById('fContact').value.trim();
+            const pos = document.getElementById('fPos').value;
+            const exp = document.getElementById('fExp').value;
+            const salary = document.getElementById('fSalary').value.trim();
+            const about = document.getElementById('fAbout').value.trim();
+            if (!name || !contact || !pos || !exp || !salary || !about) { showToast(d.err_fill || 'Заполните все поля'); return; }
+            const btn = document.getElementById('submitBtn');
+            btn.classList.add('loading'); btn.querySelector('span').textContent = '...';
+            const msg = `🆕 *Новая заявка — АО «WHIRL»*\n\n👤 *Имя:* ${name}\n📱 *Контакт:* ${contact}\n💼 *Вакансия:* ${pos}\n📅 *Опыт:* ${exp}\n💰 *Зарплата:* ${salary}\n\n📝 *О себе:*\n${about}\n\n🌐 _Язык: ${lang.toUpperCase()}_`;
+            try {
+                const res = await fetch(`https://api.telegram.org/bot${TG_TOKEN}/sendMessage`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ chat_id: TG_CHAT_ID, text: msg, parse_mode: 'Markdown' }) });
+                const json = await res.json();
+                if (json.ok) { document.getElementById('formWrap').style.display = 'none'; document.getElementById('formSuccess').classList.add('show'); }
+                else throw new Error(json.description || 'API error');
+            } catch (err) {
+                showToast((d.err_send || 'Ошибка') + ': ' + err.message);
+                btn.classList.remove('loading'); btn.querySelector('span').textContent = d.submit_btn || 'Отправить в Telegram';
+            }
+        }
+
+        function resetForm() {
+            ['fName', 'fContact', 'fSalary', 'fAbout'].forEach(id => document.getElementById(id).value = '');
+            document.getElementById('fPos').selectedIndex = 0; document.getElementById('fExp').selectedIndex = 0;
+            document.getElementById('formSuccess').classList.remove('show'); document.getElementById('formWrap').style.display = 'block';
+            const btn = document.getElementById('submitBtn'); btn.classList.remove('loading');
+            btn.querySelector('span').textContent = TR[lang].submit_btn || 'Отправить в Telegram';
+        }
+
+        (function(){
+            const burger=document.getElementById('burger'),mobNav=document.getElementById('mobNav');
+            if(burger){
+                burger.addEventListener('click',()=>{burger.classList.toggle('open');mobNav.classList.toggle('active');});
+                mobNav.querySelectorAll('a').forEach(a=>{a.addEventListener('click',()=>{burger.classList.remove('open');mobNav.classList.remove('active');});});
+            }
+        })();
+    </script>
+  <script>
+  /* ── Theme toggle (persisted) ── */
+  (function(){
+    var root=document.documentElement;
+    var stored=localStorage.getItem('whirl-theme');
+    var prefersDark=window.matchMedia('(prefers-color-scheme:dark)').matches;
+    var initial=stored||(prefersDark?'dark':'light');
+    if(initial==='light') root.setAttribute('data-theme','light');
+    function applyCanvas(){
+      var canvas=document.getElementById('bgc');
+      if(!canvas) return;
+      /* canvas bg will auto-pick next frame via draw loop */
+      canvas._lightMode=(root.getAttribute('data-theme')==='light');
+    }
+    applyCanvas();
+    document.addEventListener('DOMContentLoaded',function(){
+      var btn=document.getElementById('themeToggle');
+      if(!btn) return;
+      btn.addEventListener('click',function(){
+        var isLight=root.getAttribute('data-theme')==='light';
+        if(isLight){
+          root.removeAttribute('data-theme');
+          localStorage.setItem('whirl-theme','dark');
+        } else {
+          root.setAttribute('data-theme','light');
+          localStorage.setItem('whirl-theme','light');
+        }
+        applyCanvas();
+        /* update canvas bg color reference */
+        if(window._canvasBg!==undefined){
+          window._canvasBg=root.getAttribute('data-theme')==='light'?'#f5f5f7':'#03030a';
+        }
+      });
+    });
+  })();
+  </script>
+
+</body>
+
+</html>
