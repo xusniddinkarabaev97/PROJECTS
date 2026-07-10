@@ -101,4 +101,10 @@ export const api = {
   createUser: (data) =>
     request("/users", { method: "POST", body: JSON.stringify(data) }),
   toggleUser: (id) => request(`/users/${id}/toggle`, { method: "PUT" }),
+
+  // Transactions
+  getTransactions: (params = {}) => {
+    const q = new URLSearchParams(params).toString();
+    return request(`/transactions${q ? "?" + q : ""}`);
+  },
 };
