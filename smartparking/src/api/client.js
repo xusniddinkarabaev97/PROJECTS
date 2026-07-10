@@ -1,4 +1,4 @@
-const API_BASE = "/api";
+const API_BASE = "/smartparking/api";
 
 async function request(url, options = {}) {
   const token = localStorage.getItem("bgz-token");
