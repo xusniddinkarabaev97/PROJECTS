@@ -66,7 +66,7 @@ export const api = {
 
   // Auth
   login: (email, password) =>
-    fetch("/api/Companies/login", {
+    fetch("/smartparking/api/Companies/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password }),
