@@ -1,0 +1,255 @@
+@page
+@model SmartParking.Pages.Billing.QrCodeModel
+@{
+    ViewData["Title"] = "Генерация QR-кода";
+}
+
+<div class="container-fluid px-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0">
+            <i>&#128260;</i> Генерация QR-кода
+        </h1>
+        <a asp-page="/Billing/Index" class="btn btn-outline-secondary">&larr; Назад к панели</a>
+    </div>
+
+    <div class="row g-4">
+        @* ФОРМА ГЕНЕРАЦИИ *@
+        <div class="col-lg-6">
+            <div class="card shadow-sm">
+                <div class="card-header fw-semibold bg-primary text-white">
+                    Параметры QR-кода
+                </div>
+                <div class="card-body">
+                    <form id="qrForm">
+                        <div class="mb-3">
+                            <label for="qrType" class="form-label fw-medium">Тип QR-кода</label>
+                            <select class="form-select" id="qrType">
+                                <option value="payment">Оплата парковки</option>
+                                <option value="station">Станция / Терминал</option>
+                                <option value="receipt">Чек / Квитанция</option>
+                                <option value="custom">Своя ссылка</option>
+                            </select>
+                        </div>
+
+                        @* Поля для оплаты *@
+                        <div id="paymentFields">
+                            <div class="mb-3">
+                                <label for="transactionId" class="form-label fw-medium">ID Транзакции</label>
+                                <input type="number" class="form-control" id="transactionId" placeholder="123" value="@Model.SuggestedTransactionId">
+                            </div>
+                            <div class="mb-3">
+                                <label for="paymentAmount" class="form-label fw-medium">Сумма (₽)</label>
+                                <input type="number" class="form-control" id="paymentAmount" placeholder="500" step="0.01">
+                            </div>
+                        </div>
+
+                        @* Поля для станции *@
+                        <div id="stationFields" style="display:none;">
+                            <div class="mb-3">
+                                <label for="stationId" class="form-label fw-medium">ID Станции</label>
+                                <input type="number" class="form-control" id="stationId" placeholder="1">
+                            </div>
+                            <div class="mb-3">
+                                <label for="stationName" class="form-label fw-medium">Название станции</label>
+                                <input type="text" class="form-control" id="stationName" placeholder="Парковка №1">
+                            </div>
+                        </div>
+
+                        @* Поля для чека *@
+                        <div id="receiptFields" style="display:none;">
+                            <div class="mb-3">
+                                <label for="receiptId" class="form-label fw-medium">Номер чека</label>
+                                <input type="text" class="form-control" id="receiptId" placeholder="RCP-001">
+                            </div>
+                        </div>
+
+                        @* Своя ссылка *@
+                        <div id="customFields" style="display:none;">
+                            <div class="mb-3">
+                                <label for="customUrl" class="form-label fw-medium">URL / данные</label>
+                                <input type="text" class="form-control" id="customUrl" placeholder="http://avto.itpanda.uz/...">
+                                <small class="text-muted">Вставьте полный URL, который будет закодирован в QR</small>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="qrSize" class="form-label fw-medium">Размер (px)</label>
+                            <input type="range" class="form-range" id="qrSize" min="150" max="500" value="250" step="10">
+                            <small class="text-muted"><span id="sizeLabel">250</span>px</small>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100 fw-semibold">
+                            Сгенерировать QR-код
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        @* ПРЕДПРОСМОТР QR-КОДА *@
+        <div class="col-lg-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-header fw-semibold bg-dark text-white d-flex justify-content-between align-items-center">
+                    <span>Предпросмотр QR-кода</span>
+                    <button class="btn btn-sm btn-light" id="downloadBtn" style="display:none;">Скачать</button>
+                </div>
+                <div class="card-body d-flex flex-column align-items-center justify-content-center" style="min-height:400px;">
+                    <div id="qrContainer" class="p-3 bg-white rounded-3 border">
+                        <div id="qrPlaceholder" class="text-center text-muted py-5">
+                            <span style="font-size:4rem;">&#128260;</span>
+                            <p class="mt-3">Заполните параметры и нажмите «Сгенерировать»</p>
+                        </div>
+                        <div id="qrResult" style="display:none;"></div>
+                    </div>
+                    <div id="qrUrlDisplay" class="mt-3 text-center" style="display:none;">
+                        <small class="text-muted">Закодированная ссылка:</small><br>
+                        <code id="qrUrlText" class="text-break"></code>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @* ПОСЛЕДНИЕ ТРАНЗАКЦИИ — БЫСТРЫЙ QR *@
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header fw-semibold">
+                    Быстрая генерация QR для последних транзакций
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Клиент</th>
+                                    <th>Сумма</th>
+                                    <th>Статус</th>
+                                    <th>Действие</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var t in Model.RecentTransactions)
+                                {
+                                    <tr>
+                                        <td>#@t.Id</td>
+                                        <td>@t.ClientName</td>
+                                        <td class="fw-bold">@t.TotalSum.ToString("N2") ₽</td>
+                                        <td>
+                                            <span class="badge bg-@(t.PaymentStatus == "Paid" ? "success" : "warning")">@t.PaymentStatus</span>
+                                        </td>
+                                        <td>
+                                            <button class="btn btn-sm btn-outline-primary quick-qr"
+                                                    data-id="@t.Id"
+                                                    data-amount="@t.TotalSum"
+                                                    data-client="@t.ClientName">
+                                                QR-код
+                                            </button>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+    <script>
+        let currentQr = null;
+
+        document.getElementById('qrType').addEventListener('change', function() {
+            const val = this.value;
+            document.getElementById('paymentFields').style.display = val === 'payment' ? 'block' : 'none';
+            document.getElementById('stationFields').style.display = val === 'station' ? 'block' : 'none';
+            document.getElementById('receiptFields').style.display = val === 'receipt' ? 'block' : 'none';
+            document.getElementById('customFields').style.display = val === 'custom' ? 'block' : 'none';
+        });
+
+        document.getElementById('qrSize').addEventListener('input', function() {
+            document.getElementById('sizeLabel').textContent = this.value;
+        });
+
+        document.getElementById('qrForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            generateQr();
+        });
+
+        document.querySelectorAll('.quick-qr').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const id = this.dataset.id;
+                const amount = this.dataset.amount;
+                const client = this.dataset.client;
+
+                document.getElementById('qrType').value = 'payment';
+                document.getElementById('qrType').dispatchEvent(new Event('change'));
+                document.getElementById('transactionId').value = id;
+                document.getElementById('paymentAmount').value = amount;
+
+                generateQr();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
+        });
+
+        function generateQr() {
+            const type = document.getElementById('qrType').value;
+            const size = parseInt(document.getElementById('qrSize').value);
+            let url = '';
+
+            switch(type) {
+                case 'payment':
+                    const txnId = document.getElementById('transactionId').value || '0';
+                    const amount = document.getElementById('paymentAmount').value || '0';
+                    url = `http://avto.itpanda.uz/pay?txn=${txnId}&amount=${amount}`;
+                    break;
+                case 'station':
+                    const stId = document.getElementById('stationId').value || '0';
+                    const stName = document.getElementById('stationName').value || 'station';
+                    url = `http://avto.itpanda.uz/station?id=${stId}&name=${encodeURIComponent(stName)}`;
+                    break;
+                case 'receipt':
+                    const rcpId = document.getElementById('receiptId').value || 'RCP-001';
+                    url = `http://avto.itpanda.uz/receipt?id=${encodeURIComponent(rcpId)}`;
+                    break;
+                case 'custom':
+                    url = document.getElementById('customUrl').value || 'http://avto.itpanda.uz/';
+                    break;
+            }
+
+            document.getElementById('qrPlaceholder').style.display = 'none';
+            const qrResult = document.getElementById('qrResult');
+            qrResult.style.display = 'block';
+            qrResult.innerHTML = '';
+            qrResult.style.width = size + 'px';
+            qrResult.style.height = size + 'px';
+
+            currentQr = new QRCode(qrResult, {
+                text: url,
+                width: size,
+                height: size,
+                colorDark: '#000000',
+                colorLight: '#ffffff',
+                correctLevel: QRCode.CorrectLevel.M
+            });
+
+            document.getElementById('qrUrlDisplay').style.display = 'block';
+            document.getElementById('qrUrlText').textContent = url;
+            document.getElementById('downloadBtn').style.display = 'inline-block';
+        }
+
+        document.getElementById('downloadBtn').addEventListener('click', function() {
+            const canvas = document.querySelector('#qrResult canvas');
+            if (canvas) {
+                const link = document.createElement('a');
+                link.download = 'qr-code.png';
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+            }
+        });
+    </script>
+}

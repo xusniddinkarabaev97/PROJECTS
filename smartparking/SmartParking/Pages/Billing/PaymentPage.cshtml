@@ -1,0 +1,86 @@
+@page "/payment/{id:int}"
+@model SmartParking.Pages.Billing.PaymentPageModel
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>To'lov — SmartParking</title>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:-apple-system,sans-serif;background:#0a0e14;color:#e6edf3;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+        .card{background:#181f2a;border:1px solid #252d3a;border-radius:16px;padding:32px;max-width:420px;width:100%;text-align:center}
+        .icon{font-size:64px;margin-bottom:16px}
+        h1{font-size:22px;margin-bottom:8px}
+        .amount{font-size:36px;font-weight:700;color:#d2991d;margin:16px 0}
+        .info{font-size:13px;color:#8b949e;margin-bottom:24px}
+        .btn{display:block;width:100%;padding:14px;border:none;border-radius:10px;font-size:16px;font-weight:600;cursor:pointer;margin-bottom:10px}
+        .btn-pay{background:#238636;color:#fff}
+        .btn-cancel{background:#2d1215;color:#da3633;border:1px solid #da3633}
+        .btn:disabled{opacity:.5}
+        .result{margin-top:16px;padding:12px;border-radius:8px;font-weight:600;display:none}
+        .result.ok{display:block;background:#162b1d;color:#238636}
+        .result.fail{display:block;background:#2d1215;color:#da3633}
+        .spinner{width:24px;height:24px;border:3px solid #252d3a;border-top-color:#1f6feb;border-radius:50%;animation:spin .7s linear infinite;margin:12px auto}
+        @@keyframes spin{to{transform:rotate(360deg)}}
+    </style>
+</head>
+<body>
+<div class="card">
+@if (Model.Transaction == null)
+{
+    <div class="icon">❌</div>
+    <h1>Topilmadi</h1>
+    <p class="info">#@Model.TransactionId</p>
+}
+else
+{
+    var status = Model.Transaction.PaymentStatus;
+    if (status == SmartParking.Enums.PaymentStatus.Completed)
+    {
+        <div class="icon">✅</div><h1>To'langan</h1>
+        <div class="amount">@Model.Transaction.TotalSum.ToString("N0") UZS</div>
+    }
+    else if (status == SmartParking.Enums.PaymentStatus.Failed || status == SmartParking.Enums.PaymentStatus.Cancelled)
+    {
+        <div class="icon">❌</div><h1>Bekor qilingan</h1>
+        <div class="amount">@Model.Transaction.TotalSum.ToString("N0") UZS</div>
+    }
+    else
+    {
+        <div class="icon">💳</div>
+        <h1>To'lov</h1>
+        <p class="info">#@Model.Transaction.Id · @(Model.Transaction.Client?.FullName ?? "—")</p>
+        <div class="amount">@Model.Transaction.TotalSum.ToString("N0") UZS</div>
+        <button class="btn btn-pay" id="btnPay" onclick="process('complete')">✅ To'lash</button>
+        <button class="btn btn-cancel" id="btnCancel" onclick="process('fail')">❌ Bekor qilish</button>
+        <div id="spinner" class="spinner" style="display:none"></div>
+        <div id="result" class="result"></div>
+    }
+}
+</div>
+<script>
+async function process(action){
+    document.getElementById('btnPay').disabled=true;
+    document.getElementById('btnCancel').disabled=true;
+    document.getElementById('spinner').style.display='block';
+    try{
+        let r=await fetch('/api/Transactions/@Model.TransactionId/'+action,{method:'POST'});
+        if(r.ok){
+            document.getElementById('result').className='result ok';
+            document.getElementById('result').textContent=action==='complete'?'✅ To\'lov qabul qilindi!':'❌ Bekor qilindi';
+        }else{
+            throw new Error(await r.text());
+        }
+    }catch(e){
+        document.getElementById('result').className='result fail';
+        document.getElementById('result').textContent='Xatolik: '+e.message;
+    }
+    document.getElementById('spinner').style.display='none';
+}
+</script>
+</body>
+</html>

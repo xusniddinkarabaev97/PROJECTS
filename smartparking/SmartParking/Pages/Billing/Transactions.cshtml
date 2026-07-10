@@ -1,0 +1,140 @@
+@page
+@model SmartParking.Pages.Billing.TransactionsModel
+@{
+    ViewData["Title"] = "Транзакции";
+}
+
+<div class="container-fluid px-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0">
+            &#128179; Панель Транзакций
+        </h1>
+        <a asp-page="/Billing/Index" class="btn btn-outline-secondary">&larr; Назад к панели</a>
+    </div>
+
+    @* ФИЛЬТРЫ *@
+    <div class="row mb-3">
+        <div class="col-md-3">
+            <select class="form-select" id="statusFilter" onchange="filterTable()">
+                <option value="all">Все статусы</option>
+                <option value="New">Новые</option>
+                <option value="Pending">Ожидают</option>
+                <option value="Completed">Завершены</option>
+                <option value="Failed">Провалены</option>
+                <option value="Cancelled">Отменены</option>
+            </select>
+        </div>
+        <div class="col-md-3">
+            <input type="text" class="form-control" id="searchFilter" placeholder="Поиск по клиенту..." onkeyup="filterTable()">
+        </div>
+        <div class="col-md-3 ms-auto text-end">
+            <span class="text-muted">Всего: <strong>@Model.Transactions.Count</strong></span>
+        </div>
+    </div>
+
+    @* ТАБЛИЦА ТРАНЗАКЦИЙ *@
+    <div class="card shadow-sm">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0" id="txnTable">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>ID</th>
+                            <th>Клиент</th>
+                            <th>Сумма</th>
+                            <th>Метод</th>
+                            <th>Статус оплаты</th>
+                            <th>Тип</th>
+                            <th>Дата</th>
+                            <th class="text-center">Действия</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var t in Model.Transactions)
+                        {
+                            var (badgeClass, badgeText) = t.PaymentStatus switch
+                            {
+                                SmartParking.Enums.PaymentStatus.Completed => ("success", "Transaction completed"),
+                                SmartParking.Enums.PaymentStatus.Failed => ("danger", "Transaction failed"),
+                                SmartParking.Enums.PaymentStatus.Cancelled => ("secondary", "Cancelled"),
+                                SmartParking.Enums.PaymentStatus.Pending => ("info", "Pending"),
+                                SmartParking.Enums.PaymentStatus.New => ("warning", "New"),
+                                SmartParking.Enums.PaymentStatus.Authorized => ("primary", "Authorized"),
+                                SmartParking.Enums.PaymentStatus.Refunded => ("dark", "Refunded"),
+                                SmartParking.Enums.PaymentStatus.Expired => ("light text-dark", "Expired"),
+                                _ => ("secondary", t.PaymentStatus.ToString())
+                            };
+
+                            var disabled = t.PaymentStatus == SmartParking.Enums.PaymentStatus.Completed
+                                        || t.PaymentStatus == SmartParking.Enums.PaymentStatus.Failed
+                                        || t.PaymentStatus == SmartParking.Enums.PaymentStatus.Cancelled;
+
+                            <tr data-status="@t.PaymentStatus" data-client="@t.ClientName.ToLower()" class="@(t.PaymentStatus == SmartParking.Enums.PaymentStatus.Completed ? "table-success" : t.PaymentStatus == SmartParking.Enums.PaymentStatus.Failed ? "table-danger" : "")">
+                                <td><code>#@t.Id</code></td>
+                                <td class="fw-medium">@t.ClientName</td>
+                                <td class="fw-bold">@t.TotalSum.ToString("N2") ₽</td>
+                                <td>@(t.PaymentMethod ?? "—")</td>
+                                <td>
+                                    <span class="badge bg-@badgeClass">@badgeText</span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-dark">@t.Status</span>
+                                </td>
+                                <td class="text-muted small">@t.FilledAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</td>
+                                <td class="text-center">
+                                    <div class="btn-group btn-group-sm">
+                                        <button class="btn btn-success @(disabled ? "disabled" : "")"
+                                                onclick="processTxn(@t.Id, 'complete')"
+                                                @(disabled ? "disabled" : "")>
+                                            To'lash
+                                        </button>
+                                        <button class="btn btn-danger @(disabled ? "disabled" : "")"
+                                                onclick="processTxn(@t.Id, 'fail')"
+                                                @(disabled ? "disabled" : "")>
+                                            Bekor qilish
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function filterTable() {
+            const status = document.getElementById('statusFilter').value;
+            const search = document.getElementById('searchFilter').value.toLowerCase();
+            const rows = document.querySelectorAll('#txnTable tbody tr');
+
+            rows.forEach(row => {
+                const rowStatus = row.dataset.status;
+                const rowClient = row.dataset.client;
+                const statusMatch = status === 'all' || rowStatus === status;
+                const searchMatch = search === '' || rowClient.includes(search);
+                row.style.display = statusMatch && searchMatch ? '' : 'none';
+            });
+        }
+
+        async function processTxn(id, action) {
+            const label = action === 'complete' ? 'To\'lash' : 'Bekor qilish';
+            if (!confirm(`"${label}" — подтвердить для транзакции #${id}?`)) return;
+
+            try {
+                const res = await fetch(`/api/Transactions/${id}/${action}`, { method: 'POST' });
+                if (res.ok) {
+                    location.reload();
+                } else {
+                    const err = await res.text();
+                    alert('Ошибка: ' + err);
+                }
+            } catch (e) {
+                alert('Ошибка соединения: ' + e.message);
+            }
+        }
+    </script>
+}
