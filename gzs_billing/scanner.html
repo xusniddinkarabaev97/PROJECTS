@@ -5,169 +5,152 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>GZS Scanner</title>
     <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <style>
-        body { font-family: system-ui, sans-serif; background: #0a0e14; color: #e6edf3; }
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:system-ui,sans-serif;background:#0a0e14;color:#e6edf3;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:16px}
+        .card{background:#161c24;border:1px solid #252d3a;border-radius:16px;padding:20px;width:100%;max-width:400px}
+        .btn{width:100%;padding:14px;border-radius:12px;border:none;font-size:15px;font-weight:600;cursor:pointer;margin-bottom:8px}
+        .btn-teal{background:linear-gradient(135deg,#14b8a6,#10b981);color:#0f172a}
+        .btn-red{background:rgba(244,63,94,0.1);color:#f43f5e;border:1px solid rgba(244,63,94,0.2)}
+        .btn-gray{background:#1e293b;color:#94a3b8}
+        .input{width:100%;padding:12px;background:#0f172a;border:1px solid #334155;border-radius:10px;color:#fff;font-size:14px;margin-bottom:8px;outline:none}
+        .input:focus{border-color:#14b8a6}
+        .row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #1e293b;font-size:14px}
+        .val{font-weight:600;color:#fff}
+        .val-mono{font-family:monospace}
+        .val-green{color:#10b981;font-size:20px;font-weight:700}
+        video{width:100%;border-radius:12px;margin-bottom:8px}
+        .hidden{display:none!important}
+        .spinner{width:20px;height:20px;border:2px solid #334155;border-top-color:#14b8a6;border-radius:50%;animation:spin .6s linear infinite;margin:16px auto}
+        @keyframes spin{to{transform:rotate(360deg)}}
+        .error{background:rgba(244,63,94,0.1);border:1px solid rgba(244,63,94,0.2);color:#f43f5e;border-radius:12px;padding:12px;font-size:13px;margin-bottom:8px}
     </style>
 </head>
-<body class="min-h-screen bg-[#0a0e14] flex flex-col items-center p-4">
+<body>
 
-    <div class="w-full max-w-md text-center mt-8 mb-4">
-        <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-teal-500 to-emerald-400 mx-auto flex items-center justify-center text-slate-900 font-bold text-xl mb-3">GZS</div>
-        <h1 class="text-xl font-bold text-white">GZS Scanner</h1>
-        <p class="text-xs text-slate-400 mt-1">QR kodni skanerlang yoki ID kiriting</p>
-    </div>
+<div style="text-align:center;margin:20px 0">
+    <div style="width:50px;height:50px;border-radius:14px;background:linear-gradient(135deg,#14b8a6,#10b981);margin:0 auto 12px;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;color:#0f172a">GZS</div>
+    <h1 style="font-size:20px;font-weight:700">GZS Scanner</h1>
+    <p style="font-size:12px;color:#94a3b8;margin-top:4px">QR kodni skanerlang yoki ID kiriting</p>
+    <p id="debug" style="font-size:10px;color:#64748b;margin-top:4px"></p>
+</div>
 
-    <!-- Camera area -->
-    <div class="w-full max-w-md bg-[#161c24] border border-slate-800 rounded-2xl overflow-hidden mb-3">
-        <video id="video" class="w-full h-56 object-cover hidden" autoplay playsinline></video>
-        <div id="noCamera" class="w-full h-56 flex items-center justify-center text-slate-500 bg-[#11161d]">
-            <div class="text-center"><span class="text-5xl block mb-3">📷</span><p class="text-sm">Kamera o'chiq</p></div>
-        </div>
-    </div>
+<!-- Camera -->
+<div id="camSection" class="hidden card" style="padding:12px">
+    <video id="video" autoplay playsinline></video>
+    <button class="btn btn-teal" onclick="captureAndScan()">📸 Skanerlash</button>
+    <button class="btn btn-red" onclick="stopCamera()">📷 Kamerani o'chirish</button>
+</div>
 
-    <!-- Camera toggle -->
-    <button id="btnCamera" onclick="toggleCamera()" class="w-full max-w-md py-3 mb-3 rounded-xl bg-teal-500/10 text-teal-400 border border-teal-500/20 font-medium text-sm cursor-pointer hover:bg-teal-500/20 transition">
-        📷 Kamerani yoqish
-    </button>
+<!-- Camera Start -->
+<button id="btnStart" class="btn btn-teal" onclick="startCamera()">📷 Kamerani yoqish</button>
 
-    <!-- Manual input -->
-    <div class="w-full max-w-md flex gap-2 mb-3">
-        <input id="manualInput" class="flex-1 px-4 py-3 bg-[#161c24] border border-slate-700 rounded-xl text-white text-sm outline-none focus:border-teal-500/50" placeholder="1283,1 yoki station=1283&dispenser=1">
-        <button onclick="scanManual()" class="px-5 py-3 rounded-xl bg-gradient-to-r from-teal-500 to-emerald-500 text-slate-900 font-semibold text-sm cursor-pointer">OK</button>
-    </div>
+<!-- Manual -->
+<div class="card" style="margin-bottom:8px">
+    <input id="manualInput" class="input" placeholder="1283,1 yoki station=1283&dispenser=1">
+    <button class="btn btn-teal" onclick="scanManual()">🔍 Izlash</button>
+</div>
 
-    <!-- Loading -->
-    <div id="loading" class="hidden w-full max-w-md flex items-center justify-center py-8 gap-3">
-        <div class="w-5 h-5 border-2 border-slate-700 border-t-teal-400 rounded-full animate-spin"></div>
-        <span class="text-slate-400 text-sm">Yuklanmoqda...</span>
-    </div>
+<!-- Loading -->
+<div id="loading" class="hidden"><div class="spinner"></div><p style="text-align:center;color:#94a3b8;font-size:13px">Yuklanmoqda...</p></div>
 
-    <!-- Result -->
-    <div id="result" class="w-full max-w-md hidden">
-        <div class="bg-[#161c24] border border-slate-800 rounded-2xl p-5">
-            <div class="flex items-center justify-between mb-3">
-                <h3 class="text-lg font-bold text-white">Ma'lumot</h3>
-                <span class="px-3 py-1 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">✓ OK</span>
-            </div>
-            <div class="space-y-2 text-sm">
-                <div class="flex justify-between py-2 border-b border-slate-800"><span class="text-slate-400">Stansiya</span><span class="text-white font-mono" id="rStation">-</span></div>
-                <div class="flex justify-between py-2 border-b border-slate-800"><span class="text-slate-400">Kolonna</span><span class="text-white font-mono" id="rDispenser">-</span></div>
-                <div class="flex justify-between py-2 border-b border-slate-800"><span class="text-slate-400">Operatsiya</span><span class="text-white font-mono" id="rOp">-</span></div>
-                <div class="flex justify-between py-2 border-b border-slate-800"><span class="text-slate-400">Summa</span><span class="text-emerald-400 font-bold text-lg" id="rAmount">-</span></div>
-                <div class="flex justify-between py-2 border-b border-slate-800"><span class="text-slate-400">Hajm</span><span class="text-white" id="rVolume">-</span></div>
-                <div class="flex justify-between py-2 border-b border-slate-800"><span class="text-slate-400">Avto</span><span class="text-white font-bold font-mono" id="rCar">-</span></div>
-                <div class="flex justify-between py-2"><span class="text-slate-400">Vaqt</span><span class="text-white text-xs" id="rTime">-</span></div>
-            </div>
-            <button onclick="resetScan()" class="w-full mt-4 py-3 rounded-xl bg-slate-800 text-slate-400 text-sm font-medium hover:text-white cursor-pointer transition">Orqaga</button>
-        </div>
-    </div>
+<!-- Result -->
+<div id="result" class="hidden card">
+    <h3 style="font-size:16px;margin-bottom:12px;color:#10b981">✓ Ma'lumot</h3>
+    <div class="row"><span>Stansiya</span><span class="val val-mono" id="rS">-</span></div>
+    <div class="row"><span>Kolonna</span><span class="val val-mono" id="rD">-</span></div>
+    <div class="row"><span>Operatsiya</span><span class="val val-mono" id="rO">-</span></div>
+    <div class="row"><span>Summa</span><span class="val-green" id="rA">-</span></div>
+    <div class="row"><span>Hajm</span><span class="val" id="rV">-</span></div>
+    <div class="row"><span>Avto</span><span class="val val-mono" id="rC">-</span></div>
+    <div class="row"><span>Vaqt</span><span class="val" style="font-size:12px" id="rT">-</span></div>
+    <button class="btn btn-gray" onclick="resetAll()" style="margin-top:12px">Orqaga</button>
+</div>
 
-    <!-- Error -->
-    <div id="error" class="hidden w-full max-w-md bg-rose-500/10 border border-rose-500/20 text-rose-400 rounded-xl p-4 text-sm"></div>
+<!-- Error -->
+<div id="error" class="hidden error"></div>
 
-    <div class="text-xs text-slate-600 mt-6">GZS Billing v2 &copy; 2026 <span id="debug"></span></div>
+<script>
+    document.getElementById('debug').textContent = typeof jsQR !== 'undefined' ? 'jsQR yuklandi' : 'jsQR yuklanmadi!';
+    let stream = null, currentData = null;
 
-    <script>
-        document.getElementById('debug').textContent = typeof jsQR !== 'undefined' ? '✓ jsQR OK' : '✗ jsQR missing';
-        let stream = null, scanning = false, currentData = null;
+    async function startCamera() {
+        try {
+            stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment', width: 640, height: 480 } });
+            document.getElementById('video').srcObject = stream;
+            document.getElementById('camSection').classList.remove('hidden');
+            document.getElementById('btnStart').classList.add('hidden');
+        } catch(e) {
+            alert('Kamera xatosi: ' + e.message);
+        }
+    }
+
+    function stopCamera() {
+        if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
+        document.getElementById('camSection').classList.add('hidden');
+        document.getElementById('btnStart').classList.remove('hidden');
+    }
+
+    function captureAndScan() {
+        if (!stream || typeof jsQR === 'undefined') return;
         const video = document.getElementById('video');
         const canvas = document.createElement('canvas');
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
         const ctx = canvas.getContext('2d');
-
-        async function toggleCamera() {
-            if (stream) { stopCamera(); return; }
-            try {
-                stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
-                video.srcObject = stream;
-                video.classList.remove('hidden');
-                document.getElementById('noCamera').classList.add('hidden');
-                document.getElementById('btnCamera').textContent = '📷 Kamerani o\'chirish';
-                document.getElementById('btnCamera').className = 'w-full max-w-md py-3 mb-3 rounded-xl bg-rose-500/10 text-rose-400 border border-rose-500/20 font-medium text-sm cursor-pointer hover:bg-rose-500/20 transition';
-                video.play();
-                scanLoop();
-            } catch(e) {
-                alert('Kamera ruxsati rad etildi: ' + e.message);
-            }
+        ctx.drawImage(video, 0, 0);
+        const img = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const code = jsQR(img.data, canvas.width, canvas.height);
+        if (code) {
+            const re = /station[=:](\d+).*dispenser[=:](\d+)/i;
+            const m = code.data.match(re);
+            if (m) { fetchData(parseInt(m[1]), parseInt(m[2])); return; }
         }
+        alert('QR kod topilmadi yoki format noto\'g\'ri. Qaytadan urining.');
+    }
 
-        function stopCamera() {
-            if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
-            video.classList.add('hidden');
-            document.getElementById('noCamera').classList.remove('hidden');
-            document.getElementById('btnCamera').textContent = '📷 Kamerani yoqish';
-            document.getElementById('btnCamera').className = 'w-full max-w-md py-3 mb-3 rounded-xl bg-teal-500/10 text-teal-400 border border-teal-500/20 font-medium text-sm cursor-pointer hover:bg-teal-500/20 transition';
-            scanning = false;
-        }
+    function scanManual() {
+        const v = document.getElementById('manualInput').value.trim();
+        const m = v.match(/station[=:](\d+).*dispenser[=:](\d+)/i);
+        if (m) { fetchData(parseInt(m[1]), parseInt(m[2])); return; }
+        const p = v.split(/[,\s]+/);
+        if (p.length >= 2) { fetchData(parseInt(p[0]), parseInt(p[1])); return; }
+        alert('Format: 1283,1 yoki station=1283&dispenser=1');
+    }
 
-        function scanLoop() {
-            if (!stream || scanning) { requestAnimationFrame(scanLoop); return; }
-            if (video.readyState === video.HAVE_ENOUGH_DATA && typeof jsQR !== 'undefined') {
-                canvas.width = video.videoWidth;
-                canvas.height = video.videoHeight;
-                ctx.drawImage(video, 0, 0);
-                const img = ctx.getImageData(0, 0, canvas.width, canvas.height);
-                const code = jsQR(img.data, canvas.width, canvas.height);
-                if (code) {
-                    scanning = true;
-                    const re = /station[=:](\d+).*dispenser[=:](\d+)/i;
-                    const m = code.data.match(re);
-                    if (m) fetchData(parseInt(m[1]), parseInt(m[2]));
-                    else { alert('QR kod topildi lekin station/dispenser yo\'q:\n' + code.data); scanning = false; }
-                }
-            }
-            requestAnimationFrame(scanLoop);
-        }
-
-        function scanManual() {
-            const v = document.getElementById('manualInput').value.trim();
-            const m = v.match(/station[=:](\d+).*dispenser[=:](\d+)/i);
-            if (m) fetchData(parseInt(m[1]), parseInt(m[2]));
-            else {
-                const p = v.split(/[,\s]+/);
-                if (p.length >= 2) fetchData(parseInt(p[0]), parseInt(p[1]));
-            }
-        }
-
-        async function fetchData(sid, did) {
-            scanning = true;
-            hideAll();
-            document.getElementById('loading').classList.remove('hidden');
-            try {
-                const r = await fetch('/api/v1/scanner/ugaz', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ stationId: sid, dispenserId: did })
-                });
-                if (!r.ok) { const e = await r.json(); throw new Error(e.message || e.title || 'UGaz error'); }
-                const d = await r.json();
-                currentData = { ...d, stationId: sid, dispenserId: did };
-                show(d);
-            } catch(e) {
-                document.getElementById('error').textContent = 'Xatolik: ' + e.message;
-                document.getElementById('error').classList.remove('hidden');
-            } finally {
-                document.getElementById('loading').classList.add('hidden');
-                scanning = false;
-            }
-        }
-
-        function show(d) {
-            document.getElementById('rStation').textContent = d.filling_station_id;
-            document.getElementById('rDispenser').textContent = d.dispenser_id;
-            document.getElementById('rOp').textContent = d.operation_id;
-            document.getElementById('rAmount').textContent = (d.amount||0).toLocaleString() + ' UZS';
-            document.getElementById('rVolume').textContent = (d.volume||0) + ' L';
-            document.getElementById('rCar').textContent = d.car_number || '-';
-            document.getElementById('rTime').textContent = d.created_at ? new Date(d.created_at).toLocaleString() : '-';
+    async function fetchData(sid, did) {
+        hideAll();
+        document.getElementById('loading').classList.remove('hidden');
+        try {
+            const r = await fetch('/api/v1/scanner/ugaz', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ stationId: sid, dispenserId: did })
+            });
+            if (!r.ok) { const e = await r.json(); throw new Error(e.message || e.title || 'Error ' + r.status); }
+            const d = await r.json();
+            currentData = d;
+            document.getElementById('rS').textContent = d.filling_station_id;
+            document.getElementById('rD').textContent = d.dispenser_id;
+            document.getElementById('rO').textContent = d.operation_id;
+            document.getElementById('rA').textContent = (d.amount||0).toLocaleString() + ' UZS';
+            document.getElementById('rV').textContent = (d.volume||0) + ' L';
+            document.getElementById('rC').textContent = d.car_number || '-';
+            document.getElementById('rT').textContent = d.created_at ? new Date(d.created_at).toLocaleString() : '-';
             document.getElementById('result').classList.remove('hidden');
+        } catch(e) {
+            document.getElementById('error').textContent = 'Xatolik: ' + e.message;
+            document.getElementById('error').classList.remove('hidden');
+        } finally {
+            document.getElementById('loading').classList.add('hidden');
         }
+    }
 
-        function resetScan() { hideAll(); scanning = false; currentData = null; }
-        function hideAll() {
-            document.getElementById('result').classList.add('hidden');
-            document.getElementById('error').classList.add('hidden');
-        }
-    </script>
+    function resetAll() { hideAll(); }
+    function hideAll() {
+        document.getElementById('result').classList.add('hidden');
+        document.getElementById('error').classList.add('hidden');
+    }
+</script>
 </body>
 </html>
