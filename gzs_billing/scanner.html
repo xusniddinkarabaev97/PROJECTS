@@ -66,9 +66,10 @@
     <!-- Error -->
     <div id="error" class="hidden w-full max-w-md bg-rose-500/10 border border-rose-500/20 text-rose-400 rounded-xl p-4 text-sm"></div>
 
-    <div class="text-xs text-slate-600 mt-6">GZS Billing v1 &copy; 2026</div>
+    <div class="text-xs text-slate-600 mt-6">GZS Billing v2 &copy; 2026 <span id="debug"></span></div>
 
     <script>
+        document.getElementById('debug').textContent = typeof jsQR !== 'undefined' ? '✓ jsQR OK' : '✗ jsQR missing';
         let stream = null, scanning = false, currentData = null;
         const video = document.getElementById('video');
         const canvas = document.createElement('canvas');
