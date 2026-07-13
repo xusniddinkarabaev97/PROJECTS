@@ -23,19 +23,19 @@ export default function Dashboard() {
   );
 
   const stats = [
-    { label: t("totalStations"), value: data?.totalStations ?? 0, icon: "fuel", color: "text-emerald-400", glow: "shadow-emerald-500/5" },
-    { label: t("totalStakeholders"), value: data?.totalStakeholders ?? 0, icon: "users", color: "text-blue-400", glow: "shadow-blue-500/5" },
-    { label: t("totalTransactions"), value: data?.totalTransactions ?? 0, icon: "credit-card", color: "text-amber-400", glow: "shadow-amber-500/5" },
+    { label: "Zapravkalar", value: data?.totalFillingStations ?? 0, icon: "fuel", color: "text-emerald-400", glow: "shadow-emerald-500/5" },
+    { label: t("stakeholders"), value: data?.totalStakeholders ?? 0, icon: "users", color: "text-blue-400", glow: "shadow-blue-500/5" },
+    { label: t("transactions"), value: data?.totalTransactions ?? 0, icon: "credit-card", color: "text-amber-400", glow: "shadow-amber-500/5" },
     { label: t("todayTransactions"), value: data?.todayTransactions ?? 0, icon: "pump", color: "text-emerald-400", glow: "shadow-emerald-500/5" },
-    { label: t("todayRevenue"), value: `${(data?.todayRevenue ?? 0).toLocaleString()} UZS`, icon: "banknote", color: "text-rose-400", glow: "shadow-rose-500/5" },
+    { label: t("todayRevenue"), value: `${(data?.todayTotalAmount ?? 0).toLocaleString()} UZS`, icon: "banknote", color: "text-rose-400", glow: "shadow-rose-500/5" },
   ];
 
   return (
     <div>
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-3xl font-bold tracking-tight text-white mb-1">Zapravkalar</h1>
-        <p className="text-sm text-slate-400">Jami zapravkalar {data?.totalStations ?? 0}</p>
+        <h1 className="text-3xl font-bold tracking-tight text-white mb-1">{t("dashboard")}</h1>
+        <p className="text-sm text-slate-400">Jami zapravkalar {data?.totalFillingStations ?? 0}</p>
       </div>
 
       {/* Stats Cards */}
