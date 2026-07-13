@@ -1,0 +1,288 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>GzsBilling.Api</name>
+    </assembly>
+    <members>
+        <member name="M:GzsBilling.Api.Controllers.AuthController.Login(GzsBilling.Domain.Models.LoginRequest)">
+            <summary>
+            Login and get JWT token with role-based permissions
+            </summary>
+        </member>
+        <member name="M:GzsBilling.Api.Controllers.AuthController.GetCurrentUser">
+            <summary>
+            Get current user info from token
+            </summary>
+        </member>
+        <member name="M:GzsBilling.Api.Controllers.AuthController.GetTestAccounts">
+            <summary>
+            Get available test accounts (dev only)
+            </summary>
+        </member>
+        <member name="M:GzsBilling.Api.Controllers.PayController.GetColumnInfo(System.Guid)">
+            <summary>
+            Get column info for payment page
+            </summary>
+        </member>
+        <member name="M:GzsBilling.Api.Controllers.PayController.ProcessPayment(System.Guid,GzsBilling.Api.Controllers.PayRequest)">
+            <summary>
+            Process payment for a column (simulated)
+            </summary>
+        </member>
+        <member name="M:GzsBilling.Api.Controllers.PaymentsController.CreatePayment(GzsBilling.Api.Models.CreatePaymentRequest)">
+            <summary>
+            Create a new payment transaction
+            </summary>
+        </member>
+        <member name="M:GzsBilling.Api.Controllers.PaymentsController.GetTransaction(System.String)">
+            <summary>
+            Get transaction by ID
+            </summary>
+        </member>
+        <member name="M:GzsBilling.Api.Controllers.PaymentsController.GetTransactions(System.String,System.String,System.Int32,System.Int32)">
+            <summary>
+            Get all transactions with optional filters
+            </summary>
+        </member>
+        <member name="M:GzsBilling.Api.Controllers.PaymentsController.GetDashboard">
+            <summary>
+            Get daily transaction statistics
+            </summary>
+        </member>
+        <member name="M:GzsBilling.Api.Controllers.PaymentsController.Health">
+            <summary>
+            Health check - no auth required
+            </summary>
+        </member>
+        <member name="M:GzsBilling.Api.Controllers.QrController.GetQrCode(System.Guid)">
+            <summary>
+            Generate QR code image for a column ID.
+            QR contains the full payment URL: {scheme}://{host}/pay/{columnId}
+            The host is derived dynamically from the incoming request so the QR
+            works regardless of whether the API is accessed via localhost or ngrok.
+            </summary>
+        </member>
+        <member name="M:GzsBilling.Api.Controllers.QrController.GenerateQrCodes(System.Collections.Generic.List{GzsBilling.Api.Controllers.QrGenerateRequest})">
+            <summary>
+            Generate QR codes from JSON array.
+            Each item must have "url" field. Optional "label" for identification.
+            Returns array of base64 PNG QR codes.
+            </summary>
+        </member>
+        <member name="M:GzsBilling.Api.Controllers.TestImitationController.CreateTestTransaction(GzsBilling.Api.Models.TestImitationRequest)">
+            <summary>
+            Test endpoint: create a simulated transaction for testing purposes.
+            No authentication required. No real payment processing happens.
+            </summary>
+        </member>
+        <member name="M:GzsBilling.Api.Controllers.UgazController.GetInfo(System.Int32,System.Int32)">
+            <summary>
+            Get payment info from UGaz and create a pending transaction
+            </summary>
+        </member>
+        <member name="M:GzsBilling.Api.Controllers.UgazController.Process(GzsBilling.Api.Controllers.UgazProcessRequest)">
+            <summary>
+            Process payment: pay or cancel using real UGaz API fields.
+            Extracts action from payment_status if action is not provided:
+              "finished" → pay, "cancel_transaction" → cancel, "new" → pay
+            </summary>
+        </member>
+        <member name="M:GzsBilling.Api.Controllers.v1.DisputesController.CreateDispute(GzsBilling.Api.Controllers.v1.CreateDisputeRequest)">
+            <summary>
+            Create a new dispute for a transaction.
+            Sets status to Open and SLA deadline to 30 calendar days from creation.
+            </summary>
+        </member>
+        <member name="M:GzsBilling.Api.Controllers.v1.DisputesController.GetDispute(System.String)">
+            <summary>
+            Retrieve a dispute by ID, including its full history and evidence list.
+            </summary>
+        </member>
+        <member name="M:GzsBilling.Api.Controllers.v1.DisputesController.UpdateDisputeStatus(System.String,GzsBilling.Api.Controllers.v1.UpdateDisputeStatusRequest)">
+            <summary>
+            Update the status of a dispute.
+            Allowed transitions: Open to UnderReview, UnderReview to Resolved/Rejected, Rejected to UnderReview.
+            </summary>
+        </member>
+        <member name="M:GzsBilling.Api.Controllers.v1.DisputesController.GetDisputes(System.String,System.String,System.Nullable{System.DateTimeOffset},System.Nullable{System.DateTimeOffset},System.Int32,System.Int32)">
+            <summary>
+            List disputes with optional filters for status, contragent, and date range.
+            </summary>
+        </member>
+        <member name="M:GzsBilling.Api.Controllers.v1.DisputesController.UploadEvidence(System.String,GzsBilling.Api.Controllers.v1.UploadEvidenceRequest)">
+            <summary>
+            Upload evidence documents for a dispute.
+            Accepts metadata about evidence files (actual file upload would use multipart).
+            </summary>
+        </member>
+        <member name="T:GzsBilling.Api.Controllers.v1.ReconciliationController">
+            <summary>
+            Manages reconciliation operations between internal billing records
+            and external provider statements.
+            </summary>
+        </member>
+        <member name="M:GzsBilling.Api.Controllers.v1.ReconciliationController.RunReconciliation(System.String)">
+            <summary>
+            Trigger a manual reconciliation run for the specified provider.
+            </summary>
+        </member>
+        <member name="M:GzsBilling.Api.Controllers.v1.ReconciliationController.GetReports(System.String,System.Int32,System.Int32)">
+            <summary>
+            List reconciliation reports with optional provider filter.
+            </summary>
+        </member>
+        <member name="M:GzsBilling.Api.Controllers.v1.ReconciliationController.GetStats">
+            <summary>
+            Get reconciliation statistics.
+            </summary>
+        </member>
+        <member name="M:GzsBilling.Api.Controllers.v1.RefundsController.CreateRefund(GzsBilling.Api.Controllers.v1.CreateRefundRequest)">
+            <summary>
+            Create a refund for a completed transaction.
+            Protected against double refund: returns 409 if refund already exists.
+            </summary>
+        </member>
+        <member name="M:GzsBilling.Api.Controllers.v1.RefundsController.GetRefund(System.String)">
+            <summary>
+            Get refund by ID with full audit chain
+            </summary>
+        </member>
+        <member name="M:GzsBilling.Api.Controllers.v1.RefundsController.GetRefunds(System.String,System.String,System.Int32,System.Int32)">
+            <summary>
+            Get all refunds with optional filters
+            </summary>
+        </member>
+        <member name="M:GzsBilling.Api.Controllers.v1.ShareholdersController.GetAll">
+            <summary>
+            List all shareholders (Admin only)
+            </summary>
+        </member>
+        <member name="M:GzsBilling.Api.Controllers.v1.ShareholdersController.GetById(System.Guid)">
+            <summary>
+            Get shareholder by ID
+            </summary>
+        </member>
+        <member name="M:GzsBilling.Api.Controllers.v1.ShareholdersController.Create(GzsBilling.Api.Controllers.v1.CreateShareholderRequest)">
+            <summary>
+            Create a new shareholder (Admin only)
+            </summary>
+        </member>
+        <member name="M:GzsBilling.Api.Controllers.v1.ShareholdersController.Update(System.Guid,GzsBilling.Api.Controllers.v1.UpdateShareholderRequest)">
+            <summary>
+            Update an existing shareholder (Admin only)
+            </summary>
+        </member>
+        <member name="M:GzsBilling.Api.Controllers.v1.ShareholdersController.Delete(System.Guid)">
+            <summary>
+            Delete a shareholder (Admin only)
+            </summary>
+        </member>
+        <member name="M:GzsBilling.Api.Controllers.v1.StationsController.GetAll">
+            <summary>
+            List all gas stations
+            </summary>
+        </member>
+        <member name="M:GzsBilling.Api.Controllers.v1.StationsController.GetById(System.Guid)">
+            <summary>
+            Get station by ID with columns
+            </summary>
+        </member>
+        <member name="M:GzsBilling.Api.Controllers.v1.StationsController.GetColumns(System.Guid)">
+            <summary>
+            Get all columns for a station
+            </summary>
+        </member>
+        <member name="M:GzsBilling.Api.Controllers.v1.StationsController.Create(GzsBilling.Api.Controllers.v1.CreateStationRequest)">
+            <summary>
+            Create a new gas station (Admin only)
+            </summary>
+        </member>
+        <member name="M:GzsBilling.Api.Controllers.v1.StationsController.Update(System.Guid,GzsBilling.Api.Controllers.v1.UpdateStationRequest)">
+            <summary>
+            Update an existing gas station
+            </summary>
+        </member>
+        <member name="M:GzsBilling.Api.Controllers.v1.StationsController.Delete(System.Guid)">
+            <summary>
+            Delete a gas station (Admin only)
+            </summary>
+        </member>
+        <member name="M:GzsBilling.Api.Controllers.v1.StationsController.AddColumn(System.Guid,GzsBilling.Api.Controllers.v1.CreateColumnRequest)">
+            <summary>
+            Add a column to a station
+            </summary>
+        </member>
+        <member name="M:GzsBilling.Api.Controllers.v1.StationsController.UpdateColumn(System.Guid,System.Guid,GzsBilling.Api.Controllers.v1.UpdateColumnRequest)">
+            <summary>
+            Update a column
+            </summary>
+        </member>
+        <member name="M:GzsBilling.Api.Controllers.v1.StationsController.DeleteColumn(System.Guid,System.Guid)">
+            <summary>
+            Delete a column
+            </summary>
+        </member>
+        <member name="M:GzsBilling.Api.Controllers.v1.UsersController.GetAll">
+            <summary>
+            List all users (Admin only)
+            </summary>
+        </member>
+        <member name="M:GzsBilling.Api.Controllers.v1.UsersController.GetById(System.Guid)">
+            <summary>
+            Get user by ID
+            </summary>
+        </member>
+        <member name="M:GzsBilling.Api.Controllers.v1.UsersController.Create(GzsBilling.Api.Controllers.v1.CreateUserRequest)">
+            <summary>
+            Create a new user. Manager+ can create Operators/ReadOnly. Admin creates all roles.
+            </summary>
+        </member>
+        <member name="M:GzsBilling.Api.Controllers.v1.UsersController.Update(System.Guid,GzsBilling.Api.Controllers.v1.UpdateUserRequest)">
+            <summary>
+            Update an existing user
+            </summary>
+        </member>
+        <member name="M:GzsBilling.Api.Controllers.v1.UsersController.Deactivate(System.Guid)">
+            <summary>
+            Deactivate a user (soft delete)
+            </summary>
+        </member>
+        <member name="M:GzsBilling.Api.Controllers.WebhooksController.PaymentStatusCallback(System.String,System.Text.Json.JsonElement)">
+            <summary>
+            Receive payment status callback from external payment systems
+            </summary>
+        </member>
+        <member name="M:GzsBilling.Api.Controllers.WebhooksController.ReconciliationCallback(System.String,System.Text.Json.JsonElement)">
+            <summary>
+            Receive reconciliation callback
+            </summary>
+        </member>
+        <member name="T:GzsBilling.Api.Middleware.Security.IdempotencyMiddleware">
+            <summary>
+            Middleware that enforces idempotent request processing using the X-Idempotency-Key header.
+            Caches the original response for 24 hours and replays it on duplicate keys.
+            </summary>
+        </member>
+        <member name="M:GzsBilling.Api.Middleware.Security.IdempotencyMiddleware.DeriveCacheKey(System.String)">
+            <summary>
+            Derives a deterministic, compact cache key from the idempotency key.
+            Uses SHA-256 and takes the first 16 hex characters, prefixed with "idem:".
+            </summary>
+        </member>
+        <member name="T:GzsBilling.Api.Middleware.Security.IdempotencyMiddleware.CachedResponse">
+            <summary>
+            Serializable representation of a cached HTTP response.
+            </summary>
+        </member>
+        <member name="T:GzsBilling.Api.Models.TestImitationRequest">
+            <summary>
+            Request payload for the test transaction imitation endpoint.
+            </summary>
+        </member>
+        <member name="T:GzsBilling.Api.Models.TestTransactionResponse">
+            <summary>
+            Response returned after a test transaction is successfully created.
+            </summary>
+        </member>
+    </members>
+</doc>

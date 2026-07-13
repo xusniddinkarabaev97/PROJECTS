@@ -144,7 +144,7 @@
             }
         }
 
-        // Fetch from UGaz
+        // Fetch from UGaz via billing proxy
         async function fetchUGaz(stationId, dispenserId) {
             scanning = true;
             document.getElementById('result').classList.add('hidden');
@@ -152,27 +152,16 @@
             document.getElementById('loading').classList.remove('hidden');
 
             try {
-                // Login
-                const loginRes = await fetch(`${UGAZ_URL}/api/v1/auth/login`, {
+                const res = await fetch('/api/v1/scanner/ugaz', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(UGAZ_AUTH)
+                    body: JSON.stringify({ stationId, dispenserId })
                 });
-                if (!loginRes.ok) throw new Error('Login failed');
-                const { access_token: token } = await loginRes.json();
-
-                // Start payment
-                const payRes = await fetch(`${UGAZ_URL}/api/v1/payments/start`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                    body: JSON.stringify({ filling_station_id: stationId, dispenser_id: dispenserId })
-                });
-                if (!payRes.ok) {
-                    const err = await payRes.json();
-                    throw new Error(err.message || 'UGaz error');
+                if (!res.ok) {
+                    const err = await res.json();
+                    throw new Error(err.message || err.title || 'UGaz error');
                 }
-
-                const data = await payRes.json();
+                const data = await res.json();
                 currentData = { ...data, stationId, dispenserId };
                 showResult(data);
             } catch (e) {
