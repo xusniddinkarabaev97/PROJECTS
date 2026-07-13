@@ -100,7 +100,7 @@ public class TolovProsessController : ControllerBase
             CardType = "Unknown",
             IdempotencyKey = idempotencyKey,
             PaymentId = 1,
-            Status = TranzaksiyaStatus.Pending,
+            Status = TranzaksiyaStatus.Completed,
             CreatedAt = DateTimeOffset.UtcNow
         };
 
@@ -115,7 +115,7 @@ public class TolovProsessController : ControllerBase
         return CreatedAtAction(nameof(InitsializatsiyaTolovAsync), new { id = tranzaksiya.Id }, new
         {
             transaction_id = tranzaksiya.Id,
-            status = "Pending",
+            status = "Completed",
             total_sum = tranzaksiya.TotalSum,
             car_number = seans.car_number,
             amount = seans.amount,
