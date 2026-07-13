@@ -63,7 +63,7 @@ public class TolovProsessController : ControllerBase
         [FromBody] TolovInitiateRequest request,
         CancellationToken cancellationToken)
     {
-        var idempotencyKey = $"{request.filling_station_id}_{request.dispenser_id}_{request.payment_id}_{DateTimeOffset.UtcNow:yyyyMMddHH}";
+        var idempotencyKey = $"{request.filling_station_id}_{request.dispenser_id}_{DateTimeOffset.UtcNow:yyyyMMddHH}";
 
         var existing = await _dbContext.Tranzaktsiyalar
             .FirstOrDefaultAsync(t => t.IdempotencyKey == idempotencyKey, cancellationToken);
@@ -97,9 +97,9 @@ public class TolovProsessController : ControllerBase
             TotalSum = seans.amount,
             FillingStationId = seans.filling_station_id,
             DispenserId = seans.dispenser_id,
-            CardType = await DetectCardTypeAsync(request.payment_id),
+            CardType = "Unknown",
             IdempotencyKey = idempotencyKey,
-            PaymentId = request.payment_id,
+            PaymentId = 1,
             Status = TranzaksiyaStatus.Pending,
             CreatedAt = DateTimeOffset.UtcNow
         };
@@ -215,24 +215,11 @@ public class TolovProsessController : ControllerBase
 /// </summary>
 public class TolovInitiateRequest
 {
-    /// <summary>
-    /// The filling station identifier assigned by UGaz.
-    /// </summary>
     [Required]
     public int filling_station_id { get; set; }
 
-    /// <summary>
-    /// The fuel dispenser identifier at the station.
-    /// </summary>
     [Required]
     public int dispenser_id { get; set; }
-
-    /// <summary>
-    /// The payment provider identifier (1=Uzcard, 2=Humo).
-    /// </summary>
-    [Required]
-    [Range(1, int.MaxValue)]
-    public int payment_id { get; set; }
 }
 
 /// <summary>
