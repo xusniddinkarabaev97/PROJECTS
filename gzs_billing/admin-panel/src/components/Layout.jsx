@@ -28,7 +28,7 @@ export default function Layout({ children }) {
     { path: "/stations", label: t("stations"), icon: icons.stations, roles: ["superadmin"] },
     { path: "/stakeholders", label: t("stakeholders"), icon: icons.stakeholders, roles: ["superadmin"] },
     { path: "/payments", label: t("payments"), icon: icons.payments, roles: ["superadmin"] },
-    { path: "/transactions", label: t("transactions"), icon: icons.transactions, roles: ["manager", "superadmin"] },
+
     { path: "/sverka", label: t("sverka"), icon: icons.sverka, roles: ["manager", "superadmin"] },
     { path: "/reports", label: t("reports"), icon: icons.reports, roles: ["manager", "superadmin"] },
     { path: "/settings", label: t("settings"), icon: icons.settings, roles: ["superadmin"] },

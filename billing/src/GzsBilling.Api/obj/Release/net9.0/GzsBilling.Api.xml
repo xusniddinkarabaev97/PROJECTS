@@ -1,0 +1,236 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>GzsBilling.Api</name>
+    </assembly>
+    <members>
+        <member name="T:GzsBilling.Api.Controllers.Admin.DashboardController">
+            <summary>
+            Admin API controller for dashboard summary statistics.
+            </summary>
+        </member>
+        <member name="M:GzsBilling.Api.Controllers.Admin.DashboardController.GetStats(System.Threading.CancellationToken)">
+            <summary>
+            Returns aggregate dashboard statistics for the admin panel.
+            Includes total filling stations, stakeholders, transactions,
+            today's total amount, and pending disbursements.
+            </summary>
+        </member>
+        <member name="T:GzsBilling.Api.Controllers.Admin.FillingStationsController">
+            <summary>
+            Admin API controller for full CRUD management of filling stations.
+            </summary>
+        </member>
+        <member name="M:GzsBilling.Api.Controllers.Admin.FillingStationsController.GetAll(System.Threading.CancellationToken)">
+            <summary>
+            Lists all filling stations with their stakeholder counts.
+            </summary>
+        </member>
+        <member name="M:GzsBilling.Api.Controllers.Admin.FillingStationsController.GetById(System.Int32,System.Threading.CancellationToken)">
+            <summary>
+            Gets a single filling station by ID, including stakeholder count.
+            </summary>
+        </member>
+        <member name="M:GzsBilling.Api.Controllers.Admin.FillingStationsController.Create(GzsBilling.Domain.Models.CreateFillingStationRequest,System.Threading.CancellationToken)">
+            <summary>
+            Creates a new filling station.
+            </summary>
+        </member>
+        <member name="M:GzsBilling.Api.Controllers.Admin.FillingStationsController.Update(System.Int32,GzsBilling.Domain.Models.CreateFillingStationRequest,System.Threading.CancellationToken)">
+            <summary>
+            Updates an existing filling station.
+            </summary>
+        </member>
+        <member name="M:GzsBilling.Api.Controllers.Admin.FillingStationsController.Delete(System.Int32,System.Threading.CancellationToken)">
+            <summary>
+            Soft-deletes a filling station by setting IsActive to false.
+            </summary>
+        </member>
+        <member name="M:GzsBilling.Api.Controllers.Admin.FillingStationsController.Activate(System.Int32,System.Threading.CancellationToken)">
+            <summary>
+            Reactivates a soft-deleted filling station.
+            </summary>
+        </member>
+        <member name="T:GzsBilling.Api.Controllers.Admin.SettingsController">
+            <summary>
+            Admin API controller for managing system settings as key-value pairs.
+            </summary>
+        </member>
+        <member name="M:GzsBilling.Api.Controllers.Admin.SettingsController.GetAll(System.Threading.CancellationToken)">
+            <summary>
+            Lists all system settings.
+            </summary>
+        </member>
+        <member name="M:GzsBilling.Api.Controllers.Admin.SettingsController.GetByKey(System.String,System.Threading.CancellationToken)">
+            <summary>
+            Gets a single system setting by its key.
+            </summary>
+        </member>
+        <member name="M:GzsBilling.Api.Controllers.Admin.SettingsController.Update(System.String,GzsBilling.Domain.Models.UpdateSettingRequest,System.Threading.CancellationToken)">
+            <summary>
+            Updates (or creates) a system setting value.
+            </summary>
+        </member>
+        <member name="M:GzsBilling.Api.Controllers.Admin.SettingsController.GetCategories(System.Threading.CancellationToken)">
+            <summary>
+            Lists all distinct setting categories.
+            </summary>
+        </member>
+        <member name="M:GzsBilling.Api.Controllers.Admin.UsersController.GetAll(System.Threading.CancellationToken)">
+            <summary>
+            Lists all users.
+            </summary>
+        </member>
+        <member name="M:GzsBilling.Api.Controllers.Admin.UsersController.GetById(System.Guid,System.Threading.CancellationToken)">
+            <summary>
+            Gets a single user by ID.
+            </summary>
+        </member>
+        <member name="M:GzsBilling.Api.Controllers.Admin.UsersController.Create(GzsBilling.Domain.Models.CreateUserRequest,System.Threading.CancellationToken)">
+            <summary>
+            Creates a new user (superadmin only).
+            </summary>
+        </member>
+        <member name="M:GzsBilling.Api.Controllers.Admin.UsersController.ToggleActive(System.Guid,System.Threading.CancellationToken)">
+            <summary>
+            Toggles a user's active status (activate/deactivate).
+            </summary>
+        </member>
+        <member name="M:GzsBilling.Api.Controllers.AuthController.Login(GzsBilling.Domain.Models.LoginRequest,System.Threading.CancellationToken)">
+            <summary>
+            Authenticates a user and returns a JWT token.
+            </summary>
+        </member>
+        <member name="M:GzsBilling.Api.Controllers.AuthController.Register(GzsBilling.Domain.Models.CreateUserRequest,System.Threading.CancellationToken)">
+            <summary>
+            Creates a new user. Only superadmins can register new users.
+            </summary>
+        </member>
+        <member name="T:GzsBilling.Api.Controllers.QrCodeController">
+            <summary>
+            QR-kod yaratish uchun API.
+            Yoqilg'i quyish shoxobchalarida to'lov QR kodlari generatsiya qiladi.
+            </summary>
+        </member>
+        <member name="M:GzsBilling.Api.Controllers.QrCodeController.GenerateQr(System.Int32,System.Int32,System.Int32,System.Threading.CancellationToken)">
+            <summary>
+            QR-kod generatsiya qiladi va base64 PNG formatda qaytaradi.
+            QR ichida to'lov URL: gzs-billing://pay?station=ID&amp;dispenser=ID&amp;payment=ID
+            </summary>
+            <param name="stationId">Shoxobcha ID (filling_station_id)</param>
+            <param name="dispenserId">Kolonna raqami (dispenser_id)</param>
+            <param name="paymentId">To'lov provayderi ID (1=Uzcard, 2=Humo)</param>
+        </member>
+        <member name="M:GzsBilling.Api.Controllers.QrCodeController.GetActivePayments(System.Threading.CancellationToken)">
+            <summary>
+            Barcha faol to'lov provayderlari ro'yxati.
+            </summary>
+        </member>
+        <member name="M:GzsBilling.Api.Controllers.QrCodeController.GetActiveStations(System.Threading.CancellationToken)">
+            <summary>
+            Barcha faol shoxobchalar ro'yxati (QR generatsiya uchun).
+            </summary>
+        </member>
+        <member name="M:GzsBilling.Api.Controllers.QrCodeController.GetDispensers(System.Int32,System.Threading.CancellationToken)">
+            <summary>
+            Shoxobchadagi faol kolonkalar ro'yxati.
+            </summary>
+        </member>
+        <member name="T:GzsBilling.Api.Controllers.QrCodeResponse">
+            <summary>
+            QR-kod javobi.
+            </summary>
+        </member>
+        <member name="T:GzsBilling.Api.Controllers.TolovProsessController">
+            <summary>
+            API controller for managing payment initiation and callback processing
+            from payment providers (Click, Paynet) in the GZS Billing System.
+            </summary>
+        </member>
+        <member name="M:GzsBilling.Api.Controllers.TolovProsessController.InitsializatsiyaTolovAsync(GzsBilling.Api.Controllers.TolovInitiateRequest,System.Threading.CancellationToken)">
+            <summary>
+            Initiates a new payment transaction for a refueling session.
+            Accepts filling station ID, dispenser ID, and payment provider ID.
+            Validates idempotency, pulls live metrics from UGaz API, and returns
+            a newly generated transaction ID.
+            </summary>
+            <param name="request">Payment initiation payload containing station, dispenser, and payment identifiers.</param>
+            <param name="cancellationToken">Cancellation token.</param>
+            <returns>
+            201 Created with the generated <c>transaction_id</c> on success.
+            409 Conflict if an idempotency key collision is detected.
+            502 Bad Gateway if the UGaz API is unreachable.
+            </returns>
+        </member>
+        <member name="M:GzsBilling.Api.Controllers.TolovProsessController.CallbackTolovTasdiqlashAsync(GzsBilling.Api.Controllers.TolovCallbackRequest,System.Threading.CancellationToken)">
+            <summary>
+            Processes a payment callback from the payment provider (Click/Paynet).
+            Requires the <c>X-Idempotency-Key</c> header for safe retry handling.
+            On successful completion, the transaction is immediately published
+            to RabbitMQ for the 24-hour reconciliation buffer.
+            </summary>
+            <param name="callback">Callback payload containing transaction_id, status, and confirmed total_sum.</param>
+            <param name="cancellationToken">Cancellation token.</param>
+            <returns>
+            200 OK with the updated transaction state.
+            400 Bad Request if validation fails.
+            404 Not Found if the transaction does not exist.
+            </returns>
+        </member>
+        <member name="T:GzsBilling.Api.Controllers.TolovInitiateRequest">
+            <summary>
+            Request payload for initiating a payment transaction.
+            </summary>
+        </member>
+        <member name="P:GzsBilling.Api.Controllers.TolovInitiateRequest.filling_station_id">
+            <summary>
+            The filling station identifier assigned by UGaz.
+            </summary>
+        </member>
+        <member name="P:GzsBilling.Api.Controllers.TolovInitiateRequest.dispenser_id">
+            <summary>
+            The fuel dispenser identifier at the station.
+            </summary>
+        </member>
+        <member name="P:GzsBilling.Api.Controllers.TolovInitiateRequest.payment_id">
+            <summary>
+            The payment provider identifier (1=Uzcard, 2=Humo).
+            </summary>
+        </member>
+        <member name="T:GzsBilling.Api.Controllers.TolovCallbackRequest">
+            <summary>
+            Request payload for payment provider callback confirmation.
+            </summary>
+        </member>
+        <member name="P:GzsBilling.Api.Controllers.TolovCallbackRequest.transaction_id">
+            <summary>
+            The transaction ID generated during initiation.
+            </summary>
+        </member>
+        <member name="P:GzsBilling.Api.Controllers.TolovCallbackRequest.status">
+            <summary>
+            The final status: "completed", "failed", or "canceled".
+            </summary>
+        </member>
+        <member name="P:GzsBilling.Api.Controllers.TolovCallbackRequest.total_sum">
+            <summary>
+            The confirmed total amount from the payment provider.
+            </summary>
+        </member>
+        <member name="T:GzsBilling.Api.Controllers.UGazCallbackController">
+            <summary>
+            UGaz dan keladigan callback (to'lov tasdiqlash) uchun endpoint.
+            </summary>
+        </member>
+        <member name="M:GzsBilling.Api.Controllers.UGazCallbackController.UGazCallback(GzsBilling.Api.Controllers.UGazCallbackPayload,System.Threading.CancellationToken)">
+            <summary>
+            UGaz callback — to'lov natijasini qabul qiladi.
+            </summary>
+        </member>
+        <member name="T:GzsBilling.Api.Controllers.UGazCallbackPayload">
+            <summary>
+            UGaz callback payload modeli.
+            </summary>
+        </member>
+    </members>
+</doc>

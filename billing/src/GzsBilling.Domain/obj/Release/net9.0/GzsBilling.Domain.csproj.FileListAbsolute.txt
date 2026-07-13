@@ -1,0 +1,12 @@
+D:\PROJECTS\PROJECTS\billing\src\GzsBilling.Domain\bin\Release\net9.0\GzsBilling.Domain.deps.json
+D:\PROJECTS\PROJECTS\billing\src\GzsBilling.Domain\bin\Release\net9.0\GzsBilling.Domain.dll
+D:\PROJECTS\PROJECTS\billing\src\GzsBilling.Domain\bin\Release\net9.0\GzsBilling.Domain.pdb
+D:\PROJECTS\PROJECTS\billing\src\GzsBilling.Domain\obj\Release\net9.0\GzsBilling.Domain.GeneratedMSBuildEditorConfig.editorconfig
+D:\PROJECTS\PROJECTS\billing\src\GzsBilling.Domain\obj\Release\net9.0\GzsBilling.Domain.AssemblyInfoInputs.cache
+D:\PROJECTS\PROJECTS\billing\src\GzsBilling.Domain\obj\Release\net9.0\GzsBilling.Domain.AssemblyInfo.cs
+D:\PROJECTS\PROJECTS\billing\src\GzsBilling.Domain\obj\Release\net9.0\GzsBilling.Domain.csproj.CoreCompileInputs.cache
+D:\PROJECTS\PROJECTS\billing\src\GzsBilling.Domain\obj\Release\net9.0\GzsBilling.Domain.sourcelink.json
+D:\PROJECTS\PROJECTS\billing\src\GzsBilling.Domain\obj\Release\net9.0\GzsBilling.Domain.dll
+D:\PROJECTS\PROJECTS\billing\src\GzsBilling.Domain\obj\Release\net9.0\refint\GzsBilling.Domain.dll
+D:\PROJECTS\PROJECTS\billing\src\GzsBilling.Domain\obj\Release\net9.0\GzsBilling.Domain.pdb
+D:\PROJECTS\PROJECTS\billing\src\GzsBilling.Domain\obj\Release\net9.0\ref\GzsBilling.Domain.dll
