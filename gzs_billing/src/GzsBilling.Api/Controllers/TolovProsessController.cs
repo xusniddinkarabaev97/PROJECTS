@@ -61,8 +61,8 @@ public class TolovProsessController : ControllerBase
     [ProducesResponseType(StatusCodes.Status502BadGateway)]
     public async Task<IActionResult> InitsializatsiyaTolovAsync(
         [FromBody] TolovInitiateRequest request,
-        [FromQuery] string? status = null,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        [FromQuery] string? status = null)
     {
         var idempotencyKey = $"{request.filling_station_id}_{request.dispenser_id}_{DateTimeOffset.UtcNow:yyyyMMddHH}";
 
