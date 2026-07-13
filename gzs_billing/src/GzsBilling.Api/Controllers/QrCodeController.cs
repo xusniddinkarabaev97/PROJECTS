@@ -57,8 +57,8 @@ public class QrCodeController : ControllerBase
             .AsNoTracking()
             .FirstOrDefaultAsync(d => d.Id == dispenserId && d.FillingStationId == stationId && d.IsActive, ct);
 
-        if (dispenser is null)
-            return NotFound(new { error = "NOT_FOUND", message = $"Dispenser {dispenserId} not found at station {stationId}." });
+        var dispenserName = dispenser?.Name ?? $"Dispenser {dispenserId}";
+        var fuelType = dispenser?.FuelType ?? "Unknown";
 
         var qrContent = $"gzs-billing://pay?station={stationId}&dispenser={dispenserId}";
         var webFallback = $"https://whirl.uz/swagger/UGaz";
@@ -72,15 +72,15 @@ public class QrCodeController : ControllerBase
 
         _logger.LogInformation(
             "QR generated: station={Station}({SId}), dispenser={Dispenser}({DId})",
-            station.Name, stationId, dispenser.Name, dispenserId);
+            station.Name, stationId, dispenserName, dispenserId);
 
         return Ok(new QrCodeResponse
         {
             StationId = stationId,
             StationName = station.Name,
             DispenserId = dispenserId,
-            DispenserName = dispenser.Name,
-            FuelType = dispenser.FuelType,
+            DispenserName = dispenserName,
+            FuelType = fuelType,
             QrContent = qrContent,
             WebFallbackUrl = webFallback,
             InitiatePayload = new
