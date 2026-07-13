@@ -23,11 +23,11 @@ export default function Dashboard() {
   );
 
   const stats = [
-    { label: "Zapravkalar", value: data?.totalFillingStations ?? 0, icon: "fuel", color: "text-emerald-400", glow: "shadow-emerald-500/5" },
-    { label: t("stakeholders"), value: data?.totalStakeholders ?? 0, icon: "users", color: "text-blue-400", glow: "shadow-blue-500/5" },
-    { label: t("transactions"), value: data?.totalTransactions ?? 0, icon: "credit-card", color: "text-amber-400", glow: "shadow-amber-500/5" },
-    { label: t("todayTransactions"), value: data?.todayTransactions ?? 0, icon: "pump", color: "text-emerald-400", glow: "shadow-emerald-500/5" },
-    { label: t("todayRevenue"), value: `${(data?.todayTotalAmount ?? 0).toLocaleString()} UZS`, icon: "banknote", color: "text-rose-400", glow: "shadow-rose-500/5" },
+    { label: "Zapravkalar", value: data?.totalFillingStations ?? 0, icon: "fuel", color: "text-emerald-400", glow: "shadow-emerald-500/5", path: "/stations" },
+    { label: t("stakeholders"), value: data?.totalStakeholders ?? 0, icon: "users", color: "text-blue-400", glow: "shadow-blue-500/5", path: "/stakeholders" },
+    { label: t("transactions"), value: data?.totalTransactions ?? 0, icon: "credit-card", color: "text-amber-400", glow: "shadow-amber-500/5", path: "#" },
+    { label: t("todayTransactions"), value: data?.todayTransactions ?? 0, icon: "pump", color: "text-emerald-400", glow: "shadow-emerald-500/5", path: "#" },
+    { label: t("todayRevenue"), value: `${(data?.todayTotalAmount ?? 0).toLocaleString()} UZS`, icon: "banknote", color: "text-rose-400", glow: "shadow-rose-500/5", path: "#" },
   ];
 
   return (
@@ -41,7 +41,7 @@ export default function Dashboard() {
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8">
         {stats.map((s) => (
-          <div key={s.label} className={`bg-[#161c24]/60 backdrop-blur-md border border-slate-800 rounded-2xl p-5 hover:border-slate-700 transition ${s.glow}`}>
+          <div onClick={() => { window.location.hash = s.path; }} className={`bg-[#161c24]/60 backdrop-blur-md border border-slate-800 rounded-2xl p-5 hover:border-slate-700 transition cursor-pointer ${s.glow}`}>
             <div className="flex items-start justify-between">
               <div className="flex flex-col">
                 <span className="text-xs text-slate-400 mb-2">{s.label}</span>
