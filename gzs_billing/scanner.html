@@ -6,7 +6,7 @@
 <script>
 let stream=null,scanning=false,currentData=null;
 const video=document.getElementById('video'),canvas=document.createElement('canvas'),ctx=canvas.getContext('2d');
-const PAY_HTML='<div style="text-align:center;margin-bottom:16px"><div style="font-size:48px;margin-bottom:8px">⛽</div><h2 style="font-size:20px;font-weight:700;color:#fff">To\'lov ma\'lumoti</h2></div><div class="row"><span>Stansiya</span><span class="vl" id="rS">-</span></div><div class="row"><span>Kolonna</span><span class="vl" id="rD">-</span></div><div class="row"><span>Avtomobil</span><span class="vl" id="rC">-</span></div><div class="row"><span>Hajm</span><span class="vl" id="rV">-</span></div><div class="row"><span>Sana</span><span class="vl" style="font-size:12px" id="rT">-</span></div><div style="text-align:center;margin:20px 0"><span style="color:#94a3b8;font-size:13px">To\'lov summasi</span><div class="vl-green" id="rA">-</div></div><button id="btnPay" class="btn btn-teal" onclick="initiatePayment()">💳 To\'lash</button><button class="btn btn-gray" onclick="cancelPayment()">↩ Orqaga</button><div id="payErr" class="hidden err"></div>';
+var PAY_HTML='<div style="text-align:center;margin-bottom:16px"><div style="font-size:48px;margin-bottom:8px">⛽</div><h2 style="font-size:20px;font-weight:700;color:#fff">Tolov malumoti</h2></div><div class="row"><span>Stansiya</span><span class="vl" id="rS">-</span></div><div class="row"><span>Kolonna</span><span class="vl" id="rD">-</span></div><div class="row"><span>Avtomobil</span><span class="vl" id="rC">-</span></div><div class="row"><span>Hajm</span><span class="vl" id="rV">-</span></div><div class="row"><span>Sana</span><span class="vl" style="font-size:12px" id="rT">-</span></div><div style="text-align:center;margin:20px 0"><span style="color:#94a3b8;font-size:13px">Tolov summasi</span><div class="vl-green" id="rA">-</div></div><button id="btnPay" class="btn btn-teal" onclick="initiatePayment()">💳 Tolash</button><button class="btn btn-gray" onclick="cancelPayment()">↩ Orqaga</button><div id="payErr" class="hidden err"></div>';
 
 async function startCamera(){try{stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment',width:{ideal:1280},height:{ideal:720}}});video.srcObject=stream;video.play();document.getElementById('scannerScreen').classList.remove('hidden');document.getElementById('scanStatus').textContent='QR kodni ramkaga joylashtiring';scanning=true;scanLoop()}catch(e){var i=document.createElement('input');i.type='file';i.accept='image/*';i.capture='environment';i.onchange=function(){if(i.files[0])handleFile(i.files[0])};i.click()}}
 function stopCamera(){if(stream){stream.getTracks().forEach(t=>t.stop());stream=null}scanning=false;document.getElementById('scannerScreen').classList.add('hidden')}
@@ -61,9 +61,5 @@ function hideAll(){
   document.getElementById('errorBox').classList.add('hidden');
   document.getElementById('loading').classList.add('hidden');
 }
-function resetAll(){
-  hideAll();
-  currentData=null;
-  document.getElementById('manualInput').value='';
-}
+function resetAll(){location.reload()}
 </script></body></html>
