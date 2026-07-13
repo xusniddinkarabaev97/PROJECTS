@@ -41,10 +41,9 @@ public class QrCodeController : ControllerBase
     public async Task<IActionResult> GenerateQr(
         [FromQuery, Required] int stationId,
         [FromQuery, Required] int dispenserId,
-        [FromQuery, Required] int paymentId,
         CancellationToken ct)
     {
-        if (stationId <= 0 || dispenserId <= 0 || paymentId <= 0)
+        if (stationId <= 0 || dispenserId <= 0)
             return BadRequest(new { error = "INVALID_PARAMS", message = "All IDs must be positive." });
 
         var station = await _dbContext.FillingStations
@@ -61,18 +60,8 @@ public class QrCodeController : ControllerBase
         if (dispenser is null)
             return NotFound(new { error = "NOT_FOUND", message = $"Dispenser {dispenserId} not found at station {stationId}." });
 
-        var payment = await _dbContext.Payments
-            .AsNoTracking()
-            .FirstOrDefaultAsync(p => p.Id == paymentId && p.IsActive, ct);
-
-        if (payment is null)
-            return NotFound(new { error = "NOT_FOUND", message = $"Payment provider {paymentId} not found." });
-
-        // QR kod ichidagi ma'lumot – deep-link yoki web URL
-        // Mobil ilova uchun deep-link: gzs-billing://pay?station=...&dispenser=...&payment=...
-        // Web fallback:
-        var qrContent = $"gzs-billing://pay?station={stationId}&dispenser={dispenserId}&payment={paymentId}";
-        var webFallback = $"https://black.tail3183c8.ts.net/api/v1/payments/initiate";
+        var qrContent = $"gzs-billing://pay?station={stationId}&dispenser={dispenserId}";
+        var webFallback = $"https://whirl.uz/swagger/UGaz";
 
         // QR kod PNG rasm generatsiya
         using var qrGenerator = new QRCodeGenerator();
@@ -82,8 +71,8 @@ public class QrCodeController : ControllerBase
         var qrBase64 = Convert.ToBase64String(qrBytes);
 
         _logger.LogInformation(
-            "QR generated: station={Station}({SId}), dispenser={Dispenser}({DId}), payment={Payment}({PId})",
-            station.Name, stationId, dispenser.Name, dispenserId, payment.Name, paymentId);
+            "QR generated: station={Station}({SId}), dispenser={Dispenser}({DId})",
+            station.Name, stationId, dispenser.Name, dispenserId);
 
         return Ok(new QrCodeResponse
         {
@@ -92,15 +81,12 @@ public class QrCodeController : ControllerBase
             DispenserId = dispenserId,
             DispenserName = dispenser.Name,
             FuelType = dispenser.FuelType,
-            PaymentId = paymentId,
-            PaymentName = payment.Name,
             QrContent = qrContent,
             WebFallbackUrl = webFallback,
             InitiatePayload = new
             {
                 filling_station_id = stationId,
-                dispenser_id = dispenserId,
-                payment_id = paymentId
+                dispenser_id = dispenserId
             },
             QrCodeBase64 = $"data:image/png;base64,{qrBase64}",
             GeneratedAt = DateTimeOffset.UtcNow
