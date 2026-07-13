@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <title>GZS Scanner</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body { font-family: system-ui, sans-serif; background: #0a0e14; color: #e6edf3; }
+        .pulse { animation: pulse 2s infinite; }
+        @keyframes pulse { 0%,100% { opacity:1 } 50% { opacity:0.5 } }
+    </style>
+</head>
+<body class="min-h-screen bg-[#0a0e14] flex flex-col items-center p-4">
+
+    <!-- Header -->
+    <div class="w-full max-w-md text-center mt-8 mb-6">
+        <div class="w-16 h-16 rounded-2xl bg-gradient-to-tr from-teal-500 to-emerald-400 mx-auto flex items-center justify-center text-slate-900 font-bold text-2xl mb-4">GZS</div>
+        <h1 class="text-2xl font-bold text-white">GZS Scanner</h1>
+        <p class="text-sm text-slate-400 mt-1">QR kodni skanerlang yoki kiriting</p>
+    </div>
+
+    <!-- Camera / Video -->
+    <div class="w-full max-w-md bg-[#161c24] border border-slate-800 rounded-2xl overflow-hidden mb-4">
+        <video id="video" class="w-full h-64 object-cover" autoplay playsinline></video>
+        <div id="noCamera" class="hidden h-64 flex items-center justify-center text-slate-500">
+            <div class="text-center"><span class="text-4xl block mb-2">📷</span>Kamera yo'q</div>
+        </div>
+    </div>
+
+    <!-- Manual input -->
+    <div class="w-full max-w-md flex gap-2 mb-4">
+        <input id="manualInput" class="flex-1 px-4 py-3 bg-[#161c24] border border-slate-700 rounded-xl text-white text-sm outline-none focus:border-teal-500/50" placeholder="station=1283&dispenser=1">
+        <button onclick="scanManual()" class="px-6 py-3 rounded-xl bg-gradient-to-r from-teal-500 to-emerald-500 text-slate-900 font-semibold text-sm cursor-pointer">OK</button>
+    </div>
+
+    <!-- Result Card -->
+    <div id="result" class="w-full max-w-md hidden">
+        <div class="bg-[#161c24]/60 backdrop-blur-md border border-slate-800 rounded-2xl p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-bold text-white" id="resultTitle">Natija</h3>
+                <span id="resultBadge" class="px-3 py-1 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">OK</span>
+            </div>
+            <div class="space-y-3 text-sm">
+                <div class="flex justify-between py-2 border-b border-slate-800"><span class="text-slate-400">Stansiya ID</span><span class="text-white font-mono" id="rStation">-</span></div>
+                <div class="flex justify-between py-2 border-b border-slate-800"><span class="text-slate-400">Kolonna ID</span><span class="text-white font-mono" id="rDispenser">-</span></div>
+                <div class="flex justify-between py-2 border-b border-slate-800"><span class="text-slate-400">Operatsiya</span><span class="text-white font-mono" id="rOp">-</span></div>
+                <div class="flex justify-between py-2 border-b border-slate-800"><span class="text-slate-400">Summa</span><span class="text-emerald-400 font-bold text-lg" id="rAmount">-</span></div>
+                <div class="flex justify-between py-2 border-b border-slate-800"><span class="text-slate-400">Hajm</span><span class="text-white" id="rVolume">-</span></div>
+                <div class="flex justify-between py-2 border-b border-slate-800"><span class="text-slate-400">Avto raqam</span><span class="text-white font-bold font-mono" id="rCar">-</span></div>
+                <div class="flex justify-between py-2"><span class="text-slate-400">Vaqt</span><span class="text-white text-xs" id="rTime">-</span></div>
+            </div>
+            <div class="flex gap-3 mt-6">
+                <button onclick="initiatePayment()" id="btnPay" disabled class="flex-1 py-3 rounded-xl bg-gradient-to-r from-teal-500 to-emerald-500 text-slate-900 font-semibold text-sm cursor-pointer disabled:opacity-50 transition">To'lovni boshlash</button>
+                <button onclick="resetScan()" class="px-6 py-3 rounded-xl bg-slate-800 text-slate-400 text-sm font-medium hover:text-white cursor-pointer transition">Orqaga</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading -->
+    <div id="loading" class="hidden w-full max-w-md flex items-center justify-center py-10 gap-3">
+        <div class="w-5 h-5 border-2 border-slate-700 border-t-teal-400 rounded-full animate-spin"></div>
+        <span class="text-slate-400">Yuklanmoqda...</span>
+    </div>
+
+    <!-- Error -->
+    <div id="error" class="hidden w-full max-w-md bg-rose-500/10 border border-rose-500/20 text-rose-400 rounded-xl p-4 text-sm"></div>
+
+    <div class="w-full max-w-md text-center text-xs text-slate-600 mt-4">GZS Billing &copy; 2026</div>
+
+    <script>
+        let currentData = null;
+        let video = document.getElementById('video');
+        let stream = null;
+        let scanning = false;
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        const UGAZ_URL = 'https://uzinfocom-payment.ugaz.uz';
+        const UGAZ_AUTH = { username: 'uzinfocom_billing', password: 'o7G1UA5juQIai' };
+        const DEEP_LINK_RE = /gzs-billing:\/\/pay\?.*station=(\d+).*dispenser=(\d+)/i;
+
+        // Start camera
+        async function startCamera() {
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false });
+                video.srcObject = stream;
+                video.play();
+                scanQR();
+            } catch (e) {
+                document.getElementById('noCamera').classList.remove('hidden');
+                video.classList.add('hidden');
+            }
+        }
+
+        // Scan QR from video frame
+        function scanQR() {
+            if (!stream) return;
+            if (video.readyState === video.HAVE_ENOUGH_DATA) {
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                
+                // Simple QR scan - try parsing deep link from image
+                // For full QR: use jsQR library dynamically
+                if (window.jsQR) {
+                    const code = jsQR(imageData.data, canvas.width, canvas.height);
+                    if (code) parseAndFetch(code.data);
+                }
+            }
+            requestAnimationFrame(scanQR);
+        }
+
+        // Load jsQR
+        function loadJsQR(cb) {
+            if (window.jsQR) { cb(); return; }
+            const s = document.createElement('script');
+            s.src = 'https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js';
+            s.onload = cb;
+            document.head.appendChild(s);
+        }
+
+        // Parse QR content and fetch UGaz
+        function parseAndFetch(qrText) {
+            if (scanning) return;
+            const match = qrText.match(DEEP_LINK_RE);
+            if (match) {
+                fetchUGaz(parseInt(match[1]), parseInt(match[2]));
+            }
+        }
+
+        // Manual scan
+        function scanManual() {
+            const val = document.getElementById('manualInput').value.trim();
+            const m = val.match(/station[=:](\d+).*dispenser[=:](\d+)/i);
+            if (m) fetchUGaz(parseInt(m[1]), parseInt(m[2]));
+            else {
+                // Try as direct station dispenser
+                const parts = val.split(/[,\s]+/);
+                if (parts.length >= 2) fetchUGaz(parseInt(parts[0]), parseInt(parts[1]));
+            }
+        }
+
+        // Fetch from UGaz
+        async function fetchUGaz(stationId, dispenserId) {
+            scanning = true;
+            document.getElementById('result').classList.add('hidden');
+            document.getElementById('error').classList.add('hidden');
+            document.getElementById('loading').classList.remove('hidden');
+
+            try {
+                // Login
+                const loginRes = await fetch(`${UGAZ_URL}/api/v1/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(UGAZ_AUTH)
+                });
+                if (!loginRes.ok) throw new Error('Login failed');
+                const { access_token: token } = await loginRes.json();
+
+                // Start payment
+                const payRes = await fetch(`${UGAZ_URL}/api/v1/payments/start`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify({ filling_station_id: stationId, dispenser_id: dispenserId })
+                });
+                if (!payRes.ok) {
+                    const err = await payRes.json();
+                    throw new Error(err.message || 'UGaz error');
+                }
+
+                const data = await payRes.json();
+                currentData = { ...data, stationId, dispenserId };
+                showResult(data);
+            } catch (e) {
+                document.getElementById('error').textContent = 'Xatolik: ' + e.message;
+                document.getElementById('error').classList.remove('hidden');
+                currentData = null;
+            } finally {
+                document.getElementById('loading').classList.add('hidden');
+                scanning = false;
+            }
+        }
+
+        function showResult(d) {
+            document.getElementById('rStation').textContent = d.filling_station_id;
+            document.getElementById('rDispenser').textContent = d.dispenser_id;
+            document.getElementById('rOp').textContent = d.operation_id;
+            document.getElementById('rAmount').textContent = (d.amount || 0).toLocaleString() + ' UZS';
+            document.getElementById('rVolume').textContent = (d.volume || 0) + ' L';
+            document.getElementById('rCar').textContent = d.car_number || '-';
+            document.getElementById('rTime').textContent = d.created_at ? new Date(d.created_at).toLocaleString() : '-';
+            document.getElementById('btnPay').disabled = false;
+            document.getElementById('result').classList.remove('hidden');
+        }
+
+        async function initiatePayment() {
+            if (!currentData) return;
+            const btn = document.getElementById('btnPay');
+            btn.disabled = true;
+            btn.textContent = 'Yuborilmoqda...';
+            
+            try {
+                const res = await fetch('/api/v1/payments/initiate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        filling_station_id: currentData.stationId,
+                        dispenser_id: currentData.dispenserId
+                    })
+                });
+                const result = await res.json();
+                if (res.ok) {
+                    btn.textContent = '✅ Yuborildi!';
+                    btn.className = btn.className.replace('from-teal-500 to-emerald-500', 'from-emerald-500 to-emerald-600');
+                } else {
+                    throw new Error(result.message || result.error);
+                }
+            } catch (e) {
+                btn.textContent = '❌ ' + e.message;
+                btn.className = btn.className.replace('from-teal-500 to-emerald-500', 'from-rose-500 to-rose-600');
+            }
+        }
+
+        function resetScan() {
+            document.getElementById('result').classList.add('hidden');
+            document.getElementById('error').classList.add('hidden');
+            currentData = null;
+            document.getElementById('btnPay').disabled = true;
+            document.getElementById('btnPay').textContent = "To'lovni boshlash";
+        }
+
+        // Init
+        loadJsQR(() => {
+            startCamera();
+        });
+        lucide.createIcons();
+    </script>
+</body>
+</html>
