@@ -7,104 +7,139 @@
     <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
     <style>
         *{margin:0;padding:0;box-sizing:border-box}
-        body{font-family:system-ui,sans-serif;background:#0a0e14;color:#e6edf3;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:16px}
-        .card{background:#161c24;border:1px solid #252d3a;border-radius:16px;padding:20px;width:100%;max-width:400px}
-        .btn{display:block;width:100%;padding:14px;border-radius:12px;border:none;font-size:15px;font-weight:600;cursor:pointer;margin-bottom:8px;text-align:center}
+        body{font-family:system-ui,sans-serif;background:#000;color:#e6edf3;height:100vh;overflow:hidden}
+        #camSection{position:relative;width:100%;height:100vh;display:flex;flex-direction:column}
+        #video{width:100%;height:100%;object-fit:cover;position:absolute;top:0;left:0}
+        #overlay{position:absolute;top:0;left:0;width:100%;height:100%;display:flex;align-items:center;justify-content:center;pointer-events:none}
+        #frame{width:250px;height:250px;border:3px solid #14b8a6;border-radius:20px;box-shadow:0 0 0 9999px rgba(0,0,0,0.5)}
+        #topBar{position:absolute;top:0;left:0;right:0;z-index:10;padding:16px;display:flex;justify-content:space-between;align-items:flex-start}
+        #closeBtn{background:rgba(0,0,0,0.5);color:#fff;border:none;width:40px;height:40px;border-radius:50%;font-size:24px;cursor:pointer;z-index:20}
+        #status{position:absolute;bottom:80px;left:0;right:0;text-align:center;z-index:10;color:#fff;font-size:16px;text-shadow:0 0 10px rgba(0,0,0,0.8)}
+        #startBtn{position:absolute;bottom:40px;left:50%;transform:translateX(-50%);z-index:10;background:linear-gradient(135deg,#14b8a6,#10b981);color:#0f172a;border:none;padding:16px 48px;border-radius:16px;font-size:18px;font-weight:700;cursor:pointer}
+        /* Result Panel */
+        #result{display:none;position:absolute;bottom:0;left:0;right:0;z-index:30;background:#161c24;border-radius:20px 20px 0 0;padding:24px;max-height:70vh;overflow-y:auto}
+        #result.show{display:block}
+        .row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #1e293b;font-size:14px}
+        .vl{font-weight:600;color:#fff;font-family:monospace}
+        .vl-green{color:#10b981;font-size:22px;font-weight:700}
+        .btn{display:block;width:100%;padding:14px;border-radius:12px;border:none;font-size:15px;font-weight:600;cursor:pointer;margin-top:8px;text-align:center}
         .btn-teal{background:linear-gradient(135deg,#14b8a6,#10b981);color:#0f172a}
         .btn-green{background:#10b981;color:#fff}
         .btn-gray{background:#1e293b;color:#94a3b8}
         .btn-red{background:rgba(244,63,94,0.2);color:#f43f5e}
-        .input{width:100%;padding:12px;background:#0f172a;border:1px solid #334155;border-radius:10px;color:#fff;font-size:14px;margin-bottom:8px;outline:none}
-        .input:focus{border-color:#14b8a6}
-        .row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #1e293b;font-size:14px}
-        .val{font-weight:600;color:#fff;font-family:monospace}
-        .val-green{color:#10b981;font-size:20px;font-weight:700}
-        .hidden{display:none!important}
-        .spinner{width:20px;height:20px;border:2px solid #334155;border-top-color:#14b8a6;border-radius:50%;animation:spin .6s linear infinite;margin:16px auto}
+        .err{background:rgba(244,63,94,0.1);border:1px solid rgba(244,63,94,0.2);color:#f43f5e;border-radius:12px;padding:12px;font-size:13px;margin-top:8px}
+        .spinner{display:inline-block;width:16px;height:16px;border:2px solid #0f172a;border-top-color:transparent;border-radius:50%;animation:spin .6s linear infinite;margin-right:8px;vertical-align:middle}
         @keyframes spin{to{transform:rotate(360deg)}}
-        .err{background:rgba(244,63,94,0.1);border:1px solid rgba(244,63,94,0.2);color:#f43f5e;border-radius:12px;padding:12px;font-size:13px;margin-bottom:8px}
-        .ok{background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.2);color:#10b981;border-radius:12px;padding:12px;font-size:13px;margin-bottom:8px}
     </style>
 </head>
 <body>
 
-<div style="text-align:center;margin:20px 0">
-    <div style="width:50px;height:50px;border-radius:14px;background:linear-gradient(135deg,#14b8a6,#10b981);margin:0 auto 12px;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;color:#0f172a">GZS</div>
-    <h1 style="font-size:20px;font-weight:700">GZS Scanner</h1>
-    <p style="font-size:12px;color:#94a3b8;margin-top:4px">QR kod rasm orqali yoki ID kiriting</p>
+<div id="camSection">
+    <video id="video" autoplay playsinline></video>
+    <div id="overlay"><div id="frame"></div></div>
+    <div id="topBar">
+        <button id="closeBtn" onclick="stopCamera()">✕</button>
+    </div>
+    <div id="status">Kamerani yoqish uchun pastdagi tugmani bosing</div>
+    <button id="startBtn" onclick="startCamera()">📷 Boshlash</button>
+
+    <!-- Result panel -->
+    <div id="result">
+        <h3 style="font-size:16px;margin-bottom:12px;color:#10b981">✓ Ma'lumot</h3>
+        <div class="row"><span>Stansiya</span><span class="vl" id="rS">-</span></div>
+        <div class="row"><span>Kolonna</span><span class="vl" id="rD">-</span></div>
+        <div class="row"><span>Operatsiya</span><span class="vl" id="rO">-</span></div>
+        <div class="row"><span>Summa</span><span class="vl-green" id="rA">-</span></div>
+        <div class="row"><span>Hajm</span><span class="vl" id="rV">-</span></div>
+        <div class="row"><span>Avto</span><span class="vl" id="rC">-</span></div>
+        <div class="row"><span>Vaqt</span><span class="vl" style="font-size:12px" id="rT">-</span></div>
+        <button id="btnPay" class="btn btn-teal" onclick="initiatePayment()">💳 To'lash (bazaga yozish)</button>
+        <button class="btn btn-gray" onclick="resetScan()">↩ Orqaga</button>
+        <div id="error" class="err" style="display:none"></div>
+    </div>
 </div>
-
-<div class="card" style="margin-bottom:8px">
-    <label class="btn btn-teal" style="cursor:pointer;margin-bottom:0">
-        📸 QR kod rasmini olish
-        <input type="file" accept="image/*" capture="environment" onchange="handleFile(this)" style="display:none">
-    </label>
-</div>
-
-<div class="card" style="margin-bottom:8px">
-    <input id="manualInput" class="input" placeholder="1283,1 yoki station=1283&dispenser=1">
-    <button class="btn btn-teal" onclick="scanManual()">🔍 Izlash</button>
-</div>
-
-<div id="loading" class="hidden"><div class="spinner"></div><p style="text-align:center;color:#94a3b8;font-size:13px">Yuklanmoqda...</p></div>
-
-<div id="result" class="hidden card">
-    <h3 style="font-size:16px;margin-bottom:12px;color:#10b981">✓ Ma'lumot</h3>
-    <div class="row"><span>Stansiya</span><span class="val" id="rS">-</span></div>
-    <div class="row"><span>Kolonna</span><span class="val" id="rD">-</span></div>
-    <div class="row"><span>Operatsiya</span><span class="val" id="rO">-</span></div>
-    <div class="row"><span>Summa</span><span class="val-green" id="rA">-</span></div>
-    <div class="row"><span>Hajm</span><span class="val" id="rV">-</span></div>
-    <div class="row"><span>Avto</span><span class="val" id="rC">-</span></div>
-    <div class="row"><span>Vaqt</span><span class="val" style="font-size:12px" id="rT">-</span></div>
-    <button id="btnPay" class="btn btn-teal" onclick="initiatePayment()" style="margin-top:12px">💳 To'lash (bazaga yozish)</button>
-    <button class="btn btn-gray" onclick="resetAll()" style="margin-top:8px">Orqaga</button>
-</div>
-
-<div id="error" class="hidden err"></div>
-<div id="msg" class="hidden ok"></div>
 
 <script>
-    let currentData = null;
+    let stream = null, scanning = false, currentData = null;
+    const video = document.getElementById('video');
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
 
-    function handleFile(input) {
-        if (!input.files || !input.files[0]) return;
-        document.getElementById('msg').textContent = 'Rasm yuklandi, tekshirilmoqda...';
-        document.getElementById('msg').classList.remove('hidden');
-        const img = new Image();
-        img.onload = function() {
-            const c = document.createElement('canvas');
-            c.width = img.width; c.height = img.height;
-            c.getContext('2d').drawImage(img, 0, 0);
-            const d = c.getContext('2d').getImageData(0, 0, c.width, c.height);
-            const code = jsQR(d.data, c.width, c.height);
-            if (code) {
-                document.getElementById('msg').textContent = '✓ QR topildi';
-                const re = /station[=:](\d+).*dispenser[=:](\d+)/i;
-                const m = code.data.match(re);
-                if (m) { fetchData(parseInt(m[1]), parseInt(m[2])); return; }
-                const nums = code.data.match(/\d+/g);
-                if (nums && nums.length >= 2) { fetchData(parseInt(nums[0]), parseInt(nums[1])); return; }
-                alert('QR format: ' + code.data);
-            } else {
-                alert('QR kod topilmadi');
-            }
-        };
-        img.src = URL.createObjectURL(input.files[0]);
+    async function startCamera() {
+        try {
+            stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } } });
+            video.srcObject = stream;
+            video.setAttribute('playsinline', '');
+            video.play();
+            document.getElementById('startBtn').style.display = 'none';
+            document.getElementById('status').textContent = 'QR kodni ramkaga joylashtiring';
+            scanning = true;
+            scanLoop();
+        } catch(e) {
+            // Fallback: file picker
+            document.getElementById('status').textContent = 'Kamera yoq. Rasm orqali skanerlang.';
+            document.getElementById('startBtn').textContent = '📸 Rasm tanlash';
+            document.getElementById('startBtn').onclick = function() {
+                const inp = document.createElement('input');
+                inp.type = 'file';
+                inp.accept = 'image/*';
+                inp.capture = 'environment';
+                inp.onchange = function() { if(inp.files[0]) handleFile(inp.files[0]); };
+                inp.click();
+            };
+        }
     }
 
-    function scanManual() {
-        const v = document.getElementById('manualInput').value.trim();
-        const m = v.match(/station[=:](\d+).*dispenser[=:](\d+)/i);
+    function stopCamera() {
+        if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
+        scanning = false;
+        document.getElementById('startBtn').style.display = 'block';
+        document.getElementById('status').textContent = 'Kamerani yoqish uchun pastdagi tugmani bosing';
+    }
+
+    function scanLoop() {
+        if (!scanning || !stream) return;
+        if (video.readyState === video.HAVE_ENOUGH_DATA && typeof jsQR !== 'undefined') {
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            ctx.drawImage(video, 0, 0);
+            const img = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const code = jsQR(img.data, canvas.width, canvas.height, { inversionAttempts: 'dontInvert' });
+            if (code) {
+                scanning = false;
+                parseQR(code.data);
+                return;
+            }
+        }
+        requestAnimationFrame(scanLoop);
+    }
+
+    function handleFile(file) {
+        const img = new Image();
+        img.onload = function() {
+            canvas.width = img.width; canvas.height = img.height;
+            ctx.drawImage(img, 0, 0);
+            const d = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const code = jsQR(d.data, canvas.width, canvas.height);
+            if (code) { parseQR(code.data); }
+            else { alert('QR kod topilmadi'); }
+        };
+        img.src = URL.createObjectURL(file);
+    }
+
+    function parseQR(text) {
+        const re = /station[=:](\d+).*dispenser[=:](\d+)/i;
+        const m = text.match(re);
         if (m) { fetchData(parseInt(m[1]), parseInt(m[2])); return; }
-        const p = v.split(/[,\s]+/);
-        if (p.length >= 2) { fetchData(parseInt(p[0]), parseInt(p[1])); return; }
-        alert('Format: 1283,1');
+        const nums = text.match(/\d+/g);
+        if (nums && nums.length >= 2) { fetchData(parseInt(nums[0]), parseInt(nums[1])); return; }
+        alert('QR kod noto\'g\'ri: ' + text);
+        scanning = true;
+        scanLoop();
     }
 
     async function fetchData(sid, did) {
-        hideAll();
-        document.getElementById('loading').classList.remove('hidden');
+        document.getElementById('status').textContent = 'Yuklanmoqda...';
         try {
             const r = await fetch('/api/v1/scanner/ugaz', {
                 method: 'POST',
@@ -124,12 +159,13 @@
             document.getElementById('btnPay').className = 'btn btn-teal';
             document.getElementById('btnPay').textContent = '💳 To\'lash (bazaga yozish)';
             document.getElementById('btnPay').disabled = false;
-            document.getElementById('result').classList.remove('hidden');
+            document.getElementById('error').style.display = 'none';
+            document.getElementById('result').classList.add('show');
+            document.getElementById('status').textContent = '';
         } catch(e) {
             document.getElementById('error').textContent = 'Xatolik: ' + e.message;
-            document.getElementById('error').classList.remove('hidden');
-        } finally {
-            document.getElementById('loading').classList.add('hidden');
+            document.getElementById('error').style.display = 'block';
+            document.getElementById('result').classList.add('show');
         }
     }
 
@@ -137,7 +173,7 @@
         if (!currentData) return;
         const btn = document.getElementById('btnPay');
         btn.disabled = true;
-        btn.textContent = '⏳ Yuborilmoqda...';
+        btn.innerHTML = '<span class="spinner"></span> Yuborilmoqda...';
         try {
             const r = await fetch('/api/v1/payments/initiate', {
                 method: 'POST',
@@ -153,7 +189,7 @@
                 btn.textContent = '✅ Bazaga yozildi! #' + (d.transaction_id || d.id || 'OK');
                 btn.disabled = true;
             } else {
-                throw new Error(d.message || d.error || 'Xatolik ' + r.status);
+                throw new Error(d.message || d.error);
             }
         } catch(e) {
             btn.className = 'btn btn-red';
@@ -161,11 +197,13 @@
         }
     }
 
-    function resetAll() { hideAll(); }
-    function hideAll() {
-        document.getElementById('result').classList.add('hidden');
-        document.getElementById('error').classList.add('hidden');
-        document.getElementById('msg').classList.add('hidden');
+    function resetScan() {
+        document.getElementById('result').classList.remove('show');
+        document.getElementById('error').style.display = 'none';
+        currentData = null;
+        scanning = true;
+        scanLoop();
+        document.getElementById('status').textContent = 'QR kodni ramkaga joylashtiring';
     }
 </script>
 </body>
