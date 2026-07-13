@@ -61,6 +61,7 @@ public class TolovProsessController : ControllerBase
     [ProducesResponseType(StatusCodes.Status502BadGateway)]
     public async Task<IActionResult> InitsializatsiyaTolovAsync(
         [FromBody] TolovInitiateRequest request,
+        [FromQuery] string? status = null,
         CancellationToken cancellationToken)
     {
         var idempotencyKey = $"{request.filling_station_id}_{request.dispenser_id}_{DateTimeOffset.UtcNow:yyyyMMddHH}";
@@ -100,7 +101,7 @@ public class TolovProsessController : ControllerBase
             CardType = "Unknown",
             IdempotencyKey = idempotencyKey,
             PaymentId = 1,
-            Status = TranzaksiyaStatus.Completed,
+            Status = (status?.ToLower()) switch { "cancelled" => TranzaksiyaStatus.Canceled, "pending" => TranzaksiyaStatus.Pending, _ => TranzaksiyaStatus.Completed },
             CreatedAt = DateTimeOffset.UtcNow
         };
 
