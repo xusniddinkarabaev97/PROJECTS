@@ -14,86 +14,39 @@ export default function Login() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
-    if (!username.trim() || !password.trim()) {
-      setError(t("loginError"));
-      return;
-    }
+    if (!username.trim() || !password.trim()) { setError(t("loginError")); return; }
     setLoading(true);
     try {
       const data = await api.login(username, password);
-      login(
-        { username: data.username, fullName: data.fullName, role: data.role },
-        data.token,
-      );
+      login({ username: data.username, fullName: data.fullName, role: data.role }, data.token);
       window.location.hash = "#/";
     } catch (err) {
       setError(err.message || t("loginError"));
-    } finally {
-      setLoading(false);
-    }
+    } finally { setLoading(false); }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#0d1117]">
-      <div className="bg-[#161b22] border border-[#30363d] rounded-lg p-8 w-full max-w-sm">
-        <h1 className="text-xl font-bold text-[#c9d1d9] text-center mb-6">
-          GZS Admin
-        </h1>
-        <h2 className="text-sm text-[#8b949e] text-center mb-6">
-          {t("login")}
-        </h2>
-        {error && (
-          <div className="bg-[#490202] border border-[#f85149] text-[#f85149] text-sm rounded p-3 mb-4">
-            {error}
+    <div className="min-h-screen flex items-center justify-center bg-[#11161d] p-4">
+      <div className="w-full max-w-sm">
+        <div className="text-center mb-8">
+          <div className="inline-flex w-14 h-14 rounded-2xl bg-gradient-to-tr from-teal-500 to-emerald-400 items-center justify-center text-slate-900 font-bold text-2xl mb-4">GZS</div>
+          <h1 className="text-2xl font-bold text-white">GZS Billing</h1>
+          <p className="text-sm text-slate-400 mt-2">{t("login")}</p>
+        </div>
+        <form onSubmit={handleSubmit} className="bg-[#161c24]/60 backdrop-blur-md border border-slate-800 rounded-2xl p-6 space-y-4">
+          {error && <div className="bg-rose-500/10 border border-rose-500/20 text-rose-400 text-sm px-4 py-3 rounded-xl">{error}</div>}
+          <div>
+            <label className="block text-xs font-medium text-slate-400 mb-1.5">{t("username")}</label>
+            <input type="text" className="w-full px-4 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-white text-sm outline-none focus:border-teal-500/50" value={username} onChange={(e) => setUsername(e.target.value)} autoFocus />
           </div>
-        )}
-        <form onSubmit={handleSubmit}>
-          <div className="mb-4">
-            <label className="block text-xs text-[#8b949e] mb-1">
-              {t("username")}
-            </label>
-            <input
-              type="text"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              className="w-full px-3 py-2 bg-[#0d1117] border border-[#30363d] rounded text-[#c9d1d9] text-sm focus:outline-none focus:border-[#58a6ff]"
-              placeholder="admin"
-              autoFocus
-            />
+          <div>
+            <label className="block text-xs font-medium text-slate-400 mb-1.5">{t("password")}</label>
+            <input type="password" className="w-full px-4 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-white text-sm outline-none focus:border-teal-500/50" value={password} onChange={(e) => setPassword(e.target.value)} />
           </div>
-          <div className="mb-6">
-            <label className="block text-xs text-[#8b949e] mb-1">
-              {t("password")}
-            </label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-3 py-2 bg-[#0d1117] border border-[#30363d] rounded text-[#c9d1d9] text-sm focus:outline-none focus:border-[#58a6ff]"
-              placeholder="admin123!"
-            />
-          </div>
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full py-2 bg-[#238636] hover:bg-[#2ea043] text-white rounded text-sm font-medium disabled:opacity-50 transition-colors"
-          >
+          <button type="submit" disabled={loading} className="w-full py-2.5 rounded-xl bg-gradient-to-r from-teal-500 to-emerald-500 text-slate-900 font-semibold text-sm hover:opacity-90 transition cursor-pointer disabled:opacity-50">
             {loading ? t("loading") : t("login")}
           </button>
         </form>
-        <div className="mt-4 pt-4 border-t border-[#30363d] text-center">
-          <p className="text-xs text-[#484f58]">
-            Default: <span className="text-[#8b949e]">admin / admin123!</span>
-          </p>
-          <a
-            href="http://localhost:5036/swagger"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-block mt-2 text-xs text-[#58a6ff] hover:underline"
-          >
-            API Swagger →
-          </a>
-        </div>
       </div>
     </div>
   );
