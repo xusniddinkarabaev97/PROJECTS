@@ -80,7 +80,7 @@
         const ctx = canvas.getContext('2d');
         const UGAZ_URL = 'https://uzinfocom-payment.ugaz.uz';
         const UGAZ_AUTH = { username: 'uzinfocom_billing', password: 'o7G1UA5juQIai' };
-        const DEEP_LINK_RE = /gzs-billing:\/\/pay\?.*station=(\d+).*dispenser=(\d+)/i;
+        const DEEP_LINK_RE = /station[=:](\d+).*dispenser[=:](\d+)/i;
 
         // Start camera
         async function startCamera() {
@@ -193,12 +193,12 @@
             btn.textContent = 'Yuborilmoqda...';
             
             try {
-                const res = await fetch('/api/v1/payments/initiate', {
+                const res = await fetch('/api/v1/scanner/ugaz', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        filling_station_id: currentData.stationId,
-                        dispenser_id: currentData.dispenserId
+                        stationId: currentData.stationId || currentData.filling_station_id,
+                        dispenserId: currentData.dispenserId || currentData.dispenser_id
                     })
                 });
                 const result = await res.json();
