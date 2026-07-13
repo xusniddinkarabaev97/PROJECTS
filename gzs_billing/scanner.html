@@ -11,7 +11,9 @@
         .card{background:#161c24;border:1px solid #252d3a;border-radius:16px;padding:20px;width:100%;max-width:400px}
         .btn{display:block;width:100%;padding:14px;border-radius:12px;border:none;font-size:15px;font-weight:600;cursor:pointer;margin-bottom:8px;text-align:center}
         .btn-teal{background:linear-gradient(135deg,#14b8a6,#10b981);color:#0f172a}
+        .btn-green{background:#10b981;color:#fff}
         .btn-gray{background:#1e293b;color:#94a3b8}
+        .btn-red{background:rgba(244,63,94,0.2);color:#f43f5e}
         .input{width:100%;padding:12px;background:#0f172a;border:1px solid #334155;border-radius:10px;color:#fff;font-size:14px;margin-bottom:8px;outline:none}
         .input:focus{border-color:#14b8a6}
         .row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #1e293b;font-size:14px}
@@ -32,7 +34,6 @@
     <p style="font-size:12px;color:#94a3b8;margin-top:4px">QR kod rasm orqali yoki ID kiriting</p>
 </div>
 
-<!-- File input (opens native camera) -->
 <div class="card" style="margin-bottom:8px">
     <label class="btn btn-teal" style="cursor:pointer;margin-bottom:0">
         📸 QR kod rasmini olish
@@ -40,16 +41,13 @@
     </label>
 </div>
 
-<!-- Or manual -->
 <div class="card" style="margin-bottom:8px">
     <input id="manualInput" class="input" placeholder="1283,1 yoki station=1283&dispenser=1">
     <button class="btn btn-teal" onclick="scanManual()">🔍 Izlash</button>
 </div>
 
-<!-- Loading -->
 <div id="loading" class="hidden"><div class="spinner"></div><p style="text-align:center;color:#94a3b8;font-size:13px">Yuklanmoqda...</p></div>
 
-<!-- Result -->
 <div id="result" class="hidden card">
     <h3 style="font-size:16px;margin-bottom:12px;color:#10b981">✓ Ma'lumot</h3>
     <div class="row"><span>Stansiya</span><span class="val" id="rS">-</span></div>
@@ -59,15 +57,20 @@
     <div class="row"><span>Hajm</span><span class="val" id="rV">-</span></div>
     <div class="row"><span>Avto</span><span class="val" id="rC">-</span></div>
     <div class="row"><span>Vaqt</span><span class="val" style="font-size:12px" id="rT">-</span></div>
-    <button class="btn btn-gray" onclick="resetAll()" style="margin-top:12px">Orqaga</button>
+    <button id="btnPay" class="btn btn-teal" onclick="initiatePayment()" style="margin-top:12px">💳 To'lash (bazaga yozish)</button>
+    <button class="btn btn-gray" onclick="resetAll()" style="margin-top:8px">Orqaga</button>
 </div>
 
 <div id="error" class="hidden err"></div>
 <div id="msg" class="hidden ok"></div>
 
 <script>
+    let currentData = null;
+
     function handleFile(input) {
         if (!input.files || !input.files[0]) return;
+        document.getElementById('msg').textContent = 'Rasm yuklandi, tekshirilmoqda...';
+        document.getElementById('msg').classList.remove('hidden');
         const img = new Image();
         img.onload = function() {
             const c = document.createElement('canvas');
@@ -76,17 +79,15 @@
             const d = c.getContext('2d').getImageData(0, 0, c.width, c.height);
             const code = jsQR(d.data, c.width, c.height);
             if (code) {
-                document.getElementById('msg').textContent = 'QR topildi: ' + code.data.substring(0,60);
-                document.getElementById('msg').classList.remove('hidden');
+                document.getElementById('msg').textContent = '✓ QR topildi';
                 const re = /station[=:](\d+).*dispenser[=:](\d+)/i;
                 const m = code.data.match(re);
                 if (m) { fetchData(parseInt(m[1]), parseInt(m[2])); return; }
-                // Try parsing as plain numbers
                 const nums = code.data.match(/\d+/g);
                 if (nums && nums.length >= 2) { fetchData(parseInt(nums[0]), parseInt(nums[1])); return; }
-                alert('QR format noto‘g‘ri: ' + code.data);
+                alert('QR format: ' + code.data);
             } else {
-                alert('QR kod topilmadi. Aniqroq rasm oling.');
+                alert('QR kod topilmadi');
             }
         };
         img.src = URL.createObjectURL(input.files[0]);
@@ -98,7 +99,7 @@
         if (m) { fetchData(parseInt(m[1]), parseInt(m[2])); return; }
         const p = v.split(/[,\s]+/);
         if (p.length >= 2) { fetchData(parseInt(p[0]), parseInt(p[1])); return; }
-        alert('Format: 1283,1 yoki station=1283&dispenser=1');
+        alert('Format: 1283,1');
     }
 
     async function fetchData(sid, did) {
@@ -110,8 +111,9 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ stationId: sid, dispenserId: did })
             });
-            if (!r.ok) { const e = await r.json(); throw new Error(e.message || e.title || 'Error ' + r.status); }
+            if (!r.ok) { const e = await r.json(); throw new Error(e.message || e.title); }
             const d = await r.json();
+            currentData = d;
             document.getElementById('rS').textContent = d.filling_station_id;
             document.getElementById('rD').textContent = d.dispenser_id;
             document.getElementById('rO').textContent = d.operation_id;
@@ -119,12 +121,43 @@
             document.getElementById('rV').textContent = (d.volume||0) + ' L';
             document.getElementById('rC').textContent = d.car_number || '-';
             document.getElementById('rT').textContent = d.created_at ? new Date(d.created_at).toLocaleString() : '-';
+            document.getElementById('btnPay').className = 'btn btn-teal';
+            document.getElementById('btnPay').textContent = '💳 To\'lash (bazaga yozish)';
+            document.getElementById('btnPay').disabled = false;
             document.getElementById('result').classList.remove('hidden');
         } catch(e) {
             document.getElementById('error').textContent = 'Xatolik: ' + e.message;
             document.getElementById('error').classList.remove('hidden');
         } finally {
             document.getElementById('loading').classList.add('hidden');
+        }
+    }
+
+    async function initiatePayment() {
+        if (!currentData) return;
+        const btn = document.getElementById('btnPay');
+        btn.disabled = true;
+        btn.textContent = '⏳ Yuborilmoqda...';
+        try {
+            const r = await fetch('/api/v1/payments/initiate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    filling_station_id: currentData.filling_station_id,
+                    dispenser_id: currentData.dispenser_id
+                })
+            });
+            const d = await r.json();
+            if (r.ok) {
+                btn.className = 'btn btn-green';
+                btn.textContent = '✅ Bazaga yozildi! #' + (d.transaction_id || d.id || 'OK');
+                btn.disabled = true;
+            } else {
+                throw new Error(d.message || d.error || 'Xatolik ' + r.status);
+            }
+        } catch(e) {
+            btn.className = 'btn btn-red';
+            btn.textContent = '❌ ' + e.message;
         }
     }
 
