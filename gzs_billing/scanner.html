@@ -9,21 +9,19 @@
         *{margin:0;padding:0;box-sizing:border-box}
         body{font-family:system-ui,sans-serif;background:#0a0e14;color:#e6edf3;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:16px}
         .card{background:#161c24;border:1px solid #252d3a;border-radius:16px;padding:20px;width:100%;max-width:400px}
-        .btn{width:100%;padding:14px;border-radius:12px;border:none;font-size:15px;font-weight:600;cursor:pointer;margin-bottom:8px}
+        .btn{display:block;width:100%;padding:14px;border-radius:12px;border:none;font-size:15px;font-weight:600;cursor:pointer;margin-bottom:8px;text-align:center}
         .btn-teal{background:linear-gradient(135deg,#14b8a6,#10b981);color:#0f172a}
-        .btn-red{background:rgba(244,63,94,0.1);color:#f43f5e;border:1px solid rgba(244,63,94,0.2)}
         .btn-gray{background:#1e293b;color:#94a3b8}
         .input{width:100%;padding:12px;background:#0f172a;border:1px solid #334155;border-radius:10px;color:#fff;font-size:14px;margin-bottom:8px;outline:none}
         .input:focus{border-color:#14b8a6}
         .row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #1e293b;font-size:14px}
-        .val{font-weight:600;color:#fff}
-        .val-mono{font-family:monospace}
+        .val{font-weight:600;color:#fff;font-family:monospace}
         .val-green{color:#10b981;font-size:20px;font-weight:700}
-        video{width:100%;border-radius:12px;margin-bottom:8px}
         .hidden{display:none!important}
         .spinner{width:20px;height:20px;border:2px solid #334155;border-top-color:#14b8a6;border-radius:50%;animation:spin .6s linear infinite;margin:16px auto}
         @keyframes spin{to{transform:rotate(360deg)}}
-        .error{background:rgba(244,63,94,0.1);border:1px solid rgba(244,63,94,0.2);color:#f43f5e;border-radius:12px;padding:12px;font-size:13px;margin-bottom:8px}
+        .err{background:rgba(244,63,94,0.1);border:1px solid rgba(244,63,94,0.2);color:#f43f5e;border-radius:12px;padding:12px;font-size:13px;margin-bottom:8px}
+        .ok{background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.2);color:#10b981;border-radius:12px;padding:12px;font-size:13px;margin-bottom:8px}
     </style>
 </head>
 <body>
@@ -31,21 +29,18 @@
 <div style="text-align:center;margin:20px 0">
     <div style="width:50px;height:50px;border-radius:14px;background:linear-gradient(135deg,#14b8a6,#10b981);margin:0 auto 12px;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;color:#0f172a">GZS</div>
     <h1 style="font-size:20px;font-weight:700">GZS Scanner</h1>
-    <p style="font-size:12px;color:#94a3b8;margin-top:4px">QR kodni skanerlang yoki ID kiriting</p>
-    <p id="debug" style="font-size:10px;color:#64748b;margin-top:4px"></p>
+    <p style="font-size:12px;color:#94a3b8;margin-top:4px">QR kod rasm orqali yoki ID kiriting</p>
 </div>
 
-<!-- Camera -->
-<div id="camSection" class="hidden card" style="padding:12px">
-    <video id="video" autoplay playsinline></video>
-    <button class="btn btn-teal" onclick="captureAndScan()">📸 Skanerlash</button>
-    <button class="btn btn-red" onclick="stopCamera()">📷 Kamerani o'chirish</button>
+<!-- File input (opens native camera) -->
+<div class="card" style="margin-bottom:8px">
+    <label class="btn btn-teal" style="cursor:pointer;margin-bottom:0">
+        📸 QR kod rasmini olish
+        <input type="file" accept="image/*" capture="environment" onchange="handleFile(this)" style="display:none">
+    </label>
 </div>
 
-<!-- Camera Start -->
-<button id="btnStart" class="btn btn-teal" onclick="startCamera()">📷 Kamerani yoqish</button>
-
-<!-- Manual -->
+<!-- Or manual -->
 <div class="card" style="margin-bottom:8px">
     <input id="manualInput" class="input" placeholder="1283,1 yoki station=1283&dispenser=1">
     <button class="btn btn-teal" onclick="scanManual()">🔍 Izlash</button>
@@ -57,56 +52,44 @@
 <!-- Result -->
 <div id="result" class="hidden card">
     <h3 style="font-size:16px;margin-bottom:12px;color:#10b981">✓ Ma'lumot</h3>
-    <div class="row"><span>Stansiya</span><span class="val val-mono" id="rS">-</span></div>
-    <div class="row"><span>Kolonna</span><span class="val val-mono" id="rD">-</span></div>
-    <div class="row"><span>Operatsiya</span><span class="val val-mono" id="rO">-</span></div>
+    <div class="row"><span>Stansiya</span><span class="val" id="rS">-</span></div>
+    <div class="row"><span>Kolonna</span><span class="val" id="rD">-</span></div>
+    <div class="row"><span>Operatsiya</span><span class="val" id="rO">-</span></div>
     <div class="row"><span>Summa</span><span class="val-green" id="rA">-</span></div>
     <div class="row"><span>Hajm</span><span class="val" id="rV">-</span></div>
-    <div class="row"><span>Avto</span><span class="val val-mono" id="rC">-</span></div>
+    <div class="row"><span>Avto</span><span class="val" id="rC">-</span></div>
     <div class="row"><span>Vaqt</span><span class="val" style="font-size:12px" id="rT">-</span></div>
     <button class="btn btn-gray" onclick="resetAll()" style="margin-top:12px">Orqaga</button>
 </div>
 
-<!-- Error -->
-<div id="error" class="hidden error"></div>
+<div id="error" class="hidden err"></div>
+<div id="msg" class="hidden ok"></div>
 
 <script>
-    document.getElementById('debug').textContent = typeof jsQR !== 'undefined' ? 'jsQR yuklandi' : 'jsQR yuklanmadi!';
-    let stream = null, currentData = null;
-
-    async function startCamera() {
-        try {
-            stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment', width: 640, height: 480 } });
-            document.getElementById('video').srcObject = stream;
-            document.getElementById('camSection').classList.remove('hidden');
-            document.getElementById('btnStart').classList.add('hidden');
-        } catch(e) {
-            alert('Kamera xatosi: ' + e.message);
-        }
-    }
-
-    function stopCamera() {
-        if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
-        document.getElementById('camSection').classList.add('hidden');
-        document.getElementById('btnStart').classList.remove('hidden');
-    }
-
-    function captureAndScan() {
-        if (!stream || typeof jsQR === 'undefined') return;
-        const video = document.getElementById('video');
-        const canvas = document.createElement('canvas');
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(video, 0, 0);
-        const img = ctx.getImageData(0, 0, canvas.width, canvas.height);
-        const code = jsQR(img.data, canvas.width, canvas.height);
-        if (code) {
-            const re = /station[=:](\d+).*dispenser[=:](\d+)/i;
-            const m = code.data.match(re);
-            if (m) { fetchData(parseInt(m[1]), parseInt(m[2])); return; }
-        }
-        alert('QR kod topilmadi yoki format noto\'g\'ri. Qaytadan urining.');
+    function handleFile(input) {
+        if (!input.files || !input.files[0]) return;
+        const img = new Image();
+        img.onload = function() {
+            const c = document.createElement('canvas');
+            c.width = img.width; c.height = img.height;
+            c.getContext('2d').drawImage(img, 0, 0);
+            const d = c.getContext('2d').getImageData(0, 0, c.width, c.height);
+            const code = jsQR(d.data, c.width, c.height);
+            if (code) {
+                document.getElementById('msg').textContent = 'QR topildi: ' + code.data.substring(0,60);
+                document.getElementById('msg').classList.remove('hidden');
+                const re = /station[=:](\d+).*dispenser[=:](\d+)/i;
+                const m = code.data.match(re);
+                if (m) { fetchData(parseInt(m[1]), parseInt(m[2])); return; }
+                // Try parsing as plain numbers
+                const nums = code.data.match(/\d+/g);
+                if (nums && nums.length >= 2) { fetchData(parseInt(nums[0]), parseInt(nums[1])); return; }
+                alert('QR format noto‘g‘ri: ' + code.data);
+            } else {
+                alert('QR kod topilmadi. Aniqroq rasm oling.');
+            }
+        };
+        img.src = URL.createObjectURL(input.files[0]);
     }
 
     function scanManual() {
@@ -129,7 +112,6 @@
             });
             if (!r.ok) { const e = await r.json(); throw new Error(e.message || e.title || 'Error ' + r.status); }
             const d = await r.json();
-            currentData = d;
             document.getElementById('rS').textContent = d.filling_station_id;
             document.getElementById('rD').textContent = d.dispenser_id;
             document.getElementById('rO').textContent = d.operation_id;
@@ -150,6 +132,7 @@
     function hideAll() {
         document.getElementById('result').classList.add('hidden');
         document.getElementById('error').classList.add('hidden');
+        document.getElementById('msg').classList.add('hidden');
     }
 </script>
 </body>
