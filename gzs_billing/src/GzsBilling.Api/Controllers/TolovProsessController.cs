@@ -71,7 +71,7 @@ public class TolovProsessController : ControllerBase
 
         if (existing is not null)
         {
-            var ns = (status?.ToLower()) switch { "cancelled" => TranzaksiyaStatus.Canceled, "completed" => TranzaksiyaStatus.Completed, _ => existing.Status };
+            var ns = (status?.ToLower()) switch { "cancelled" => TranzaksiyaStatus.Canceled, "pending" => TranzaksiyaStatus.Pending, _ => TranzaksiyaStatus.Completed };
             existing.Status = ns;
             existing.UpdatedAt = DateTimeOffset.UtcNow;
             await _dbContext.SaveChangesAsync(cancellationToken);
