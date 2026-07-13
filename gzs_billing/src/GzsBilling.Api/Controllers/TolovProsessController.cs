@@ -71,8 +71,11 @@ public class TolovProsessController : ControllerBase
 
         if (existing is not null)
         {
-            _logger.LogWarning("Idempotency conflict for key {Key}", idempotencyKey);
-            return Conflict(new { error = "DUPLICATE_REQUEST", message = "This transaction was already initiated.", transaction_id = existing.Id });
+            var ns = (status?.ToLower()) switch { "cancelled" => TranzaksiyaStatus.Canceled, "completed" => TranzaksiyaStatus.Completed, _ => existing.Status };
+            existing.Status = ns;
+            existing.UpdatedAt = DateTimeOffset.UtcNow;
+            await _dbContext.SaveChangesAsync(cancellationToken);
+            return Ok(new { transaction_id = existing.Id, status = existing.Status.ToString(), message = "Updated" });
         }
 
         UGazSeansResponse? seans;
