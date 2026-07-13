@@ -1,65 +1,69 @@
-<!DOCTYPE html><html lang="uz"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no"><title>GZS Pay v5</title><script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script><style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:system-ui,sans-serif;background:#0a0e14;color:#e6edf3;min-height:100vh}.hidden{display:none!important}.spinner{width:24px;height:24px;border:3px solid #1e293b;border-top-color:#14b8a6;border-radius:50%;animation:spin .6s linear infinite;margin:20px auto}@keyframes spin{to{transform:rotate(360deg)}}.btn{display:block;width:100%;padding:16px;border-radius:14px;border:none;font-size:16px;font-weight:700;cursor:pointer;text-align:center}.btn-teal{background:linear-gradient(135deg,#14b8a6,#10b981);color:#0f172a}.btn-teal:disabled{opacity:.5}.btn-gray{background:#1e293b;color:#94a3b8;margin-top:10px}.row{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #1e293b;font-size:15px}.vl{font-weight:600;color:#fff;font-family:monospace}.vl-green{color:#10b981;font-size:28px;font-weight:700}.err{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.2);color:#ef4444;border-radius:14px;padding:14px;font-size:13px;margin:10px 0}input{width:100%;padding:14px;background:#0f172a;border:1px solid#334155;border-radius:12px;color:#fff;font-size:15px;outline:none}input:focus{border-color:#14b8a6}</style></head><body>
+<!DOCTYPE html><html lang="uz"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no"><title>GZS Pay v6</title><script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script><style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:system-ui,sans-serif;background:#0a0e14;color:#e6edf3;min-height:100vh}.hidden{display:none!important}.spinner{width:24px;height:24px;border:3px solid #1e293b;border-top-color:#14b8a6;border-radius:50%;animation:spin .6s linear infinite;margin:20px auto}@keyframes spin{to{transform:rotate(360deg)}}.btn{display:block;width:100%;padding:16px;border-radius:14px;border:none;font-size:16px;font-weight:700;cursor:pointer;text-align:center}.btn-teal{background:linear-gradient(135deg,#14b8a6,#10b981);color:#0f172a}.btn-gray{background:#1e293b;color:#94a3b8;margin-top:10px}.row{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #1e293b;font-size:15px}.vl{font-weight:600;color:#fff;font-family:monospace}.vl-green{color:#10b981;font-size:28px;font-weight:700}.err{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.2);color:#ef4444;border-radius:14px;padding:14px;font-size:13px;margin:10px 0}input{width:100%;padding:14px;background:#0f172a;border:1px solid#334155;border-radius:12px;color:#fff;font-size:15px;outline:none}input:focus{border-color:#14b8a6}</style></head><body>
 <div id="scannerScreen" class="hidden" style="position:fixed;inset:0;background:#000;z-index:50"><video id="video" autoplay playsinline style="width:100%;height:100%;object-fit:cover"></video><div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none"><div style="width:240px;height:240px;border:3px solid #14b8a6;border-radius:24px;box-shadow:0 0 0 9999px rgba(0,0,0,.5)"></div></div><button onclick="stopCamera()" style="position:absolute;top:16px;right:16px;background:rgba(0,0,0,.5);color:#fff;border:none;width:44px;height:44px;border-radius:50%;font-size:24px;cursor:pointer;z-index:60">✕</button><p id="scanStatus" style="position:absolute;bottom:100px;left:0;right:0;text-align:center;color:#fff;font-size:15px;z-index:60">QR kodni ramkaga joylashtiring</p></div>
-<div id="mainScreen" style="max-width:420px;margin:0 auto;padding:20px"><div style="text-align:center;margin:30px 0 20px"><div style="width:56px;height:56px;border-radius:16px;background:linear-gradient(135deg,#14b8a6,#10b981);margin:0 auto 16px;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:700;color:#0f172a">GZS</div><h1 style="font-size:22px;font-weight:700">To'lov</h1><p style="font-size:13px;color:#94a3b8;margin-top:4px">QR kodni skanerlang yoki ID kiriting</p></div><button class="btn btn-teal" onclick="startCamera()" style="margin-bottom:12px">📷 Kamerani yoqish</button><div style="margin-bottom:12px"><input id="manualInput" placeholder="1283,1"><button class="btn btn-teal" onclick="scanManual()" style="margin-top:6px">🔍 Izlash</button></div><div id="loading" class="hidden"><div class="spinner"></div><p style="text-align:center;color:#94a3b8">Yuklanmoqda...</p></div><div id="errorBox" class="hidden err"></div>
-<div id="payScreen" class="hidden" style="background:#161c24;border:1px solid #252d3a;border-radius:20px;padding:24px;margin-top:12px"></div></div>
+<div id="mainScreen" style="max-width:420px;margin:0 auto;padding:20px"><div style="text-align:center;margin:30px 0 20px"><div style="width:56px;height:56px;border-radius:16px;background:linear-gradient(135deg,#14b8a6,#10b981);margin:0 auto 16px;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:700;color:#0f172a">GZS</div><h1 style="font-size:22px;font-weight:700">Tolov</h1><p style="font-size:13px;color:#94a3b8;margin-top:4px">QR kodni skanerlang yoki ID kiriting</p></div><button class="btn btn-teal" onclick="startCamera()" style="margin-bottom:12px">📷 Kamerani yoqish</button><div style="margin-bottom:12px"><input id="manualInput" placeholder="1283,1"><button class="btn btn-teal" onclick="scanManual()" style="margin-top:6px">🔍 Izlash</button></div><div id="loading" class="hidden"><div class="spinner"></div><p style="text-align:center;color:#94a3b8">Yuklanmoqda...</p></div><div id="errorBox" class="hidden err"></div>
+<div id="payScreen" class="hidden" style="background:#161c24;border:1px solid #252d3a;border-radius:20px;padding:24px;margin-top:12px">
+<div style="text-align:center;margin-bottom:16px"><div style="font-size:48px;margin-bottom:8px">⛽</div><h2 style="font-size:20px;font-weight:700;color:#fff">Tolov malumoti</h2></div>
+<div class="row"><span>Stansiya</span><span class="vl" id="rS">-</span></div>
+<div class="row"><span>Kolonna</span><span class="vl" id="rD">-</span></div>
+<div class="row"><span>Avtomobil</span><span class="vl" id="rC">-</span></div>
+<div class="row"><span>Hajm</span><span class="vl" id="rV">-</span></div>
+<div class="row"><span>Sana</span><span class="vl" style="font-size:12px" id="rT">-</span></div>
+<div style="text-align:center;margin:20px 0"><span style="color:#94a3b8;font-size:13px">Tolov summasi</span><div class="vl-green" id="rA">-</div></div>
+<button id="btnPay" class="btn btn-teal" onclick="initiatePayment()">💳 Tolash</button>
+<button class="btn btn-gray" onclick="cancelPayment()">↩ Orqaga</button>
+<div id="payErr" class="hidden err"></div>
+</div></div>
 
 <script>
 let stream=null,scanning=false,currentData=null;
 const video=document.getElementById('video'),canvas=document.createElement('canvas'),ctx=canvas.getContext('2d');
-var PAY_HTML='<div style="text-align:center;margin-bottom:16px"><div style="font-size:48px;margin-bottom:8px">⛽</div><h2 style="font-size:20px;font-weight:700;color:#fff">Tolov malumoti</h2></div><div class="row"><span>Stansiya</span><span class="vl" id="rS">-</span></div><div class="row"><span>Kolonna</span><span class="vl" id="rD">-</span></div><div class="row"><span>Avtomobil</span><span class="vl" id="rC">-</span></div><div class="row"><span>Hajm</span><span class="vl" id="rV">-</span></div><div class="row"><span>Sana</span><span class="vl" style="font-size:12px" id="rT">-</span></div><div style="text-align:center;margin:20px 0"><span style="color:#94a3b8;font-size:13px">Tolov summasi</span><div class="vl-green" id="rA">-</div></div><button id="btnPay" class="btn btn-teal" onclick="initiatePayment()">💳 Tolash</button><button class="btn btn-gray" onclick="cancelPayment()">↩ Orqaga</button><div id="payErr" class="hidden err"></div>';
 
-async function startCamera(){try{stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment',width:{ideal:1280},height:{ideal:720}}});video.srcObject=stream;video.play();document.getElementById('scannerScreen').classList.remove('hidden');document.getElementById('scanStatus').textContent='QR kodni ramkaga joylashtiring';scanning=true;scanLoop()}catch(e){var i=document.createElement('input');i.type='file';i.accept='image/*';i.capture='environment';i.onchange=function(){if(i.files[0])handleFile(i.files[0])};i.click()}}
-function stopCamera(){if(stream){stream.getTracks().forEach(t=>t.stop());stream=null}scanning=false;document.getElementById('scannerScreen').classList.add('hidden')}
+function rs(id,txt){var el=document.getElementById(id);if(el)el.textContent=txt}
+function show(id){document.getElementById(id).classList.remove('hidden')}
+function hide(id){document.getElementById(id).classList.add('hidden')}
+
+async function startCamera(){try{stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment',width:{ideal:1280},height:{ideal:720}}});video.srcObject=stream;video.play();show('scannerScreen');rs('scanStatus','QR kodni ramkaga joylashtiring');scanning=true;scanLoop()}catch(e){var i=document.createElement('input');i.type='file';i.accept='image/*';i.capture='environment';i.onchange=function(){if(i.files[0])handleFile(i.files[0])};i.click()}}
+function stopCamera(){if(stream){stream.getTracks().forEach(function(t){t.stop()});stream=null}scanning=false;hide('scannerScreen')}
 function scanLoop(){if(!scanning||!stream)return;if(video.readyState===video.HAVE_ENOUGH_DATA&&typeof jsQR!=='undefined'){canvas.width=video.videoWidth;canvas.height=video.videoHeight;ctx.drawImage(video,0,0);var d=ctx.getImageData(0,0,canvas.width,canvas.height),code=jsQR(d.data,canvas.width,canvas.height,{inversionAttempts:'dontInvert'});if(code){scanning=false;stopCamera();parseQR(code.data);return}}requestAnimationFrame(scanLoop)}
 function handleFile(file){var img=new Image();img.onload=function(){canvas.width=img.width;canvas.height=img.height;ctx.drawImage(img,0,0);var d=ctx.getImageData(0,0,canvas.width,canvas.height),code=jsQR(d.data,canvas.width,canvas.height);if(code)parseQR(code.data);else alert('QR kod topilmadi')};img.src=URL.createObjectURL(file)}
-function parseQR(t){var m=t.match(/station[=:](\d+).*dispenser[=:](\d+)/i);if(m){fetchData(m[1],m[2]);return}var n=t.match(/\d+/g);if(n&&n.length>=2){fetchData(n[0],n[1]);return}alert('QR noto\'g\'ri: '+t)}
+function parseQR(t){var m=t.match(/station[=:](\d+).*dispenser[=:](\d+)/i);if(m){fetchData(m[1],m[2]);return}var n=t.match(/\d+/g);if(n&&n.length>=2){fetchData(n[0],n[1]);return}alert('QR notogri: '+t)}
 function scanManual(){var v=document.getElementById('manualInput').value.trim(),m=v.match(/station[=:](\d+).*dispenser[=:](\d+)/i);if(m){fetchData(m[1],m[2]);return}var p=v.split(/[,\s]+/);if(p.length>=2){fetchData(p[0],p[1]);return}alert('1283,1')}
 
 async function fetchData(sid,did){
-  hideAll();
-  document.getElementById('payScreen').innerHTML=PAY_HTML;
-  document.getElementById('loading').classList.remove('hidden');
+  hide('payScreen');hide('errorBox');show('loading');
   try{
     var r=await fetch('/api/v1/scanner/ugaz',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({stationId:parseInt(sid),dispenserId:parseInt(did)})});
     if(!r.ok){var e=await r.json();throw new Error(e.message||e.title)}
     var d=await r.json();currentData=d;
-    document.getElementById('rS').textContent=d.filling_station_id;
-    document.getElementById('rD').textContent=d.dispenser_id;
-    document.getElementById('rC').textContent=d.car_number||'-';
-    document.getElementById('rV').textContent=(d.volume||0)+' L';
-    document.getElementById('rT').textContent=d.created_at?new Date(d.created_at).toLocaleString():'-';
-    document.getElementById('rA').textContent=(d.amount||0).toLocaleString()+' UZS';
-    document.getElementById('payScreen').classList.remove('hidden');
+    rs('rS',d.filling_station_id);
+    rs('rD',d.dispenser_id);
+    rs('rC',d.car_number||'-');
+    rs('rV',(d.volume||0)+' L');
+    rs('rT',d.created_at?new Date(d.created_at).toLocaleString():'-');
+    rs('rA',(d.amount||0).toLocaleString()+' UZS');
+    show('payScreen');
     try{await fetch('/api/v1/payments/initiate?status=pending',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({filling_station_id:d.filling_station_id,dispenser_id:d.dispenser_id})})}catch(e){}
   }catch(e){
-    document.getElementById('errorBox').textContent=e.message;
-    document.getElementById('errorBox').classList.remove('hidden');
-  }finally{document.getElementById('loading').classList.add('hidden')}
+    rs('errorBox',e.message);show('errorBox');
+  }finally{hide('loading')}
 }
 
 async function initiatePayment(){
   if(!currentData)return;
   var btn=document.getElementById('btnPay'),err=document.getElementById('payErr');
-  btn.disabled=true;btn.textContent='Yuborilmoqda...';err.classList.add('hidden');
+  btn.disabled=true;btn.textContent='Yuborilmoqda...';hide('payErr');
   try{
     var r=await fetch('/api/v1/payments/initiate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({filling_station_id:currentData.filling_station_id,dispenser_id:currentData.dispenser_id})});
     var text=await r.text();var d={};try{d=JSON.parse(text)}catch(e){}
     if(r.ok||r.status===409){
-      document.getElementById('payScreen').innerHTML='<div style="text-align:center;padding:20px 0"><div style="font-size:72px;margin-bottom:16px">✅</div><h2 style="font-size:22px;color:#10b981;margin-bottom:8px">To\'landi!</h2><p style="color:#94a3b8;font-size:14px;margin-bottom:4px">Tranzaksiya #'+(d.transaction_id||d.id||'OK')+'</p><p style="font-size:30px;font-weight:700;color:#fff;margin:16px 0">'+(currentData.amount||0).toLocaleString()+' UZS</p><p style="color:#64748b;font-size:13px">'+(currentData.car_number||'')+' • '+(currentData.created_at?new Date(currentData.created_at).toLocaleString():'')+'</p><button class="btn btn-teal" onclick="resetAll()" style="margin-top:20px">Yangi to\'lov</button></div>';
+      document.getElementById('payScreen').innerHTML='<div style="text-align:center;padding:20px 0"><div style="font-size:72px;margin-bottom:16px">✅</div><h2 style="font-size:22px;color:#10b981;margin-bottom:8px">Tolandi!</h2><p style="color:#94a3b8;font-size:14px;margin-bottom:4px">#'+(d.transaction_id||d.id||'OK')+'</p><p style="font-size:30px;font-weight:700;color:#fff;margin:16px 0">'+(currentData.amount||0).toLocaleString()+' UZS</p><p style="color:#64748b;font-size:13px">'+(currentData.car_number||'')+' | '+(currentData.created_at?new Date(currentData.created_at).toLocaleString():'')+'</p><button class="btn btn-teal" onclick="location.reload()" style="margin-top:20px">Yangi tolov</button></div>';
     }else throw new Error(d.message||d.error);
-  }catch(e){err.textContent=e.message;err.classList.remove('hidden');btn.disabled=false;btn.textContent='💳 To\'lash'}
+  }catch(e){rs('payErr',e.message);show('payErr');btn.disabled=false;btn.textContent='💳 Tolash'}
 }
 
 async function cancelPayment(){
-  if(!currentData)return resetAll();
+  if(!currentData)return location.reload();
   try{await fetch('/api/v1/payments/initiate?status=cancelled',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({filling_station_id:currentData.filling_station_id,dispenser_id:currentData.dispenser_id})})}catch(e){}
-  resetAll();
+  location.reload();
 }
-
-function hideAll(){
-  document.getElementById('payScreen').classList.add('hidden');
-  document.getElementById('errorBox').classList.add('hidden');
-  document.getElementById('loading').classList.add('hidden');
-}
-function resetAll(){location.reload()}
 </script></body></html>
