@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="uz" class="h-full bg-[#11161d] text-slate-200">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zapravkalar Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="flex h-full font-sans antialiased selection:bg-teal-500/30">
+
+    <aside class="w-64 bg-[#161c24] border-r border-slate-800 flex flex-col justify-between p-4 hidden md:flex">
+        <div>
+            <div class="flex items-center gap-3 mb-8 px-2">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-teal-500 to-emerald-400 opacity-80 flex items-center justify-center text-slate-900 font-bold">GZS</div>
+                <div>
+                    <h2 class="text-sm font-semibold text-white tracking-wide">Панель управления</h2>
+                    <p class="text-xs text-slate-400">Система мониторинга</p>
+                </div>
+            </div>
+            <nav class="space-y-1">
+                <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800/50 transition">
+                    <i data-lucide="layout-dashboard" class="w-5 h-5"></i>
+                    <span class="text-sm font-medium">Dashboard</span>
+                </a>
+                <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-gradient-to-r from-teal-500/10 to-emerald-500/5 text-teal-400 border border-teal-500/20">
+                    <i data-lucide="fuel" class="w-5 h-5"></i>
+                    <span class="text-sm font-medium">Stations</span>
+                </a>
+                <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800/50 transition">
+                    <i data-lucide="bar-chart-3" class="w-5 h-5"></i>
+                    <span class="text-sm font-medium">Transactions</span>
+                </a>
+                <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800/50 transition">
+                    <i data-lucide="file-text" class="w-5 h-5"></i>
+                    <span class="text-sm font-medium">Reports</span>
+                </a>
+                <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800/50 transition">
+                    <i data-lucide="users" class="w-5 h-5"></i>
+                    <span class="text-sm font-medium">Users</span>
+                </a>
+            </nav>
+        </div>
+        <div class="space-y-1 border-t border-slate-800 pt-4">
+            <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800/50 transition">
+                <i data-lucide="bell" class="w-5 h-5"></i>
+                <span class="text-sm font-medium">Notifications</span>
+            </a>
+            <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-rose-400/80 hover:text-rose-400 hover:bg-rose-500/5 transition">
+                <i data-lucide="log-out" class="w-5 h-5"></i>
+                <span class="text-sm font-medium">Logout</span>
+            </a>
+        </div>
+    </aside>
+
+    <main class="flex-1 flex flex-col overflow-hidden bg-gradient-to-b from-[#181f29] to-[#11161d] p-6 lg:p-8">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+            <div>
+                <h1 class="text-3xl font-bold tracking-tight text-white mb-1">Zapravkalar</h1>
+                <p class="text-sm text-slate-400">Управление и мониторинг автозаправочных станций</p>
+            </div>
+            <button class="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-teal-500 to-emerald-500 text-slate-900 font-semibold text-sm shadow-lg shadow-teal-500/20 hover:opacity-90 transition cursor-pointer">
+                <i data-lucide="plus" class="w-5 h-5 stroke-[2.5]"></i>
+                Qo'shish
+            </button>
+        </div>
+
+        <div class="flex-1 overflow-hidden bg-[#161c24]/60 backdrop-blur-md border border-slate-800 rounded-2xl shadow-xl flex flex-col">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="border-b border-slate-800 bg-[#1a212c]/40 text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                            <th class="py-4 px-6 w-20">
+                                <div class="flex items-center gap-1.5 cursor-pointer hover:text-white transition">
+                                    ID <i data-lucide="chevrons-up-down" class="w-3.5 h-3.5 text-slate-500"></i>
+                                </div>
+                            </th>
+                            <th class="py-4 px-6">
+                                <div class="flex items-center gap-1.5 cursor-pointer hover:text-white transition">
+                                    Nomi <i data-lucide="chevrons-up-down" class="w-3.5 h-3.5 text-slate-500"></i>
+                                </div>
+                            </th>
+                            <th class="py-4 px-6">
+                                <div class="flex items-center gap-1.5 cursor-pointer hover:text-white transition">
+                                    Manzil <i data-lucide="chevrons-up-down" class="w-3.5 h-3.5 text-slate-500"></i>
+                                </div>
+                            </th>
+                            <th class="py-4 px-6">
+                                <div class="flex items-center gap-1.5 cursor-pointer hover:text-white transition">
+                                    Hudud <i data-lucide="chevrons-up-down" class="w-3.5 h-3.5 text-slate-500"></i>
+                                </div>
+                            </th>
+                            <th class="py-4 px-6 w-32">Holat</th>
+                            <th class="py-4 px-6 w-44 text-right">Amallar</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-800/60 text-sm text-slate-300">
+                        <tr class="hover:bg-slate-800/30 transition-colors">
+                            <td class="py-4 px-6 font-mono text-slate-500 font-medium">101</td>
+                            <td class="py-4 px-6 font-semibold text-white">GZS Fergana</td>
+                            <td class="py-4 px-6 text-slate-400">г. Фергана, ул. Навои, 45</td>
+                            <td class="py-4 px-6">Фергана</td>
+                            <td class="py-4 px-6">
+                                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                                    Faol
+                                </span>
+                            </td>
+                            <td class="py-4 px-6 text-right">
+                                <div class="inline-flex items-center gap-2">
+                                    <button class="p-1.5 rounded-lg text-amber-400 hover:bg-amber-500/10 transition" title="Tahrirlash">
+                                        <i data-lucide="pencil" class="w-4 h-4"></i>
+                                    </button>
+                                    <button class="p-1.5 rounded-lg text-rose-400 hover:bg-rose-500/10 transition" title="O'chirish">
+                                        <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr class="hover:bg-slate-800/30 transition-colors">
+                            <td class="py-4 px-6 font-mono text-slate-500 font-medium">102</td>
+                            <td class="py-4 px-6 font-semibold text-white">GZS Mirzo-Ulugbek</td>
+                            <td class="py-4 px-6 text-slate-400">г. Ташкент, ул. Муминова, 7/2</td>
+                            <td class="py-4 px-6">Ташкент</td>
+                            <td class="py-4 px-6">
+                                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                                    Faol
+                                </span>
+                            </td>
+                            <td class="py-4 px-6 text-right">
+                                <div class="inline-flex items-center gap-2">
+                                    <button class="p-1.5 rounded-lg text-amber-400 hover:bg-amber-500/10 transition" title="Tahrirlash">
+                                        <i data-lucide="pencil" class="w-4 h-4"></i>
+                                    </button>
+                                    <button class="p-1.5 rounded-lg text-rose-400 hover:bg-rose-500/10 transition" title="O'chirish">
+                                        <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr class="hover:bg-slate-800/30 transition-colors">
+                            <td class="py-4 px-6 font-mono text-slate-500 font-medium">103</td>
+                            <td class="py-4 px-6 font-semibold text-white">GZS Samarkand</td>
+                            <td class="py-4 px-6 text-slate-400">г. Самарканд, ул. Буюк Ипак Йули, 82</td>
+                            <td class="py-4 px-6">Самарканд</td>
+                            <td class="py-4 px-6">
+                                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                                    Faol
+                                </span>
+                            </td>
+                            <td class="py-4 px-6 text-right">
+                                <div class="inline-flex items-center gap-2">
+                                    <button class="p-1.5 rounded-lg text-amber-400 hover:bg-amber-500/10 transition" title="Tahrirlash">
+                                        <i data-lucide="pencil" class="w-4 h-4"></i>
+                                    </button>
+                                    <button class="p-1.5 rounded-lg text-rose-400 hover:bg-rose-500/10 transition" title="O'chirish">
+                                        <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="flex-1 bg-gradient-to-b from-transparent to-[#161c24]/20"></div>
+        </div>
+    </main>
+
+    <script>
+        lucide.createIcons();
+    </script>
+</body>
+</html>
