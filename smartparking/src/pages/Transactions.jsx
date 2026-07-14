@@ -3,42 +3,14 @@ import { api } from "../api/client";
 import { useTranslation } from "../i18n/LanguageContext";
 
 const STATUS_BADGE = {
-  Completed: "badge-success",
-  Paid: "badge-success",
-  New: "badge-warning",
-  Pending: "badge-warning",
-  Failed: "badge-danger",
-  Cancelled: "badge-danger",
-  Refunded: "badge-info",
-  Expired: "badge-danger",
+  Completed: { cls: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20", icon: "check-circle", label: "Completed" },
+  Paid: { cls: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20", icon: "check-circle", label: "Paid" },
+  New: { cls: "bg-amber-500/10 text-amber-400 border-amber-500/20", icon: "clock", label: "New" },
+  Pending: { cls: "bg-amber-500/10 text-amber-400 border-amber-500/20", icon: "clock", label: "Pending" },
+  Failed: { cls: "bg-rose-500/10 text-rose-400 border-rose-500/20", icon: "x-circle", label: "Failed" },
+  Cancelled: { cls: "bg-rose-500/10 text-rose-400 border-rose-500/20", icon: "x-circle", label: "Cancelled" },
+  Refunded: { cls: "bg-blue-500/10 text-blue-400 border-blue-500/20", icon: "rotate-ccw", label: "Refunded" },
 };
-
-function parseParking(paymentMethod) {
-  try {
-    return JSON.parse(paymentMethod);
-  } catch {
-    return null;
-  }
-}
-
-function ParkingDetail({ p }) {
-  if (!p) return <span>—</span>;
-  const avto = p.AvtoRaqam || p.avtoRaqam || "—";
-  const k = (p.Kirish || p.kirish || "").slice(11, 16) || "—";
-  const c = (p.Chiqish || p.chiqish || "").slice(11, 16) || "—";
-  const d = p.Davomiyligi || p.davomiyligi || "—";
-  return (
-    <div style={{ fontSize: 11, lineHeight: 1.5 }}>
-      <div>
-        🚗 <b>{avto}</b>
-      </div>
-      <div style={{ color: "var(--text-muted)" }}>
-        🅿️ {k} → {c}
-      </div>
-      <div style={{ color: "var(--text-muted)" }}>⏱ {d}</div>
-    </div>
-  );
-}
 
 export default function Transactions() {
   const { t } = useTranslation();
@@ -48,161 +20,82 @@ export default function Transactions() {
   const [search, setSearch] = useState("");
 
   const fetchData = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const r = await api.getTransactions();
-      setData(Array.isArray(r) ? r : []);
-    } catch (e) {
-      setError(e.message);
-    } finally {
-      setLoading(false);
-    }
+    setLoading(true); setError(null);
+    try { const r = await api.getTransactions(); setData(Array.isArray(r) ? r : []); }
+    catch (e) { setError(e.message); }
+    finally { setLoading(false); }
   }, []);
 
-  useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+  useEffect(() => { fetchData(); window.lucide?.createIcons(); }, [fetchData]);
 
-  const filtered = search
-    ? data.filter(
-        (tx) =>
-          String(tx.id).includes(search) ||
-          tx.client?.fullName?.toLowerCase().includes(search.toLowerCase()) ||
-          tx.status?.toLowerCase().includes(search.toLowerCase()) ||
-          tx.paymentMethod?.toLowerCase().includes(search.toLowerCase()),
-      )
-    : data;
+  const filtered = search ? data.filter((tx) =>
+    String(tx.id).includes(search) ||
+    tx.client?.fullName?.toLowerCase().includes(search.toLowerCase()) ||
+    tx.status?.toLowerCase().includes(search.toLowerCase())
+  ) : data;
 
-  const formatAmount = (v) =>
-    v != null ? Number(v).toLocaleString() + " UZS" : "—";
-  const formatDate = (d) => (d ? new Date(d).toLocaleString() : "—");
+  if (loading) return <div className="flex items-center justify-center py-20 gap-3"><div className="spinner"></div><span className="text-slate-400">{t("loading")}</span></div>;
 
   return (
     <div>
-      <div className="card-header">
-        <h2
-          style={{
-            fontSize: 24,
-            fontWeight: 700,
-            color: "var(--text-primary)",
-          }}
-        >
-          💳 {t("transactions")}
-        </h2>
-        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-          <input
-            className="input"
-            style={{ width: 240, padding: "8px 12px" }}
-            placeholder={"🔍 " + t("search") + "..."}
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-          <button className="btn btn-ghost btn-sm" onClick={fetchData}>
-            🔄
-          </button>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight text-white mb-1">{t("transactions")}</h1>
+          <p className="text-sm text-slate-400">{t("total")}: {data.length}</p>
+        </div>
+        <div className="flex gap-2 items-center">
+          <div className="relative">
+            <i data-lucide="search" className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500"></i>
+            <input className="bg-[#11161d] border border-slate-800 rounded-xl pl-10 pr-4 py-2 text-sm text-slate-300 w-56 outline-none focus:border-teal-500/50" placeholder={t("search")} value={search} onChange={e => setSearch(e.target.value)} />
+          </div>
+          <button onClick={fetchData} className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/50 cursor-pointer"><i data-lucide="refresh-cw" className="w-4 h-4"></i></button>
         </div>
       </div>
 
-      {error && (
-        <div
-          style={{
-            background: "var(--danger-bg)",
-            border: "1px solid var(--danger)",
-            color: "var(--danger)",
-            padding: "12px 16px",
-            borderRadius: 8,
-            marginBottom: 16,
-            display: "flex",
-            justifyContent: "space-between",
-          }}
-        >
-          <span>{error}</span>
-          <button
-            onClick={() => setError(null)}
-            style={{
-              color: "var(--danger)",
-              fontWeight: 700,
-              cursor: "pointer",
-              background: "none",
-              border: "none",
-            }}
-          >
-            ×
-          </button>
-        </div>
-      )}
+      {error && <div className="bg-rose-500/10 border border-rose-500/20 text-rose-400 rounded-xl p-4 text-sm mb-4">{error}</div>}
 
-      {loading ? (
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            padding: 60,
-            gap: 12,
-          }}
-        >
-          <div className="spinner" />
-          <span style={{ color: "var(--text-secondary)" }}>{t("loading")}</span>
-        </div>
-      ) : data.length === 0 ? (
-        <div className="empty-state">
-          <div className="empty-state-icon">💳</div>
+      {data.length === 0 ? (
+        <div className="py-20 text-center text-slate-500">
+          <div className="text-5xl mb-4">💳</div>
           <p>{t("noTransactions")}</p>
         </div>
       ) : (
-        <div className="card" style={{ padding: 0, overflow: "hidden" }}>
-          <div style={{ overflowX: "auto" }}>
-            <table className="data-table">
+        <div className="bg-[#161c24]/60 backdrop-blur-md border border-slate-800 rounded-2xl overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
               <thead>
-                <tr>
-                  <th>ID</th>
-                  <th>{t("name") || "Mijoz"}</th>
-                  <th>{t("amount")}</th>
-                  <th>{t("paymentStatus")}</th>
-                  <th>{t("type")}</th>
-                  <th>{t("date")}</th>
+                <tr className="border-b border-slate-800 bg-[#1a212c]/40 text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                  <th className="py-4 px-6">ID</th>
+                  <th className="py-4 px-6">{t("name") || "Mijoz"}</th>
+                  <th className="py-4 px-6">{t("amount")}</th>
+                  <th className="py-4 px-6">{t("paymentStatus")}</th>
+                  <th className="py-4 px-6">{t("type")}</th>
+                  <th className="py-4 px-6">{t("date")}</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="divide-y divide-slate-800/60 text-sm">
                 {filtered.map((tx) => {
-                  const isParking = tx.status === "parking";
-                  const p = isParking ? parseParking(tx.paymentMethod) : null;
-                  const badge = STATUS_BADGE[tx.paymentStatus] || "badge-info";
+                  const badge = STATUS_BADGE[tx.paymentStatus] || STATUS_BADGE.Pending;
                   return (
-                    <tr key={tx.id}>
-                      <td style={{ color: "var(--text-muted)", fontSize: 12 }}>
-                        #{tx.id}
+                    <tr key={tx.id} className="hover:bg-slate-800/30 transition-colors">
+                      <td className="py-4 px-6 font-mono text-xs text-slate-500">#{tx.id}</td>
+                      <td className="py-4 px-6 font-medium text-white">
+                        {tx.client?.fullName || `#${tx.clientId || "—"}`}
                       </td>
-                      <td>
-                        {isParking && p ? (
-                          <ParkingDetail p={p} />
-                        ) : (
-                          <span style={{ fontWeight: 600 }}>
-                            {tx.client?.fullName || `#${tx.clientId}` || "—"}
-                          </span>
-                        )}
-                      </td>
-                      <td style={{ fontWeight: 600 }}>
-                        {formatAmount(tx.totalSum)}
-                      </td>
-                      <td>
-                        <span className={`badge ${badge}`}>
-                          {tx.paymentStatus || "—"}
+                      <td className="py-4 px-6 text-white font-semibold">{(tx.totalSum ?? 0).toLocaleString()} UZS</td>
+                      <td className="py-4 px-6">
+                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${badge.cls}`}>
+                          <i data-lucide={badge.icon} className="w-3 h-3"></i>
+                          {badge.label}
                         </span>
                       </td>
-                      <td>
-                        <span
-                          className={`badge ${isParking ? "badge-accent" : "badge-info"}`}
-                        >
+                      <td className="py-4 px-6">
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-teal-500/10 text-teal-400 border border-teal-500/20">
                           {tx.status || "—"}
                         </span>
                       </td>
-                      <td
-                        style={{ color: "var(--text-secondary)", fontSize: 12 }}
-                      >
-                        {formatDate(tx.filledAt)}
+                      <td className="py-4 px-6 text-xs text-slate-400 whitespace-nowrap">
+                        {tx.filledAt ? new Date(tx.filledAt).toLocaleString() : "—"}
                       </td>
                     </tr>
                   );
@@ -210,20 +103,8 @@ export default function Transactions() {
               </tbody>
             </table>
           </div>
-          <div
-            style={{
-              padding: "12px 16px",
-              borderTop: "1px solid var(--border)",
-              color: "var(--text-secondary)",
-              fontSize: 12,
-            }}
-          >
-            {t("total")}: {filtered.length} / {data.length}
-            {" · "}
-            {t("amount")}:{" "}
-            {formatAmount(
-              filtered.reduce((s, tx) => s + (tx.totalSum || 0), 0),
-            )}
+          <div className="px-6 py-3 border-t border-slate-800 text-xs text-slate-500">
+            {t("total")}: {filtered.length} / {data.length} · {t("amount")}: {(filtered.reduce((s, tx) => s + (tx.totalSum || 0), 0)).toLocaleString()} UZS
           </div>
         </div>
       )}
