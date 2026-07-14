@@ -2,14 +2,13 @@ import { useState, useEffect, useCallback } from "react";
 import { api } from "../api/client";
 import { useTranslation } from "../i18n/LanguageContext";
 
-const STATUS_BADGE = {
-  Completed: { cls: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20", icon: "check-circle", label: "Completed" },
-  Paid: { cls: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20", icon: "check-circle", label: "Paid" },
-  New: { cls: "bg-amber-500/10 text-amber-400 border-amber-500/20", icon: "clock", label: "New" },
-  Pending: { cls: "bg-amber-500/10 text-amber-400 border-amber-500/20", icon: "clock", label: "Pending" },
-  Failed: { cls: "bg-rose-500/10 text-rose-400 border-rose-500/20", icon: "x-circle", label: "Failed" },
-  Cancelled: { cls: "bg-rose-500/10 text-rose-400 border-rose-500/20", icon: "x-circle", label: "Cancelled" },
-  Refunded: { cls: "bg-blue-500/10 text-blue-400 border-blue-500/20", icon: "rotate-ccw", label: "Refunded" },
+const STATUS_MAP = {
+  Completed: { cls: "badge-success", label: "Completed" },
+  Paid: { cls: "badge-success", label: "Paid" },
+  New: { cls: "badge-warning", label: "New" },
+  Pending: { cls: "badge-warning", label: "Pending" },
+  Failed: { cls: "badge-danger", label: "Failed" },
+  Cancelled: { cls: "badge-danger", label: "Cancelled" },
 };
 
 export default function Transactions() {
@@ -18,6 +17,8 @@ export default function Transactions() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const pageSize = 15;
 
   const fetchData = useCallback(async () => {
     setLoading(true); setError(null);
@@ -26,85 +27,100 @@ export default function Transactions() {
     finally { setLoading(false); }
   }, []);
 
-  useEffect(() => { fetchData(); window.lucide?.createIcons(); }, [fetchData]);
+  useEffect(() => { fetchData(); }, [fetchData]);
 
   const filtered = search ? data.filter((tx) =>
     String(tx.id).includes(search) ||
     tx.client?.fullName?.toLowerCase().includes(search.toLowerCase()) ||
-    tx.status?.toLowerCase().includes(search.toLowerCase())
+    tx.paymentStatus?.toLowerCase().includes(search.toLowerCase())
   ) : data;
 
-  if (loading) return <div className="flex items-center justify-center py-20 gap-3"><div className="spinner"></div><span className="text-slate-400">{t("loading")}</span></div>;
+  const paged = filtered.slice((page - 1) * pageSize, page * pageSize);
+  const totalPages = Math.ceil(filtered.length / pageSize);
+
+  const fmt = (v) => v != null ? Number(v).toLocaleString() + " UZS" : "—";
+  const fmtDate = (d) => d ? new Date(d).toLocaleString("ru-RU", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "—";
+
+  if (loading) return (
+    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", padding: 60, gap: 12 }}>
+      <div className="spinner" style={{ width: 24, height: 24 }}></div>
+      <span style={{ color: "var(--text-secondary)" }}>{t("loading")}</span>
+    </div>
+  );
 
   return (
     <div>
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+      <div className="card-header">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-white mb-1">{t("transactions")}</h1>
-          <p className="text-sm text-slate-400">{t("total")}: {data.length}</p>
+          <h2 style={{ fontSize: 24, fontWeight: 700, color: "var(--text-primary)", margin: 0 }}>💳 {t("transactions")}</h2>
+          <p style={{ fontSize: 13, color: "var(--text-muted)", margin: "4px 0 0 0" }}>{t("total")}: {filtered.length}</p>
         </div>
-        <div className="flex gap-2 items-center">
-          <div className="relative">
-            <i data-lucide="search" className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500"></i>
-            <input className="bg-[#11161d] border border-slate-800 rounded-xl pl-10 pr-4 py-2 text-sm text-slate-300 w-56 outline-none focus:border-teal-500/50" placeholder={t("search")} value={search} onChange={e => setSearch(e.target.value)} />
-          </div>
-          <button onClick={fetchData} className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/50 cursor-pointer"><i data-lucide="refresh-cw" className="w-4 h-4"></i></button>
+        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          <input className="input" style={{ width: 220, padding: "8px 12px" }} placeholder={"🔍 " + t("search")} value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }} />
+          <button className="btn btn-ghost btn-sm" onClick={fetchData}>🔄</button>
         </div>
       </div>
 
-      {error && <div className="bg-rose-500/10 border border-rose-500/20 text-rose-400 rounded-xl p-4 text-sm mb-4">{error}</div>}
+      {error && (
+        <div style={{ background: "var(--danger-bg)", border: "1px solid var(--danger)", color: "var(--danger)", padding: 12, borderRadius: 8, marginBottom: 16, display: "flex", justifyContent: "space-between" }}>
+          <span>{error}</span>
+          <button onClick={() => setError(null)} style={{ color: "var(--danger)", fontWeight: 700, background: "none", border: "none", cursor: "pointer" }}>×</button>
+        </div>
+      )}
 
       {data.length === 0 ? (
-        <div className="py-20 text-center text-slate-500">
-          <div className="text-5xl mb-4">💳</div>
-          <p>{t("noTransactions")}</p>
-        </div>
+        <div className="empty-state"><div className="empty-state-icon">💳</div><p>{t("noTransactions")}</p></div>
       ) : (
-        <div className="bg-[#161c24]/60 backdrop-blur-md border border-slate-800 rounded-2xl overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
+        <div className="card" style={{ padding: 0, overflow: "hidden" }}>
+          <div style={{ overflowX: "auto" }}>
+            <table className="data-table">
               <thead>
-                <tr className="border-b border-slate-800 bg-[#1a212c]/40 text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                  <th className="py-4 px-6">ID</th>
-                  <th className="py-4 px-6">{t("name") || "Mijoz"}</th>
-                  <th className="py-4 px-6">{t("amount")}</th>
-                  <th className="py-4 px-6">{t("paymentStatus")}</th>
-                  <th className="py-4 px-6">{t("type")}</th>
-                  <th className="py-4 px-6">{t("date")}</th>
+                <tr>
+                  <th style={{ width: 80 }}>ID</th>
+                  <th>{t("name") || "Mijoz"}</th>
+                  <th style={{ width: 130 }}>{t("amount")}</th>
+                  <th style={{ width: 120 }}>{t("paymentStatus")}</th>
+                  <th style={{ width: 100 }}>{t("type")}</th>
+                  <th style={{ width: 160 }}>{t("date")}</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-800/60 text-sm">
-                {filtered.map((tx) => {
-                  const badge = STATUS_BADGE[tx.paymentStatus] || STATUS_BADGE.Pending;
+              <tbody>
+                {paged.map((tx) => {
+                  const s = STATUS_MAP[tx.paymentStatus] || STATUS_MAP.New;
                   return (
-                    <tr key={tx.id} className="hover:bg-slate-800/30 transition-colors">
-                      <td className="py-4 px-6 font-mono text-xs text-slate-500">#{tx.id}</td>
-                      <td className="py-4 px-6 font-medium text-white">
-                        {tx.client?.fullName || `#${tx.clientId || "—"}`}
+                    <tr key={tx.id}>
+                      <td style={{ color: "var(--text-muted)", fontSize: 12, fontFamily: "monospace" }}>#{tx.id}</td>
+                      <td style={{ fontWeight: 600 }}>
+                        {tx.status === "parking" ? (
+                          <span>🚗 {(() => { try { const p = JSON.parse(tx.paymentMethod); return p.AvtoRaqam || p.avtoRaqam || "—"; } catch { return "—"; } })()}</span>
+                        ) : tx.client?.fullName || `#${tx.clientId || "—"}`}
                       </td>
-                      <td className="py-4 px-6 text-white font-semibold">{(tx.totalSum ?? 0).toLocaleString()} UZS</td>
-                      <td className="py-4 px-6">
-                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${badge.cls}`}>
-                          <i data-lucide={badge.icon} className="w-3 h-3"></i>
-                          {badge.label}
-                        </span>
-                      </td>
-                      <td className="py-4 px-6">
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-teal-500/10 text-teal-400 border border-teal-500/20">
+                      <td style={{ fontWeight: 600, whiteSpace: "nowrap" }}>{fmt(tx.totalSum)}</td>
+                      <td><span className={`badge ${s.cls}`}>{s.label}</span></td>
+                      <td>
+                        <span className="badge badge-accent" style={{ background: "rgba(31,111,235,0.12)", color: "#58a6ff" }}>
                           {tx.status || "—"}
                         </span>
                       </td>
-                      <td className="py-4 px-6 text-xs text-slate-400 whitespace-nowrap">
-                        {tx.filledAt ? new Date(tx.filledAt).toLocaleString() : "—"}
-                      </td>
+                      <td style={{ color: "var(--text-secondary)", fontSize: 12, whiteSpace: "nowrap" }}>{fmtDate(tx.filledAt)}</td>
                     </tr>
                   );
                 })}
               </tbody>
             </table>
           </div>
-          <div className="px-6 py-3 border-t border-slate-800 text-xs text-slate-500">
-            {t("total")}: {filtered.length} / {data.length} · {t("amount")}: {(filtered.reduce((s, tx) => s + (tx.totalSum || 0), 0)).toLocaleString()} UZS
+          {totalPages > 1 && (
+            <div style={{ display: "flex", justifyContent: "center", gap: 4, padding: 12, borderTop: "1px solid var(--border)" }}>
+              {Array.from({ length: totalPages }, (_, i) => (
+                <button key={i} onClick={() => setPage(i + 1)}
+                  style={{ padding: "6px 14px", borderRadius: 6, border: i + 1 === page ? "1px solid var(--accent)" : "1px solid var(--border)", background: i + 1 === page ? "var(--accent)" : "transparent", color: i + 1 === page ? "#fff" : "var(--text-secondary)", cursor: "pointer", fontSize: 13 }}>
+                  {i + 1}
+                </button>
+              ))}
+            </div>
+          )}
+          <div style={{ padding: "12px 16px", borderTop: "1px solid var(--border)", color: "var(--text-muted)", fontSize: 12 }}>
+            {t("total")}: {filtered.length} · {t("amount")}: {fmt(filtered.reduce((s, tx) => s + (tx.totalSum || 0), 0))}
           </div>
         </div>
       )}
