@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block title %}ASSETO — Кабинет Аудитора{% endblock %}
+
+{% block content %}
+<div class="wrap">
+  <!-- Role-Based Dashboard Header -->
+  <header class="role-dash-header fade-in">
+    <div>
+      <h1 class="role-welcome">Кабинет Аудитора</h1>
+      <div style="display:flex; gap:8px; margin-top:8px;">
+        <span class="role-badge-pill" style="background:#{{role_info.color}}20; color:#{{role_info.color}};">
+          {{ role_info.label }}
+        </span>
+        <span style="font-size:13px; color:var(--text2); font-weight:500;">Инвентаризация и сверка</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- ══ AUDITOR DASHBOARD ══ -->
+  <div id="dash-auditor" class="fade-up">
+    <div class="pro-card-grid stats-grid" style="grid-template-columns:repeat(auto-fit,minmax(200px,1fr));margin-bottom:20px;">
+      <div class="pro-card">
+        <div class="pro-card-icon" style="background:var(--accent);color:#fff;box-shadow:0 8px 24px rgba(0,122,255,0.25);">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+        </div>
+        <div class="pro-card-val" id="s-total">0</div>
+        <div class="pro-card-label">Всего единиц</div>
+      </div>
+      <div class="pro-card">
+        <div class="pro-card-icon" style="background:var(--ios-green);color:#fff;">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        </div>
+        <div class="pro-card-val" id="s-occ">0</div>
+        <div class="pro-card-label">У сотрудников</div>
+      </div>
+      <div class="pro-card">
+        <div class="pro-card-icon" style="background:var(--ios-orange);color:#fff;">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+        </div>
+        <div class="pro-card-val" id="s-broken" style="color:var(--ios-red);">0</div>
+        <div class="pro-card-label">Требуют внимания</div>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap;">
+      <a href="/inventory" class="btn btn-primary" style="padding:14px 28px;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+        Открыть инвентаризацию
+      </a>
+      <a href="/analytics" class="btn btn-secondary" style="padding:14px 28px;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+        Перейти в Аналитику
+      </a>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  async function loadAuditorData() {
+    try {
+      const r = await fetch('/api/stats');
+      const data = await r.json();
+      
+      document.getElementById('s-total').textContent = data.total || 0;
+      document.getElementById('s-occ').textContent = data.occupied || 0;
+      document.getElementById('s-broken').textContent = data.repair || 0;
+    } catch(e) {
+      console.error(e);
+    }
+  }
+
+  window.addEventListener('load', loadAuditorData);
+</script>
+{% endblock %}

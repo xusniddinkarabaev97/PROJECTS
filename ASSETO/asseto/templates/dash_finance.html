@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+
+{% block title %}ASSETO — Кабинет Бухгалтера{% endblock %}
+
+{% block content %}
+<div class="wrap">
+  <!-- Role-Based Dashboard Header -->
+  <header class="role-dash-header fade-in">
+    <div>
+      <h1 class="role-welcome">Кабинет Бухгалтера</h1>
+      <div style="display:flex; gap:8px; margin-top:8px;">
+        <span class="role-badge-pill" style="background:#{{role_info.color}}20; color:#{{role_info.color}};">
+          {{ role_info.label }}
+        </span>
+        <span style="font-size:13px; color:var(--text2); font-weight:500;">Учёт ценностей и списание</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- ══ ACCOUNTANT DASHBOARD ══ -->
+  <div id="dash-accountant" class="fade-up">
+    <div style="margin-bottom:20px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+        <div>
+          <div style="font-size:18px;font-weight:700;color:var(--text);">Документы для финансового учёта</div>
+          <div style="font-size:13px;color:var(--text2);margin-top:2px;">Требуют вашей подписи и принятия к учёту</div>
+        </div>
+        <a href="/documents" style="font-size:13px;font-weight:600;color:var(--accent);text-decoration:none;padding:6px 14px;background:rgba(0,122,255,.08);border-radius:var(--r-pill);">Все документы →</a>
+      </div>
+      <div id="acc-pending-docs" class="card" style="padding:0;overflow:hidden;background:var(--surface);border:.5px solid var(--border);border-radius:24px;">
+        <div style="padding:24px;text-align:center;color:var(--text3);font-size:13px;">⏳ Загрузка…</div>
+      </div>
+    </div>
+
+    <div class="pro-card-grid stats-grid" style="grid-template-columns:repeat(auto-fit,minmax(200px,1fr));">
+      <div class="pro-card">
+        <div class="pro-card-icon" style="background:#30B0C7;color:#fff;box-shadow:0 8px 24px rgba(48,176,199,0.3);">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        </div>
+        <div class="pro-card-val" id="acc-pending-cnt" style="color:var(--ios-orange);">0</div>
+        <div class="pro-card-label">На вашей подписи</div>
+      </div>
+      <div class="pro-card">
+        <div class="pro-card-icon" style="background:#34C759;color:#fff;box-shadow:0 8px 24px rgba(52,199,89,0.3);">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <div class="pro-card-val" id="acc-approved-cnt">0</div>
+        <div class="pro-card-label">Утверждено (всего)</div>
+      </div>
+      <div class="pro-card" onclick="window.location='/analytics'" style="cursor:pointer;">
+        <div class="pro-card-icon" style="background:#5856D6;color:#fff;box-shadow:0 8px 24px rgba(88,86,214,0.3);">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+        </div>
+        <div class="pro-card-val" id="acc-val" style="font-size:18px;">—</div>
+        <div class="pro-card-label">Стоимость активов</div>
+      </div>
+      <div class="pro-card" onclick="sync1C()" style="cursor:pointer; background: linear-gradient(135deg, rgba(255,204,0,0.1), transparent);">
+        <div class="pro-card-icon" style="background:#FFCC00;color:#000;box-shadow:0 8px 24px rgba(255,204,0,0.3);">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+        </div>
+        <div class="pro-card-val" style="font-size:18px; color:var(--text);">Синхронизация</div>
+        <div class="pro-card-label">Выгрузка в 1С:Бухгалтерия</div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  const DOC_TYPE_LABELS = {onboarding:'Приём сотрудника',dismissal:'Увольнение',writeoff:'Списание',transfer:'Акт приёма-передачи'};
+  var PRIORITY_COLOR = {high:'var(--ios-red)',normal:'var(--accent)',low:'var(--text3)'};
+  var PRIORITY_LABEL = {high:'Срочно',normal:'Обычный',low:'Низкий'};
+
+  function fmtDate(s) {
+    if (!s) return '—';
+    return new Date(s).toLocaleDateString('ru-RU', {day:'2-digit',month:'short'});
+  }
+
+  function renderDocItem(doc) {
+    return `<div onclick="window.location='/documents?id=${doc.id}'"
+      style="display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid var(--separator2);cursor:pointer;transition:background .12s;"
+      onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''">
+      <div style="width:36px;height:36px;border-radius:10px;background:rgba(0,122,255,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      </div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${doc.title||doc.doc_number}</div>
+        <div style="font-size:12px;color:var(--text2);margin-top:2px;">${DOC_TYPE_LABELS[doc.doc_type]||doc.doc_type} · ${doc.doc_number} · ${fmtDate(doc.created_at)}</div>
+      </div>
+      <span style="font-size:11px;font-weight:700;padding:3px 8px;border-radius:20px;background:${PRIORITY_COLOR[doc.priority]||'var(--accent)'};color:#fff;flex-shrink:0;">${PRIORITY_LABEL[doc.priority]||''}</span>
+    </div>`;
+  }
+
+  function renderEmpty(msg) {
+    return `<div style="padding:28px;text-align:center;color:var(--text3);font-size:13px;">${msg}</div>`;
+  }
+  function renderErr() {
+    return `<div style="padding:20px;text-align:center;color:var(--ios-red);font-size:13px;">Ошибка загрузки</div>`;
+  }
+
+  async function loadAccountantData() {
+    try {
+      // 1. Load Analytics for valuation
+      const a = await (await fetch('/api/analytics')).json();
+      const valEl = document.getElementById('acc-val');
+      if (valEl) valEl.textContent = new Intl.NumberFormat('ru-RU', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(a.total_value);
+      
+      // 2. Load Role Pending Docs
+      const resp = await fetch('/api/dashboard/role-stats');
+      const data = await resp.json();
+      
+      const accEl = document.getElementById('acc-pending-docs');
+      if (accEl) {
+        const docs = data.pending_docs || [];
+        document.getElementById('acc-pending-cnt').textContent = data.pending_docs_count || 0;
+        document.getElementById('acc-approved-cnt').textContent = a.approved_docs_count || data.total_items || 0;
+        accEl.innerHTML = docs.length
+          ? docs.map(renderDocItem).join('')
+          : renderEmpty('Нет документов, ожидающих вашей подписи');
+      }
+    } catch(e) {
+      console.error(e);
+      document.getElementById('acc-pending-docs').innerHTML = renderErr();
+    }
+  }
+
+  async function sync1C() {
+    if(!confirm("Запустить синхронизацию с 1С? Будут выгружены все утвержденные акты списания.")) return;
+    try {
+      const r = await fetch('/api/integrations/1c/export');
+      const d = await r.json();
+      if(d.ok) alert(`Успешно выгружено записей: ${d.data.length}`);
+      else alert('Ошибка выгрузки: ' + d.error);
+    } catch(e) {
+      alert('Ошибка соединения с сервером');
+    }
+  }
+
+  window.addEventListener('load', loadAccountantData);
+</script>
+{% endblock %}

@@ -1,0 +1,239 @@
+{% extends "base.html" %}
+{% block title %}ASSETO — Оргструктура 2.0{% endblock %}
+
+{% block head %}
+<script src="https://cdn.jsdelivr.net/npm/@dagrejs/dagre@1/dist/dagre.min.js"></script>
+<style>
+#org-wrap { width:100%; height:calc(100vh - 56px); background:#0f172a; position:relative; overflow:hidden; }
+#org-svg { width:100%; height:100%; }
+.org-node { cursor:grab; transition:filter .2s; }
+.org-node:hover { filter:brightness(1.2); }
+.org-node rect { fill:rgba(30,41,59,0.92); stroke:rgba(51,65,85,0.8); stroke-width:1.5; rx:24; }
+.org-edge { stroke:#475569; stroke-width:2; fill:none; marker-end:url(#arrow); }
+.org-init { fill:#fff; font-size:20px; font-weight:800; text-anchor:middle; dominant-baseline:central; }
+.org-name { fill:#f1f5f9; font-size:15px; font-weight:700; text-anchor:middle; }
+.org-pos { fill:#94a3b8; font-size:12px; text-anchor:middle; }
+.org-dept-bg { fill:rgba(59,130,246,0.1); rx:10; }
+.org-dept { fill:#93c5fd; font-size:11px; font-weight:600; text-anchor:middle; }
+.org-role { font-size:10px; font-weight:700; text-anchor:middle; text-transform:uppercase; letter-spacing:0.05em; }
+.org-loading { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; color:#94a3b8; font-size:20px; font-weight:700; }
+.org-error { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; color:#ef4444; font-size:18px; font-weight:700; gap:8px; }
+.org-toolbar { position:absolute; bottom:20px; right:20px; display:flex; gap:8px; z-index:10; }
+.org-toolbar button { background:#1e293b; border:1px solid #334155; color:#94a3b8; border-radius:10px; padding:8px 14px; cursor:pointer; font-size:13px; font-weight:600; }
+.org-toolbar button:hover { background:#334155; color:#e2e8f0; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div id="org-wrap">
+  <div id="org-loading" class="org-loading">⏳ Загрузка оргструктуры...</div>
+  <svg id="org-svg"></svg>
+  <div class="org-toolbar">
+    <button onclick="zoomIn()">🔍+</button>
+    <button onclick="zoomOut()">🔍−</button>
+    <button onclick="fitView()">📐</button>
+    <button onclick="location.reload()">🔄</button>
+  </div>
+</div>
+
+<!-- Add subordinate popup -->
+<div id="org-popup" style="display:none;position:fixed;z-index:999;background:#1e293b;border:1px solid #334155;border-radius:16px;padding:16px;min-width:280px;box-shadow:0 20px 60px rgba(0,0,0,.5);">
+  <div id="org-popup-name" style="font-size:15px;font-weight:700;color:#f1f5f9;margin-bottom:8px;"></div>
+  <select id="org-popup-select" style="width:100%;padding:8px 12px;border-radius:10px;background:#0f172a;border:1px solid #334155;color:#e2e8f0;font-size:13px;margin-bottom:8px;"><option value="">— выберите —</option></select>
+  <div style="display:flex;gap:8px;justify-content:flex-end;">
+    <button onclick="closePopup()" style="background:#334155;color:#94a3b8;border:none;border-radius:10px;padding:6px 14px;cursor:pointer;font-size:12px;font-weight:600;">Отмена</button>
+    <button onclick="addSub()" style="background:#4F46E5;color:#fff;border:none;border-radius:10px;padding:6px 14px;cursor:pointer;font-size:12px;font-weight:600;">➕ Добавить</button>
+  </div>
+</div>
+<svg width="0" height="0"><defs><marker id="arrow" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#475569"/></marker></defs></svg>
+
+<script>
+(function() {
+  var ROLE_COLORS = {
+    'superadmin': { tag:'#ef4444', bg:'#dc2626' },
+    'director':   { tag:'#ef4444', bg:'#4F46E5' },
+    'deputy':          { tag:'#f59e0b', bg:'#7C3AED' },
+    'department_head': { tag:'#ff6b35', bg:'#d9462a' },
+    'aho':        { tag:'#3b82f6', bg:'#2563EB' },
+    'hr':         { tag:'#10b981', bg:'#059669' },
+    'accountant': { tag:'#06b6d4', bg:'#0891B2' },
+    'auditor':    { tag:'#8b5cf6', bg:'#7C3AED' },
+    'employee':   { tag:'#6b7280', bg:'#4B5563' },
+    'viewer':     { tag:'#6b7280', bg:'#374151' },
+  };
+
+  var NODE_W = 240, NODE_H = 170;
+  var scale = 1, tx = 0, ty = 0;
+  var svg = document.getElementById('org-svg');
+  var wrap = document.getElementById('org-wrap');
+  var g = document.createElementNS('http://www.w3.org/2000/svg','g');
+  svg.appendChild(g);
+
+  // Pan & Zoom
+  var isPanning = false, startX, startY;
+  svg.addEventListener('mousedown', function(e) {
+    if (e.target.closest('.org-node')) return;
+    isPanning = true; startX = e.clientX - tx; startY = e.clientY - ty;
+    svg.style.cursor = 'grabbing';
+  });
+  window.addEventListener('mousemove', function(e) {
+    if (!isPanning) return;
+    tx = e.clientX - startX; ty = e.clientY - startY;
+    updateTransform();
+  });
+  window.addEventListener('mouseup', function() { isPanning = false; svg.style.cursor = ''; });
+  svg.addEventListener('wheel', function(e) {
+    e.preventDefault();
+    var ds = e.deltaY > 0 ? 0.9 : 1.1;
+    var newScale = Math.max(0.1, Math.min(3, scale * ds));
+    var rect = svg.getBoundingClientRect();
+    var mx = e.clientX - rect.left, my = e.clientY - rect.top;
+    tx = mx - (mx - tx) * (newScale / scale);
+    ty = my - (my - ty) * (newScale / scale);
+    scale = newScale;
+    updateTransform();
+  });
+
+  function updateTransform() {
+    g.setAttribute('transform', 'translate('+tx+','+ty+') scale('+scale+')');
+  }
+  window.zoomIn = function() { scale = Math.min(3, scale*1.2); updateTransform(); };
+  window.zoomOut = function() { scale = Math.max(0.1, scale/1.2); updateTransform(); };
+  window.fitView = function() {
+    var bbox = g.getBBox();
+    var w = wrap.clientWidth, h = wrap.clientHeight;
+    scale = Math.min(w/(bbox.width+100), h/(bbox.height+100), 1.5);
+    tx = (w - bbox.width*scale)/2 - bbox.x*scale;
+    ty = (h - bbox.height*scale)/2 - bbox.y*scale;
+    updateTransform();
+  };
+
+  var allUsers = [];
+  var selectedManagerId = null;
+
+  // Fetch and render
+  fetch('/api/orgchart')
+    .then(function(r) { if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
+    .then(function(data) {
+      var users = data.users;
+      allUsers = users;
+      if (!users || !users.length) {
+        document.getElementById('org-loading').innerHTML = '📋 Нет данных<br><small>Добавьте сотрудников</small>';
+        return;
+      }
+
+      document.getElementById('org-loading').style.display = 'none';
+
+      // Dagre layout
+      var dagre = window.dagre;
+      if (!dagre) { showError('Dagre не загрузился'); return; }
+
+      var g2 = new dagre.graphlib.Graph();
+      g2.setDefaultEdgeLabel(function() { return {}; });
+      g2.setGraph({ rankdir:'TB', nodesep:60, ranksep:100 });
+
+      var hasChildren = {};
+      users.forEach(function(u) {
+        users.forEach(function(x) { if (x.manager_id === u.id) hasChildren[u.id] = true; });
+      });
+
+      users.forEach(function(u) {
+        g2.setNode(String(u.id), { width:NODE_W, height:NODE_H });
+        if (u.manager_id) g2.setEdge(String(u.manager_id), String(u.id));
+      });
+      dagre.layout(g2);
+
+      // Render edges
+      g2.edges().forEach(function(e) {
+        var edge = g2.edge(e);
+        var line = document.createElementNS('http://www.w3.org/2000/svg','path');
+        line.setAttribute('d', 'M'+edge.points[0].x+','+edge.points[0].y+' C'+
+          edge.points.map(function(p){return p.x+','+p.y;}).join(' '));
+        line.setAttribute('class','org-edge');
+        g.appendChild(line);
+      });
+
+      // Render nodes
+      users.forEach(function(u) {
+        var pos = g2.node(String(u.id));
+        var x = pos.x - NODE_W/2, y = pos.y - NODE_H/2;
+        var rc = ROLE_COLORS[u.role] || { tag:'#6b7280', bg:'#4B5563' };
+        var init = (u.name||'?').split(' ').map(function(w){return w[0];}).join('').slice(0,2).toUpperCase();
+
+        var node = document.createElementNS('http://www.w3.org/2000/svg','g');
+        node.setAttribute('class','org-node');
+        node.setAttribute('transform','translate('+x+','+y+')');
+        node.style.cursor = 'pointer';
+        node.setAttribute('data-uid', u.id);
+        node.addEventListener('click', function(e) { openPopup(u, e); });
+
+        node.innerHTML = 
+          '<rect width="'+NODE_W+'" height="'+NODE_H+'"/>' +
+          '<circle cx="'+NODE_W/2+'" cy="42" r="26" fill="'+rc.bg+'"/>' +
+          '<text x="'+NODE_W/2+'" y="42" class="org-init">'+init+'</text>' +
+          '<text x="'+NODE_W/2+'" y="84" class="org-name">'+u.name+'</text>' +
+          '<text x="'+NODE_W/2+'" y="102" class="org-pos">'+(u.position||'')+'</text>' +
+          (u.department ? '<rect x="'+(NODE_W/2-60)+'" y="110" width="120" height="22" class="org-dept-bg"/>'+
+           '<text x="'+NODE_W/2+'" y="124" class="org-dept">'+u.department+'</text>' : '') +
+          '<text x="'+NODE_W/2+'" y="150" class="org-role" fill="'+rc.tag+'">'+(u.role_label||'').toUpperCase()+'</text>';
+
+        g.appendChild(node);
+      });
+
+      setTimeout(fitView, 100);
+    })
+    .catch(function(e) {
+      showError(e.message || 'Ошибка загрузки');
+    });
+
+  function showError(msg) {
+    document.getElementById('org-loading').innerHTML = '❌ '+msg;
+    document.getElementById('org-loading').style.color = '#ef4444';
+  }
+
+  window.openPopup = function(user, e) {
+    selectedManagerId = user.id;
+    var popup = document.getElementById('org-popup');
+    document.getElementById('org-popup-name').textContent = '➕ Подчинённый для: ' + user.name;
+    
+    // Populate select with available users (not self, not already subordinate)
+    var sel = document.getElementById('org-popup-select');
+    var children = allUsers.filter(function(x) { return x.manager_id === user.id; }).map(function(x){return x.id;});
+    var opts = '<option value="">— выберите —</option>';
+    allUsers.forEach(function(x) {
+      if (x.id !== user.id) {
+        opts += '<option value="'+x.id+'">'+x.name+' — '+(x.position||x.role_label)+'</option>';
+      }
+    });
+    sel.innerHTML = opts;
+    
+    popup.style.display = 'block';
+    popup.style.left = (e.clientX + 10) + 'px';
+    popup.style.top = (e.clientY + 10) + 'px';
+  };
+
+  window.closePopup = function() {
+    document.getElementById('org-popup').style.display = 'none';
+  };
+
+  window.addSub = function() {
+    var subId = document.getElementById('org-popup-select').value;
+    if (!subId) return alert('Выберите сотрудника');
+    var csrf = document.cookie.split(';').map(function(c){return c.trim();}).find(function(c){return c.startsWith('csrf_token=');});
+    csrf = csrf ? csrf.split('=')[1] : '';
+    fetch('/api/orgchart', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({id:parseInt(subId), manager_id:selectedManagerId})
+    }).then(function(r){ return r.json(); }).then(function(d){
+      if (d.ok) { closePopup(); location.reload(); }
+      else alert(d.error || 'Ошибка');
+    }).catch(function(e){ alert('Ошибка: '+e.message); });
+  };
+
+  window.addEventListener('click', function(e) {
+    if (!e.target.closest('#org-popup') && !e.target.closest('.org-node')) closePopup();
+  });
+})();
+</script>
+{% endblock %}

@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="ru" data-theme="{{ request.cookies.get('theme','') }}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
+  <title>Настройки — ASSETO</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #f2f2f7;
+      --surface: rgba(255, 255, 255, 0.85);
+      --surface-solid: #ffffff;
+      --surface2: #f2f2f7;
+      --surface3: #e5e5ea;
+      --border: rgba(0, 0, 0, 0.08);
+      --text: #1c1c1e;
+      --text2: #6c6c70;
+      --text3: #aeaeb2;
+      --accent: #4361EE;
+      --ios-blue: #007AFF;
+      --ios-green: #34C759;
+      --ios-red: #FF3B30;
+      --shadow: 0 8px 32px rgba(0, 0, 0, 0.04);
+      --sans: 'Inter', -apple-system, system-ui, sans-serif;
+    }
+
+    [data-theme="dark"] {
+      --bg: #000000;
+      --surface: rgba(28, 28, 30, 0.8);
+      --surface-solid: #1c1c1e;
+      --surface2: #2c2c2e;
+      --surface3: #3a3a3c;
+      --border: rgba(255, 255, 255, 0.1);
+      --text: #f5f5f7;
+      --text2: #98989d;
+      --text3: #48484a;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { -webkit-font-smoothing: antialiased; }
+    body { background: var(--bg); color: var(--text); font-family: var(--sans); min-height: 100vh; line-height: 1.4; }
+
+    .nav {
+      position: sticky; top: 0; z-index: 100;
+      background: var(--surface); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+      border-bottom: .5px solid var(--border);
+      height: 64px; display: flex; align-items: center; justify-content: space-between; padding: 0 24px;
+    }
+    .back-btn {
+      color: var(--accent); text-decoration: none; font-size: 15px; font-weight: 600;
+      display: flex; align-items: center; gap: 4px; transition: opacity 0.2s;
+    }
+    .back-btn:hover { opacity: 0.7; }
+    .nav-title { font-size: 18px; font-weight: 800; letter-spacing: -0.5px; }
+
+    .content { max-width: 720px; margin: 0 auto; padding: 32px 20px 100px; }
+
+    .section {
+      background: var(--surface-solid); border-radius: 24px; border: .5px solid var(--border);
+      overflow: hidden; margin-bottom: 24px; box-shadow: var(--shadow);
+    }
+    .section-head {
+      padding: 16px 20px; border-bottom: .5px solid var(--border);
+      display: flex; align-items: center; gap: 14px;
+    }
+    .section-icon {
+      width: 36px; height: 36px; border-radius: 11px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .section-title { font-size: 16px; font-weight: 700; }
+    .section-sub { font-size: 12px; color: var(--text2); font-weight: 500; }
+
+    .row {
+      padding: 16px 20px; border-bottom: .5px solid var(--border);
+      display: flex; align-items: center; gap: 16px; transition: background 0.15s;
+    }
+    .row:last-child { border-bottom: none; }
+    .row-info { flex: 1; min-width: 0; }
+    .row-label { font-size: 15px; font-weight: 600; color: var(--text); }
+    .row-desc { font-size: 13px; color: var(--text2); margin-top: 2px; }
+    .row-ctrl { flex-shrink: 0; }
+
+    /* Controls */
+    .toggle {
+      width: 50px; height: 30px; border-radius: 15px;
+      background: var(--surface3); border: none; cursor: pointer;
+      position: relative; transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .toggle.on { background: var(--ios-green); }
+    .toggle::after {
+      content: ''; position: absolute; top: 2px; left: 2px;
+      width: 26px; height: 26px; border-radius: 50%; background: #fff;
+      box-shadow: 0 3px 8px rgba(0,0,0,0.15);
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .toggle.on::after { left: 22px; }
+
+    .input-ios {
+      width: 100%; background: var(--surface2); border: .5px solid var(--border);
+      border-radius: 12px; padding: 12px 14px; color: var(--text);
+      font-family: var(--sans); font-size: 15px; outline: none; transition: border 0.2s;
+    }
+    .input-ios:focus { border-color: var(--accent); }
+
+    .btn {
+      font-family: var(--sans); font-size: 14px; font-weight: 700;
+      padding: 10px 20px; border-radius: 12px; border: none; cursor: pointer;
+      transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px;
+    }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-secondary { background: var(--surface2); color: var(--text); }
+    .btn-destructive { background: rgba(255, 59, 48, 0.1); color: var(--ios-red); }
+    .btn:hover { transform: scale(1.02); opacity: 0.9; }
+
+    .role-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 6px 14px; border-radius: 10px; font-size: 13px; font-weight: 700;
+    }
+    .role-dot { width: 8px; height: 8px; border-radius: 50%; }
+
+    .api-key-item {
+      padding: 12px 20px; border-bottom: .5px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .api-key-item:last-child { border-bottom: none; }
+    .key-info { display: flex; flex-direction: column; gap: 2px; }
+    .key-name { font-size: 14px; font-weight: 700; }
+    .key-meta { font-size: 11px; color: var(--text3); font-weight: 500; }
+
+    .code-box {
+      background: var(--surface2); border-radius: 14px; padding: 16px;
+      font-family: 'JetBrains Mono', monospace; font-size: 13px;
+      word-break: break-all; color: var(--accent); border: .5px solid var(--border);
+    }
+    
+    .status-pill {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 4px 10px; border-radius: 8px; font-size: 12px; font-weight: 700;
+    }
+    .status-ok { background: rgba(52, 199, 89, 0.1); color: var(--ios-green); }
+    .status-none { background: var(--surface2); color: var(--text3); }
+
+    .lang-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 20px; }
+    .lang-btn {
+      height: 48px; border-radius: 14px; border: .5px solid var(--border);
+      background: var(--surface2); color: var(--text2); font-weight: 700;
+      cursor: pointer; transition: all 0.2s;
+    }
+    .lang-btn.active { border: 2px solid var(--accent); color: var(--accent); background: rgba(67, 97, 238, 0.05); }
+
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    .fade-in { animation: fadeIn 0.4s ease-out forwards; }
+  </style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-left">
+    <a href="/" class="back-btn">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+      Главная
+    </a>
+    <span class="nav-title">Настройки</span>
+  </div>
+</nav>
+
+<div class="content">
+
+  <!-- Profile -->
+  <div class="section fade-in" style="animation-delay: 0.05s">
+    <div class="section-head">
+      <div class="section-icon" style="background: rgba(67, 97, 238, 0.1);">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      </div>
+      <div>
+        <div class="section-title">Аккаунт</div>
+        <div class="section-sub">Ваши данные и роль в системе</div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="row-info">
+        <div class="row-label">{{ current_user.name }}</div>
+        <div class="row-desc">{{ current_user.email }}</div>
+      </div>
+      <div class="row-ctrl">
+        <span class="role-badge" style="background:rgba({{ {'superadmin':'88,86,214','aho':'0,122,255','director':'255,59,48','deputy':'255,149,0','accountant':'48,176,199','employee':'142,142,147','auditor':'90,200,250','viewer':'90,200,250','hr':'52,199,89'}.get(current_user.role,'142,142,147') }},.1); color: #{{ role_info.get('color','8E8E93') }};">
+          <span class="role-dot" style="background:#{{ role_info.get('color','8E8E93') }};"></span>
+          {{ role_info.get('label','—') }}
+        </span>
+      </div>
+    </div>
+    <div class="row">
+      <div class="row-info">
+        <div class="row-label">Безопасность</div>
+        <div class="row-desc">Обновите пароль для защиты аккаунта</div>
+      </div>
+      <div class="row-ctrl">
+        <button class="btn btn-secondary" onclick="togglePwForm()">Изменить пароль</button>
+      </div>
+    </div>
+    <div id="pw-form" style="display:none; padding: 0 20px 20px;">
+      <div style="display:grid; gap:12px; margin-top:8px;">
+        <input type="password" id="pw-old" class="input-ios" placeholder="Текущий пароль">
+        <input type="password" id="pw-new" class="input-ios" placeholder="Новый пароль (8+ знаков)">
+        <input type="password" id="pw-confirm" class="input-ios" placeholder="Повторите новый пароль">
+        <button class="btn btn-primary" style="justify-content:center;" onclick="changePw()">Сохранить изменения</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Appearance -->
+  <div class="section fade-in" style="animation-delay: 0.1s">
+    <div class="section-head">
+      <div class="section-icon" style="background: rgba(255, 149, 0, 0.1);">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FF9500" stroke-width="2.5"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y1="4.22"/></svg>
+      </div>
+      <div>
+        <div class="section-title">Оформление</div>
+        <div class="section-sub">Настройка визуального стиля</div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="row-info">
+        <div class="row-label">Темный режим</div>
+        <div class="row-desc">Использовать палитру Royal Indigo</div>
+      </div>
+      <div class="row-ctrl">
+        <button id="theme-toggle" class="toggle" onclick="toggleTheme()"></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Language -->
+  <div class="section fade-in" style="animation-delay: 0.15s">
+    <div class="section-head">
+      <div class="section-icon" style="background: rgba(52, 199, 89, 0.1);">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--ios-green)" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+      </div>
+      <div>
+        <div class="section-title">Язык</div>
+        <div class="section-sub">Выберите язык интерфейса</div>
+      </div>
+    </div>
+    <div class="lang-grid">
+      <button class="lang-btn" id="lang-ru" onclick="setLang('ru')">Русский</button>
+      <button class="lang-btn" id="lang-uz" onclick="setLang('uz')">O'zbek</button>
+      <button class="lang-btn" id="lang-en" onclick="setLang('en')">English</button>
+    </div>
+  </div>
+
+  <!-- Web Push -->
+  <div class="section fade-in" style="animation-delay: 0.18s">
+    <div class="section-head">
+      <div class="section-icon" style="background:rgba(88,86,214,.1);">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#5856D6" stroke-width="2.5"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+      </div>
+      <div>
+        <div class="section-title">Push-уведомления (браузер)</div>
+        <div class="section-sub">Мгновенные уведомления прямо в браузере, даже когда вкладка закрыта</div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="row-info">
+        <div class="row-label">
+          <span id="push-status-pill" class="status-pill status-none">Не подключено</span>
+        </div>
+        <div class="row-desc" id="push-status-desc">Включите push-уведомления чтобы получать оповещения мгновенно</div>
+      </div>
+      <div class="row-ctrl">
+        <button id="push-toggle-btn" class="btn btn-primary" onclick="togglePushSetting()">Включить</button>
+      </div>
+    </div>
+    <div id="push-browser-warning" style="display:none;padding:12px 20px;font-size:13px;color:#FF9500;background:rgba(255,149,0,.08);border-top:1px solid var(--separator2);">
+      ⚠️ Ваш браузер не поддерживает push-уведомления. Используйте Chrome или Firefox.
+    </div>
+  </div>
+
+  <!-- Telegram -->
+  <div class="section fade-in" style="animation-delay: 0.2s">
+    <div class="section-head">
+      <div class="section-icon" style="background: rgba(0, 136, 204, 0.1);">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0088CC" stroke-width="2.5"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+      </div>
+      <div>
+        <div class="section-title">Telegram Уведомления</div>
+        <div class="section-sub">Статус документов и важные события</div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="row-info">
+        <div class="row-label">
+          <span class="status-pill {{ 'status-ok' if telegram_connected else 'status-none' }}">
+            {{ 'Активно' if telegram_connected else 'Не подключено' }}
+          </span>
+        </div>
+        <div class="row-desc">
+          {% if telegram_connected %}
+          Вы получаете уведомления в Telegram
+          {% else %}
+          Используйте @userinfobot для получения chat_id
+          {% endif %}
+        </div>
+      </div>
+      <div class="row-ctrl">
+        {% if telegram_connected %}
+        <button class="btn btn-destructive" onclick="disconnectTelegram()">Отключить</button>
+        {% endif %}
+      </div>
+    </div>
+    {% if not telegram_connected %}
+    <div style="padding: 0 20px 20px;">
+      <div style="display:grid; gap:12px; margin-top:8px;">
+        <input type="number" id="tg-chat-id" class="input-ios" placeholder="Ваш chat_id (от @userinfobot)">
+        <button class="btn btn-primary" style="justify-content:center;" onclick="connectTelegram()">Подключить Telegram</button>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- SMTP Email Notifications — superadmin only -->
+  {% if current_user.role == 'superadmin' %}
+  <div class="section fade-in" style="animation-delay: 0.22s">
+    <div class="section-head">
+      <div class="section-icon" style="background:rgba(0,122,255,0.1);">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#007AFF" stroke-width="2.5"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+      </div>
+      <div>
+        <div class="section-title">Email уведомления (SMTP)</div>
+        <div class="section-sub">Отправка уведомлений по email при действиях с документами</div>
+      </div>
+    </div>
+    <div style="padding:0 20px 20px;">
+      <div id="smtp-status-row" style="margin-bottom:12px;font-size:13px;color:var(--text2);"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+        <input type="text" id="smtp-host" class="input-ios" placeholder="Сервер (smtp.gmail.com)">
+        <input type="number" id="smtp-port" class="input-ios" placeholder="Порт (587 / 465)" value="587">
+        <input type="email" id="smtp-user" class="input-ios" placeholder="Логин (email)">
+        <input type="password" id="smtp-pass" class="input-ios" placeholder="Пароль / App Password">
+        <input type="email" id="smtp-from" class="input-ios" placeholder="Адрес отправителя (необязательно)">
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="btn btn-primary" onclick="saveSMTP()" style="flex:1;">Сохранить</button>
+        <button class="btn btn-secondary" onclick="testSMTP()">Отправить тест</button>
+      </div>
+      <div id="smtp-msg" style="margin-top:10px;font-size:13px;font-weight:600;display:none;"></div>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- 2FA -->
+  {% if current_user.role in ('superadmin','director','accountant','deputy','aho') %}
+  <div class="section fade-in" style="animation-delay: 0.25s">
+    <div class="section-head">
+      <div class="section-icon" style="background: rgba(52, 199, 89, 0.1);">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--ios-green)" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      </div>
+      <div>
+        <div class="section-title">Защита 2FA</div>
+        <div class="section-sub">Двухфакторная аутентификация</div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="row-info">
+        <div class="row-label">
+          <span class="status-pill {{ 'status-ok' if totp_enabled else 'status-none' }}">
+            {{ 'Защищено' if totp_enabled else 'Без защиты' }}
+          </span>
+        </div>
+        <div class="row-desc">Google Authenticator или Яндекс.Ключ</div>
+      </div>
+      <div class="row-ctrl">
+        {% if not totp_enabled %}
+        <button class="btn btn-primary" onclick="setup2FA()">Включить</button>
+        {% else %}
+        <button class="btn btn-destructive" onclick="show2FADisable()">Выключить</button>
+        {% endif %}
+      </div>
+    </div>
+    <div id="totp-setup" style="display:none; padding: 0 20px 20px; text-align:center;">
+      <div id="totp-qr" style="margin: 20px 0;"></div>
+      <div id="totp-secret-display" class="code-box" style="margin-bottom: 20px;"></div>
+      <div style="display:grid; gap:12px;">
+        <input type="text" id="totp-code" class="input-ios" placeholder="6-значный код" maxlength="6">
+        <button class="btn btn-primary" style="justify-content:center;" onclick="confirm2FA()">Подтвердить</button>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- API Keys -->
+  {% if current_user.role == 'superadmin' %}
+  <div class="section fade-in" style="animation-delay: 0.3s">
+    <div class="section-head">
+      <div class="section-icon" style="background: rgba(175, 82, 222, 0.1);">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#AF52DE" stroke-width="2.5"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
+      </div>
+      <div>
+        <div class="section-title">API Интеграции</div>
+        <div class="section-sub">Ключи для 1С и внешних систем</div>
+      </div>
+    </div>
+    <div id="api-keys-list">
+      <!-- Keys injected here -->
+    </div>
+    <div style="padding: 20px; border-top: .5px solid var(--border);">
+      <button class="btn btn-secondary" style="width:100%; justify-content:center;" onclick="showNewKeyForm()">Создать новый ключ</button>
+      <div id="new-key-form" style="display:none; margin-top:16px;">
+        <div style="display:grid; gap:12px;">
+          <input id="key-name" class="input-ios" placeholder="Название ключа">
+          <select id="key-scopes" class="input-ios">
+            <option value="read">Только чтение</option>
+            <option value="read,write">Чтение и запись</option>
+            <option value="read,write,delete">Полный доступ</option>
+          </select>
+          <button class="btn btn-primary" style="justify-content:center;" onclick="createApiKey()">Сгенерировать</button>
+        </div>
+      </div>
+      <div id="new-key-result" style="display:none; margin-top:16px;" class="code-box"></div>
+    </div>
+  </div>
+  {% endif %}
+
+  <div style="text-align:center; padding-top:20px;">
+    <button class="btn btn-destructive" style="width:100%; justify-content:center; padding: 14px;" onclick="logoutOthers()">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"/><line x1="12" y1="2" x2="12" y2="12"/></svg>
+      Выйти на всех остальных устройствах
+    </button>
+  </div>
+
+</div>
+
+<link rel="stylesheet" href="/static/css/asseto-ios.css">
+<script src="/static/js/csrf.js?v=2"></script>
+<script src="/static/js/app-polish.js"></script>
+<script src="/static/js/app.js"></script>
+<script>
+// Password
+function togglePwForm() {
+  const f = document.getElementById('pw-form');
+  f.style.display = f.style.display === 'none' ? 'block' : 'none';
+}
+async function changePw() {
+  const oldPw = document.getElementById('pw-old').value;
+  const newPw = document.getElementById('pw-new').value;
+  const conf  = document.getElementById('pw-confirm').value;
+  if (!oldPw || !newPw) { toast('Заполните поля','err'); return; }
+  if (newPw !== conf) { toast('Пароли не совпадают','err'); return; }
+  const r = await fetch('/api/profile', {
+    method: 'PUT',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({old_password: oldPw, password: newPw})
+  });
+  const d = await r.json();
+  if (d.ok) {
+    toast('Пароль успешно изменён','ok');
+    document.getElementById('pw-form').style.display = 'none';
+    ['pw-old','pw-new','pw-confirm'].forEach(id=>document.getElementById(id).value='');
+  } else { toast(d.error||'Ошибка','err'); }
+}
+
+// Telegram
+async function connectTelegram() {
+  const chatId = document.getElementById('tg-chat-id').value.trim();
+  if (!chatId) { toast('Введите chat_id','err'); return; }
+  const r = await fetch('/api/telegram/verify', {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({chat_id: chatId})
+  });
+  const d = await r.json();
+  if (d.ok) { toast('Telegram успешно подключён','ok'); setTimeout(()=>location.reload(),1000); }
+  else { toast(d.error||'Ошибка','err'); }
+}
+async function disconnectTelegram() {
+  if (!await showConfirm('Уведомления', 'Отключить Telegram-уведомления?')) return;
+  await fetch('/api/telegram/disconnect',{method:'POST'});
+  toast('Уведомления отключены','ok');
+  setTimeout(()=>location.reload(),800);
+}
+
+// 2FA
+async function setup2FA() {
+  const r = await fetch('/api/2fa/setup',{method:'POST'});
+  const d = await r.json();
+  if (!d.ok) { toast(d.error||'Ошибка','err'); return; }
+  document.getElementById('totp-qr').innerHTML = `<img src="${d.qr}" style="border-radius:16px; border: 4px solid #fff; box-shadow: 0 4px 20px rgba(0,0,0,0.1);">`;
+  document.getElementById('totp-secret-display').textContent = d.secret;
+  document.getElementById('totp-setup').style.display = 'block';
+}
+async function confirm2FA() {
+  const code = document.getElementById('totp-code').value.trim();
+  if (code.length !== 6) { toast('Введите 6 цифр','err'); return; }
+  const r = await fetch('/api/2fa/confirm',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({code})});
+  const d = await r.json();
+  if (d.ok) { toast('Защита 2FA включена','ok'); setTimeout(()=>location.reload(),1000); }
+  else { toast(d.error||'Неверный код','err'); }
+}
+function show2FADisable() {
+  // Simple reuse for now
+  setup2FA();
+}
+
+// API Keys
+async function loadApiKeys() {
+  const el = document.getElementById('api-keys-list');
+  if (!el) return;
+  const keys = await (await fetch('/api/api-keys')).json();
+  if (!keys.length) {
+    el.innerHTML = '<div style="padding:20px; text-align:center; color:var(--text3); font-size:13px;">У вас пока нет созданных ключей</div>';
+    return;
+  }
+  el.innerHTML = keys.map(k => `
+    <div class="api-key-item">
+      <div class="key-info">
+        <span class="key-name">${k.name}</span>
+        <span class="key-meta">${k.scopes} · создан ${new Date(k.created_at).toLocaleDateString('ru')}</span>
+      </div>
+      <button class="btn btn-destructive btn-sm" style="padding:6px 12px; font-size:11px;" onclick="revokeKey(${k.id})">Удалить</button>
+    </div>
+  `).join('');
+}
+function showNewKeyForm() {
+  document.getElementById('new-key-form').style.display = 'block';
+}
+async function createApiKey() {
+  const name = document.getElementById('key-name').value.trim();
+  const scopes = document.getElementById('key-scopes').value;
+  if (!name) { toast('Введите название','err'); return; }
+  const r = await fetch('/api/api-keys',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,scopes})});
+  const d = await r.json();
+  if (d.ok) {
+    const res = document.getElementById('new-key-result');
+    res.style.display = 'block';
+    res.innerHTML = `<div style="font-size:12px; font-weight:800; margin-bottom:8px; color:var(--ios-red);">⚠️ Сохраните этот ключ прямо сейчас:</div>${d.key}`;
+    document.getElementById('new-key-form').style.display = 'none';
+    loadApiKeys();
+  } else { toast(d.error||'Ошибка','err'); }
+}
+async function revokeKey(id) {
+  if (!await showConfirm('Удаление ключа', 'Удалить этот API ключ навсегда?')) return;
+  await fetch('/api/api-keys/'+id,{method:'DELETE'});
+  toast('Ключ успешно удалён','ok');
+  loadApiKeys();
+}
+
+// Theme & Lang
+function toggleTheme() {
+  const cur = document.documentElement.getAttribute('data-theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  const next = cur === 'dark' ? 'light' : 'dark';
+  applyTheme(next);
+  localStorage.setItem('asseto-theme', next);
+  toast('Тема изменена','ok');
+}
+function applyTheme(t) {
+  document.documentElement.setAttribute('data-theme', t);
+  const toggle = document.getElementById('theme-toggle');
+  if (toggle) toggle.classList.toggle('on', t === 'dark');
+}
+function setLang(l) {
+  localStorage.setItem('asseto-lang', l);
+  updateLangUI(l);
+  toast('Язык системы обновлён','ok');
+}
+function updateLangUI(l) {
+  document.querySelectorAll('.lang-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.id === 'lang-' + l);
+  });
+}
+async function logoutOthers() {
+  if (!await showConfirm('Сброс сессий', 'Это завершит все сессии на других устройствах. Продолжить?')) return;
+  try {
+    const r = await fetch('/api/auth/logout-others', { method: 'POST' });
+    const d = await r.json();
+    if (d.ok) toast('Выполнено успешно','ok');
+    else toast(d.error || 'Ошибка', 'err');
+  } catch(e) { toast('Ошибка связи', 'err'); }
+}
+
+// Web Push Settings
+async function initPushUI() {
+  const btn = document.getElementById('push-toggle-btn');
+  const pill = document.getElementById('push-status-pill');
+  const desc = document.getElementById('push-status-desc');
+  const warn = document.getElementById('push-browser-warning');
+
+  if (!('PushManager' in window) || !('serviceWorker' in navigator)) {
+    if (warn) warn.style.display = 'block';
+    if (btn) btn.style.display = 'none';
+    return;
+  }
+
+  const perm = Notification.permission;
+  const subscribed = window.ASSETO?.push?.isSubscribed() && perm === 'granted';
+
+  if (subscribed) {
+    pill.textContent = 'Активно'; pill.className = 'status-pill status-ok';
+    desc.textContent = 'Вы получаете push-уведомления в этом браузере';
+    btn.textContent = 'Отключить'; btn.className = 'btn btn-destructive';
+  } else if (perm === 'denied') {
+    pill.textContent = 'Заблокировано'; pill.className = 'status-pill status-none';
+    desc.textContent = 'Уведомления заблокированы в настройках браузера. Разрешите их вручную.';
+    btn.textContent = 'Инструкция'; btn.className = 'btn btn-secondary';
+    btn.onclick = () => alert('Разблокируйте уведомления:\nChrome: 🔒 в адресной строке → Уведомления → Разрешить\nFirefox: ℹ️ → Разрешения → Уведомления');
+    return;
+  } else {
+    pill.textContent = 'Не подключено'; pill.className = 'status-pill status-none';
+    desc.textContent = 'Нажмите «Включить» — браузер запросит разрешение';
+    btn.textContent = 'Включить'; btn.className = 'btn btn-primary';
+  }
+}
+
+async function togglePushSetting() {
+  const btn = document.getElementById('push-toggle-btn');
+  const subscribed = window.ASSETO?.push?.isSubscribed();
+  btn.disabled = true; btn.textContent = '...';
+  if (subscribed) {
+    const r = await window.ASSETO.push.unsubscribe();
+    if (r.ok) toast('Push-уведомления отключены', 'ok');
+    else toast(r.reason || 'Ошибка', 'err');
+  } else {
+    const r = await window.ASSETO.push.subscribe();
+    if (r.ok) toast('🔔 Push-уведомления включены!', 'ok');
+    else toast(r.reason || 'Ошибка', 'err');
+  }
+  btn.disabled = false;
+  initPushUI();
+}
+
+// SMTP Settings
+async function loadSMTP() {
+  const el = document.getElementById('smtp-status-row');
+  if (!el) return;
+  try {
+    const d = await (await fetch('/api/smtp/settings')).json();
+    if (d.configured) {
+      el.innerHTML = '<span style="color:#34C759;font-weight:700;">✓ SMTP настроен</span> — уведомления отправляются по email';
+    } else {
+      el.innerHTML = '<span style="color:var(--ios-orange);">Не настроено</span> — введите данные сервера ниже';
+    }
+    if (d.smtp_host) document.getElementById('smtp-host').value = d.smtp_host;
+    if (d.smtp_port) document.getElementById('smtp-port').value = d.smtp_port;
+    if (d.smtp_user) document.getElementById('smtp-user').value = d.smtp_user;
+    if (d.smtp_from) document.getElementById('smtp-from').value = d.smtp_from;
+  } catch(e) {}
+}
+async function saveSMTP() {
+  const cfg = {
+    smtp_host: document.getElementById('smtp-host').value.trim(),
+    smtp_port: document.getElementById('smtp-port').value.trim() || '587',
+    smtp_user: document.getElementById('smtp-user').value.trim(),
+    smtp_pass: document.getElementById('smtp-pass').value,
+    smtp_from: document.getElementById('smtp-from').value.trim()
+  };
+  if (!cfg.smtp_host || !cfg.smtp_user || !cfg.smtp_pass) {
+    showSMTPMsg('Заполните сервер, логин и пароль', 'err'); return;
+  }
+  const d = await (await fetch('/api/smtp/settings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(cfg)})).json();
+  if (d.ok) { showSMTPMsg('Сохранено', 'ok'); loadSMTP(); }
+  else showSMTPMsg(d.error||'Ошибка', 'err');
+}
+async function testSMTP() {
+  showSMTPMsg('Отправка...', 'ok');
+  try {
+    const d = await (await fetch('/api/smtp/test',{method:'POST'})).json();
+    if (d.ok) showSMTPMsg('Письмо отправлено на ' + d.sent_to, 'ok');
+    else showSMTPMsg(d.error||'Ошибка', 'err');
+  } catch(e) { showSMTPMsg('Сетевая ошибка', 'err'); }
+}
+function showSMTPMsg(msg, type) {
+  const el = document.getElementById('smtp-msg');
+  if (!el) return;
+  el.style.display = 'block';
+  el.style.color = type==='ok' ? '#34C759' : '#FF3B30';
+  el.textContent = msg;
+  setTimeout(()=>{ el.style.display='none'; }, 3500);
+}
+
+// Init
+(function init() {
+  const t = localStorage.getItem('asseto-theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  applyTheme(t);
+  const l = localStorage.getItem('asseto-lang') || 'ru';
+  updateLangUI(l);
+  loadApiKeys();
+  loadSMTP();
+  setTimeout(initPushUI, 1500); // wait for SW to register
+})();
+</script>
+</body>
+</html>

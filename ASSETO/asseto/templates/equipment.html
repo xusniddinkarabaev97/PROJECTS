@@ -1,0 +1,239 @@
+{% extends "base.html" %}
+{% block title %}ASSETO — Оборудование{% endblock %}
+
+{% block head %}
+<style>
+.eq-toolbar { display:flex; gap:10px; margin-bottom:16px; flex-wrap:wrap; align-items:center; }
+.eq-toolbar input, .eq-toolbar select { padding:8px 14px; border-radius:12px; border:1px solid var(--border); background:var(--surface2); color:var(--text); font-size:13px; outline:none; }
+.eq-table-wrap { background:var(--surface); border:.5px solid var(--border); border-radius:20px; overflow:hidden; }
+.eq-table { width:100%; border-collapse:collapse; }
+.eq-table th { padding:10px 14px; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:var(--text3); text-align:left; background:var(--surface2); }
+.eq-table td { padding:10px 14px; font-size:13px; border-bottom:.5px solid var(--separator2); color:var(--text); }
+.eq-table tr { cursor:pointer; transition:background .15s; }
+.eq-table tr:hover { background:var(--surface2); }
+.eq-badge { display:inline-block; padding:3px 10px; border-radius:var(--r-pill); font-size:11px; font-weight:700; }
+.eq-badge-ok { background:rgba(52,199,89,.12); color:var(--ios-green); }
+.eq-badge-warn { background:rgba(255,149,0,.12); color:var(--ios-orange); }
+.eq-badge-bad { background:rgba(255,59,48,.12); color:var(--ios-red); }
+.eq-badge-free { background:rgba(0,122,255,.1); color:var(--ios-blue); }
+.eq-modal { display:none; position:fixed; inset:0; z-index:999; background:rgba(0,0,0,.5); align-items:center; justify-content:center; }
+.eq-modal.open { display:flex; }
+.eq-modal-content { background:var(--bg); border-radius:24px; width:100%; max-width:700px; max-height:85vh; overflow-y:auto; padding:24px; }
+.eq-modal h3 { margin-bottom:16px; }
+.eq-field { margin-bottom:12px; }
+.eq-field label { font-size:11px; font-weight:700; color:var(--text2); text-transform:uppercase; display:block; margin-bottom:4px; }
+.eq-field input, .eq-field select { width:100%; padding:10px; border-radius:12px; border:1px solid var(--border); background:var(--surface2); color:var(--text); }
+.eq-field-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.eq-history { margin-top:16px; font-size:13px; }
+.eq-history-item { padding:8px 0; border-bottom:.5px solid var(--separator2); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div style="max-width:1400px;">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:12px;">
+    <div>
+      <h1 style="font-size:28px;font-weight:800;">🖥️ Оборудование</h1>
+      <div style="font-size:14px;color:var(--text2);">Учёт и управление техникой компании</div>
+    </div>
+    <div style="display:flex;gap:8px;">
+      <button class="btn btn-primary" onclick="openAdd()">+ Добавить</button>
+      <button class="btn btn-secondary" onclick="exportFiltered()">📥 Excel</button>
+      <button class="btn btn-secondary" onclick="window.open('/qr-print')">🔲 QR печать</button>
+    </div>
+  </div>
+
+  <div class="eq-toolbar">
+    <input type="text" id="eq-search" placeholder="🔍 Поиск по названию, номеру..." oninput="render()" style="flex:1;min-width:180px;">
+    <select id="eq-cat" onchange="render()"><option value="">Все категории</option></select>
+    <select id="eq-status" onchange="render()"><option value="">Все статусы</option><option value="Занято">Занято</option><option value="Свободно">Свободно</option></select>
+    <select id="eq-cond" onchange="render()"><option value="">Все состояния</option><option value="Хорошее">Хорошее</option><option value="Потёрто">Потёрто</option><option value="Требует ремонта">Ремонт</option><option value="Списано">Списано</option></select>
+    <span id="eq-count" style="font-size:12px;color:var(--text3);white-space:nowrap;"></span>
+  </div>
+
+  <div class="eq-table-wrap">
+    <table class="eq-table">
+      <thead><tr>
+        <th>Инв. №</th><th>Категория</th><th>Модель</th><th>Сотрудник</th><th>Кабинет</th><th>Статус</th><th>Состояние</th><th>Стоимость</th>
+      </tr></thead>
+      <tbody id="eq-tbody"><tr><td colspan="8" style="text-align:center;padding:40px;color:var(--text3);">⏳ Загрузка...</td></tr></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Add/Edit Modal -->
+<div class="eq-modal" id="eq-modal">
+  <div class="eq-modal-content">
+    <h3 id="eq-modal-title">Добавить технику</h3>
+    <div class="eq-field-row">
+      <div class="eq-field"><label>Категория</label><select id="eq-f-cat"></select></div>
+      <div class="eq-field"><label>Модель</label><input id="eq-f-model" placeholder="Напр. Lenovo ThinkPad"></div>
+    </div>
+    <div class="eq-field-row">
+      <div class="eq-field"><label>Инв. номер</label><input id="eq-f-inv" readonly style="color:var(--text3);"></div>
+      <div class="eq-field"><label>Серийный номер</label><input id="eq-f-sn" placeholder="SN-..."></div>
+    </div>
+    <div class="eq-field-row">
+      <div class="eq-field"><label>Место</label><input id="eq-f-place" placeholder="Главный офис"></div>
+      <div class="eq-field"><label>Кабинет</label><input id="eq-f-room" placeholder="Каб. 101"></div>
+    </div>
+    <div class="eq-field-row">
+      <div class="eq-field"><label>Сотрудник</label><select id="eq-f-emp"><option value="">— свободно —</option></select></div>
+      <div class="eq-field"><label>Состояние</label><select id="eq-f-cond"><option>Хорошее</option><option>Потёрто</option><option>Требует ремонта</option><option>Списано</option></select></div>
+    </div>
+    <div class="eq-field"><label>Цена (USD)</label><input id="eq-f-price" type="number" step="0.01" placeholder="0.00"></div>
+    <div id="eq-history-block" class="eq-history" style="display:none;"></div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px;">
+      <button class="btn btn-secondary" onclick="closeModal()">Отмена</button>
+      <button class="btn btn-primary" id="eq-btn-save" onclick="saveItem()">Сохранить</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const CATS = {{ categories | tojson | safe }};
+const PREFIX = {{ prefixes | tojson | safe }};
+const USD_RATE = 13000;
+let allItems = [], allUsers = [], editId = null;
+
+async function init() {
+  document.getElementById('eq-cat').innerHTML = '<option value="">Все категории</option>' + CATS.map(c => `<option>${c}</option>`).join('');
+  const [items, users] = await Promise.all([
+    fetch('/api/items').then(r=>r.json()),
+    fetch('/api/users/simple-list').then(r=>r.json())
+  ]);
+  allItems = items; allUsers = users;
+  document.getElementById('eq-f-cat').innerHTML = CATS.map(c => `<option>${c}</option>`).join('');
+  document.getElementById('eq-f-emp').innerHTML = '<option value="">— свободно —</option>' + users.map(u => `<option value="${u.id}">${u.name}</option>`).join('');
+  render();
+}
+
+function render() {
+  const q = (document.getElementById('eq-search').value||'').toLowerCase();
+  const cat = document.getElementById('eq-cat').value;
+  const st = document.getElementById('eq-status').value;
+  const cond = document.getElementById('eq-cond').value;
+  
+  let filtered = allItems;
+  if (q) filtered = filtered.filter(i => [i.inv_num,i.model,i.employee,i.room,i.serial_num].join(' ').toLowerCase().includes(q));
+  if (cat) filtered = filtered.filter(i => i.category === cat);
+  if (st) filtered = filtered.filter(i => i.status === st);
+  if (cond) filtered = filtered.filter(i => i.condition === cond);
+  
+  document.getElementById('eq-count').textContent = `Найдено: ${filtered.length} из ${allItems.length}`;
+  
+  const tbody = document.getElementById('eq-tbody');
+  if (!filtered.length) { tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:40px;color:var(--text3);">Ничего не найдено</td></tr>'; return; }
+  
+  tbody.innerHTML = filtered.map(i => {
+    const priceUZS = i.purchase_price ? Math.round(i.purchase_price * USD_RATE).toLocaleString('ru') + ' сум' : '—';
+    const stCls = i.status === 'Занято' ? 'eq-badge-ok' : 'eq-badge-free';
+    const condCls = i.condition === 'Хорошее' ? 'eq-badge-ok' : i.condition === 'Потёрто' ? 'eq-badge-warn' : 'eq-badge-bad';
+    return `<tr onclick="openEdit(${i.id})">
+      <td style="font-weight:700;font-family:monospace;">${i.inv_num}</td>
+      <td>${i.category}</td>
+      <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${i.model||'—'}</td>
+      <td>${i.employee||'—'}</td>
+      <td>${i.room||'—'}</td>
+      <td><span class="eq-badge ${stCls}">${i.status}</span></td>
+      <td><span class="eq-badge ${condCls}">${i.condition}</span></td>
+      <td style="font-weight:600;">${priceUZS}</td>
+    </tr>`;
+  }).join('');
+}
+
+function openAdd() {
+  editId = null;
+  document.getElementById('eq-modal-title').textContent = '+ Добавить технику';
+  document.getElementById('eq-btn-save').textContent = 'Сохранить';
+  document.getElementById('eq-history-block').style.display = 'none';
+  document.getElementById('eq-f-inv').value = PREFIX[CATS[0]] + '-...';
+  document.getElementById('eq-f-model').value = '';
+  document.getElementById('eq-f-sn').value = '';
+  document.getElementById('eq-f-place').value = '';
+  document.getElementById('eq-f-room').value = '';
+  document.getElementById('eq-f-emp').value = '';
+  document.getElementById('eq-f-cond').value = 'Хорошее';
+  document.getElementById('eq-f-price').value = '';
+  document.getElementById('eq-modal').classList.add('open');
+  document.getElementById('eq-f-cat').onchange = function() {
+    document.getElementById('eq-f-inv').value = PREFIX[this.value] + '-...';
+  };
+}
+
+async function openEdit(id) {
+  const i = allItems.find(x => x.id === id);
+  if (!i) return;
+  editId = id;
+  document.getElementById('eq-modal-title').textContent = '✏️ ' + i.inv_num;
+  document.getElementById('eq-btn-save').textContent = 'Обновить';
+  document.getElementById('eq-f-cat').value = i.category;
+  document.getElementById('eq-f-inv').value = i.inv_num;
+  document.getElementById('eq-f-model').value = i.model||'';
+  document.getElementById('eq-f-sn').value = i.serial_num||'';
+  document.getElementById('eq-f-place').value = i.place||'';
+  document.getElementById('eq-f-room').value = i.room||'';
+  document.getElementById('eq-f-emp').value = i.employee_id||'';
+  document.getElementById('eq-f-cond').value = i.condition||'Хорошее';
+  document.getElementById('eq-f-price').value = i.purchase_price||'';
+  
+  // Load history
+  try {
+    const h = await (await fetch('/api/items/'+id+'/history')).json();
+    document.getElementById('eq-history-block').style.display = 'block';
+    document.getElementById('eq-history-block').innerHTML = '<b>История</b>' + h.slice(0,10).map(r => `<div class="eq-history-item">${r.action} — ${r.user_name||'?'} · ${new Date(r.ts).toLocaleString('ru')}</div>`).join('');
+  } catch(e) {}
+  
+  document.getElementById('eq-modal').classList.add('open');
+}
+
+function closeModal() { document.getElementById('eq-modal').classList.remove('open'); }
+
+function exportFiltered() {
+  const q = document.getElementById('eq-search').value;
+  const cat = document.getElementById('eq-cat').value;
+  const st = document.getElementById('eq-status').value;
+  const cond = document.getElementById('eq-cond').value;
+  let url = '/api/export?';
+  if (q) url += 'q=' + encodeURIComponent(q) + '&';
+  if (cat) url += 'category=' + encodeURIComponent(cat) + '&';
+  if (st) url += 'status=' + encodeURIComponent(st) + '&';
+  if (cond) url += 'condition=' + encodeURIComponent(cond) + '&';
+  window.open(url);
+}
+
+async function saveItem() {
+  const cat = document.getElementById('eq-f-cat').value;
+  const empVal = document.getElementById('eq-f-emp').value;
+  const priceVal = document.getElementById('eq-f-price').value;
+  const empId = empVal ? parseInt(empVal) : null;
+  const empName = empId ? (allUsers.find(u => u.id === empId) || {}).name || '' : '';
+  
+  const data = {
+    category: cat,
+    model: document.getElementById('eq-f-model').value,
+    serial_num: document.getElementById('eq-f-sn').value||null,
+    place: document.getElementById('eq-f-place').value,
+    room: document.getElementById('eq-f-room').value,
+    condition: document.getElementById('eq-f-cond').value,
+    purchase_price: priceVal ? parseFloat(priceVal) : null,
+    employee_id: empId,
+    employee: empName || null,
+    status: empId ? 'Занято' : 'Свободно',
+  };
+  if (!editId) data.inv_num = document.getElementById('eq-f-inv').value;
+  if (!data.room) return alert('Укажите кабинет');
+  
+  const url = editId ? `/api/items/${editId}` : '/api/items';
+  const method = editId ? 'PUT' : 'POST';
+  try {
+    const resp = await fetch(url, {method, headers:{'Content-Type':'application/json'}, body:JSON.stringify(data)});
+    const r = await resp.json();
+    if (r.error) return alert(r.error);
+    closeModal(); init();
+  } catch(e) { alert('Ошибка: ' + e.message); }
+}
+
+init();
+</script>
+{% endblock %}

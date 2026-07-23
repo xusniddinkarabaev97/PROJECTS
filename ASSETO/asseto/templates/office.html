@@ -1,0 +1,496 @@
+{% extends "base.html" %}
+{% block title %}ASSETO — Канцелярия{% endblock %}
+
+{% block head %}
+<style>
+.ofc-wrap { padding:0; max-width:1400px; }
+.ofc-header { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:24px; }
+.ofc-header h1 { font-size:28px; font-weight:800; letter-spacing:-0.02em; color:var(--text); }
+.ofc-tabs { display:flex; gap:6px; margin-bottom:20px; flex-wrap:wrap; }
+.ofc-tab { padding:8px 18px; border-radius:var(--r-pill); border:1px solid var(--border); background:var(--surface); color:var(--text2); font-size:13px; font-weight:600; cursor:pointer; transition:all .2s; }
+.ofc-tab.active { background:var(--accent); color:#fff; border-color:var(--accent); }
+.ofc-tab:hover:not(.active) { background:var(--surface2); }
+.ofc-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:14px; margin-bottom:24px; }
+.ofc-stat { background:var(--surface); border:.5px solid var(--border); border-radius:18px; padding:18px; }
+.ofc-stat-val { font-size:32px; font-weight:800; letter-spacing:-0.02em; color:var(--text); }
+.ofc-stat-lbl { font-size:12px; color:var(--text3); margin-top:4px; font-weight:600; text-transform:uppercase; letter-spacing:0.05em; }
+.ofc-stat.red .ofc-stat-val { color:var(--ios-red); }
+.ofc-stat.yellow .ofc-stat-val { color:var(--ios-orange); }
+.ofc-stat.green .ofc-stat-val { color:var(--ios-green); }
+.ofc-stat.blue .ofc-stat-val { color:var(--ios-blue); }
+
+.ofc-table-wrap { background:var(--surface); border:.5px solid var(--border); border-radius:20px; overflow:hidden; }
+.ofc-table { width:100%; border-collapse:collapse; }
+.ofc-table th { padding:10px 14px; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:var(--text3); text-align:left; background:var(--surface2); }
+.ofc-table td { padding:10px 14px; font-size:13px; border-bottom:.5px solid var(--separator2); color:var(--text); }
+.ofc-table tr { cursor:pointer; transition:background .15s; }
+.ofc-table tr:hover { background:var(--surface2); }
+.ofc-table .status-badge { display:inline-block; padding:3px 10px; border-radius:var(--r-pill); font-size:11px; font-weight:700; }
+.ofc-table .status-draft { background:rgba(142,142,147,.15); color:var(--text2); }
+.ofc-table .status-registered { background:rgba(0,122,255,.15); color:var(--ios-blue); }
+.ofc-table .status-review { background:rgba(255,149,0,.15); color:var(--ios-orange); }
+.ofc-table .status-in_progress { background:rgba(88,86,214,.15); color:#7B79F7; }
+.ofc-table .status-completed { background:rgba(52,199,89,.15); color:var(--ios-green); }
+.ofc-table .status-archived { background:rgba(142,142,147,.1); color:var(--text3); }
+
+.ofc-modal { position:fixed; inset:0; z-index:1000; background:rgba(0,0,0,.5); display:flex; align-items:flex-start; justify-content:center; padding:60px 20px 20px; overflow-y:auto; }
+.ofc-modal-content { background:var(--bg); border-radius:24px; width:100%; max-width:700px; box-shadow:0 20px 60px rgba(0,0,0,.3); }
+.ofc-modal-head { display:flex; justify-content:space-between; align-items:center; padding:20px 24px; border-bottom:.5px solid var(--border); color:var(--text); }
+.ofc-modal-body { padding:24px; max-height:60vh; overflow-y:auto; color:var(--text); }
+.ofc-modal-foot { padding:16px 24px; border-top:.5px solid var(--border); display:flex; gap:10px; justify-content:flex-end; }
+.ofc-form-group { margin-bottom:16px; }
+.ofc-form-group label { display:block; font-size:12px; font-weight:700; color:var(--text2); margin-bottom:6px; text-transform:uppercase; letter-spacing:.04em; }
+.ofc-form-group input,.ofc-form-group select,.ofc-form-group textarea { width:100%; padding:10px 14px; border-radius:12px; border:.5px solid var(--border); background:var(--surface2); color:var(--text); font-size:14px; outline:none; box-sizing:border-box; }
+.ofc-form-group select option { background:var(--surface); color:var(--text); }
+.ofc-form-group textarea { min-height:80px; resize:vertical; }
+.ofc-form-row { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+
+.ofc-history { margin-top:20px; }
+.ofc-history-item { display:flex; gap:12px; padding:10px 0; border-bottom:.5px solid var(--separator2); font-size:13px; color:var(--text); }
+.ofc-history-dot { width:8px; height:8px; border-radius:50%; margin-top:6px; flex-shrink:0; background:var(--accent); }
+.ofc-file-item { display:flex; align-items:center; gap:10px; padding:8px 12px; background:var(--surface2); border-radius:10px; margin-bottom:6px; font-size:13px; color:var(--text); }
+.ofc-file-item a { color:var(--accent); }
+
+[data-theme="dark"] .ofc-modal { background:rgba(0,0,0,.7); }
+[data-theme="dark"] .ofc-modal-content { background:var(--bg); border:.5px solid var(--border); }
+
+.hidden { display:none !important; }
+</style>
+</head>
+{% endblock %}
+
+{% block content %}
+<div class="ofc-wrap">
+  <div class="ofc-header">
+    <div>
+      <h1>📋 Канцелярия</h1>
+      <div style="font-size:14px;color:var(--text2);">Управление входящими, исходящими и внутренними документами</div>
+    </div>
+    <button class="btn btn-primary" onclick="openDocModal()">+ Новый документ</button>
+  </div>
+
+  <!-- Дашборд статистика -->
+  <div class="ofc-grid" id="ofc-stats">
+    <div class="ofc-stat blue"><div class="ofc-stat-val" id="s-total">—</div><div class="ofc-stat-lbl">Всего документов</div></div>
+    <div class="ofc-stat blue"><div class="ofc-stat-val" id="s-inwork">—</div><div class="ofc-stat-lbl">В работе</div></div>
+    <div class="ofc-stat red"><div class="ofc-stat-val" id="s-overdue">—</div><div class="ofc-stat-lbl">Просрочено</div></div>
+    <div class="ofc-stat yellow"><div class="ofc-stat-val" id="s-due-today">—</div><div class="ofc-stat-lbl">Срок сегодня</div></div>
+    <div class="ofc-stat green"><div class="ofc-stat-val" id="s-my">—</div><div class="ofc-stat-lbl">Моих задач</div></div>
+  </div>
+
+  <!-- Табы -->
+  <div class="ofc-tabs">
+    <button class="ofc-tab active" onclick="filterDocs('')">Все</button>
+    <button class="ofc-tab" onclick="filterDocs('incoming')">📥 Входящие</button>
+    <button class="ofc-tab" onclick="filterDocs('outgoing')">📤 Исходящие</button>
+    <button class="ofc-tab" onclick="filterDocs('internal')">📄 Внутренние</button>
+    <button class="ofc-tab" onclick="filterDocs('','my')">👤 Мои задачи</button>
+  </div>
+
+  <!-- Таблица -->
+  <div style="background:var(--surface);border:.5px solid var(--border);border-radius:20px;overflow:hidden;">
+    <table class="ofc-table">
+      <thead>
+        <tr>
+          <th>№</th><th>Тип</th><th>Содержание</th><th>Контрагент</th><th>Исполнитель</th><th>Срок</th><th>Статус</th>
+        </tr>
+      </thead>
+      <tbody id="ofc-tbody">
+        <tr><td colspan="7" style="text-align:center;padding:40px;color:var(--text3);">⏳ Загрузка…</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Модалка создания/просмотра -->
+<div class="ofc-modal hidden" id="doc-modal">
+  <div class="ofc-modal-content">
+    <div class="ofc-modal-head">
+      <div style="font-weight:700;font-size:18px;" id="modal-title">Новый документ</div>
+      <button onclick="closeDocModal()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--text2);">✕</button>
+    </div>
+    <div class="ofc-modal-body" id="modal-body">
+      <!-- Форма -->
+      <div id="doc-form">
+        <div class="ofc-form-group">
+          <label>Тип документа</label>
+          <select id="f-type" onchange="onTypeChange()">
+            <option value="incoming">Входящий</option>
+            <option value="outgoing">Исходящий</option>
+            <option value="internal">Внутренний (приказ)</option>
+          </select>
+        </div>
+        <div class="ofc-form-group">
+          <label>Краткое содержание *</label>
+          <input id="f-title" placeholder="О чём документ…">
+        </div>
+        <div class="ofc-form-group">
+          <label>Описание</label>
+          <textarea id="f-desc" placeholder="Подробности…"></textarea>
+        </div>
+        <div class="ofc-form-row">
+          <div class="ofc-form-group">
+            <label>Контрагент</label>
+            <select id="f-contractor"><option value="">—</option></select>
+          </div>
+          <div class="ofc-form-group" id="f-recipient-group" style="display:none;">
+            <label>Получатель</label>
+            <input id="f-recipient" placeholder="Кому направлено…">
+          </div>
+        </div>
+        <div class="ofc-form-row" id="f-incoming-fields">
+          <div class="ofc-form-group">
+            <label>От кого</label>
+            <input id="f-sender-name" placeholder="Организация или ФИО отправителя">
+          </div>
+          <div class="ofc-form-group">
+            <label>Исх. номер отправителя</label>
+            <input id="f-sender-num" placeholder="Напр. 123/01">
+          </div>
+          <div class="ofc-form-group">
+            <label>Дата письма отправителя</label>
+            <input type="date" id="f-sender-date">
+          </div>
+        </div>
+        <div class="ofc-form-row" id="f-outgoing-fields" style="display:none;">
+          <div class="ofc-form-group">
+            <label>Исходящий номер письма</label>
+            <input id="f-out-num" placeholder="Напр. 45/07">
+          </div>
+          <div class="ofc-form-group">
+            <label>Ответ на входящее письмо</label>
+            <select id="f-reply-to"><option value="">— не ответ —</option></select>
+          </div>
+        </div>
+        <div class="ofc-form-group">
+          <label>Приоритет</label>
+          <select id="f-priority">
+            <option value="normal">Обычный</option>
+            <option value="high">Высокий</option>
+            <option value="urgent">Срочно</option>
+          </select>
+        </div>
+        <div class="ofc-form-group">
+          <label>Файлы (скан-копии)</label>
+          <input type="file" id="f-files" multiple style="padding:8px;">
+        </div>
+      </div>
+
+      <!-- Детали документа (просмотр) -->
+      <div id="doc-detail" class="hidden">
+        <div id="detail-content"></div>
+        <div id="assign-form-container" class="hidden" style="margin-top:20px;padding:16px;background:var(--surface2);border-radius:16px;border:.5px solid var(--border);"></div>
+      </div>
+    </div>
+    <div class="ofc-modal-foot" id="modal-foot">
+      <button class="btn btn-secondary" onclick="closeDocModal()">Отмена</button>
+      <button class="btn btn-primary" id="btn-save" onclick="saveDoc()">Сохранить</button>
+      <button class="btn btn-primary hidden" id="btn-register" onclick="registerDoc()">Зарегистрировать</button>
+      <button class="btn btn-primary hidden" id="btn-assign" onclick="assignDoc()">Назначить</button>
+      <button class="btn btn-success hidden" id="btn-complete" onclick="completeDoc()">Выполнено</button>
+      <button class="btn btn-secondary hidden" id="btn-archive" onclick="archiveDoc()">В архив</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const EMPLOYEES = {{ employees | tojson | safe }};
+
+let currentFilter = '';
+let currentMy = '';
+let currentDocId = null;
+let contractors = [];
+
+async function loadDashboard() {
+  const resp = await fetch('/api/office/dashboard');
+  const d = await resp.json();
+  document.getElementById('s-total').textContent = d.total;
+  document.getElementById('s-inwork').textContent = d.in_work;
+  document.getElementById('s-overdue').textContent = d.overdue;
+  document.getElementById('s-due-today').textContent = d.due_today;
+  document.getElementById('s-my').textContent = d.my_docs;
+}
+
+async function loadDocs() {
+  let url = '/api/office/docs?';
+  if (currentFilter) url += 'type=' + currentFilter + '&';
+  if (currentMy) url += 'my=1&';
+  const resp = await fetch(url);
+  const docs = await resp.json();
+  const tbody = document.getElementById('ofc-tbody');
+  if (!docs.length) {
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--text3);">Нет документов</td></tr>';
+    return;
+  }
+  tbody.innerHTML = docs.map(d => `
+    <tr onclick="openDoc(${d.id})">
+      <td style="font-weight:700;">${d.reg_number || (d.doc_type==='outgoing' ? 'ИСХ: '+d.sender_doc_number : d.sender_doc_number) || '—'}</td>
+      <td><span style="font-size:12px;color:var(--text2);">${d.type_label}</span></td>
+      <td style="max-width:250px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${d.title}</td>
+      <td>${d.sender_name || d.contractor_name || d.recipient_name || '—'}</td>
+      <td>${d.assignee_name || '—'}</td>
+      <td style="${d.deadline && d.status!='completed'&&d.status!='archived'&&d.deadline<'${new Date().toISOString().slice(0,10)}'?'color:var(--ios-red);font-weight:700;':''}">${d.deadline || '—'}</td>
+      <td><span class="status-badge status-${d.status}">${d.status_label}</span></td>
+    </tr>
+  `).join('');
+}
+
+function filterDocs(type, my) {
+  currentFilter = type;
+  currentMy = my || '';
+  document.querySelectorAll('.ofc-tab').forEach(t => t.classList.remove('active'));
+  if (!type && !my) document.querySelector('.ofc-tab').classList.add('active');
+  loadDocs();
+}
+
+async function loadContractors() {
+  const resp = await fetch('/api/office/contractors');
+  contractors = await resp.json();
+  const sel = document.getElementById('f-contractor');
+  sel.innerHTML = '<option value="">—</option>' + contractors.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+}
+
+async function loadIncomingDocs() {
+  const resp = await fetch('/api/office/docs?type=incoming');
+  const docs = await resp.json();
+  const sel = document.getElementById('f-reply-to');
+  sel.innerHTML = '<option value="">— не ответ —</option>' + docs.map(d => `<option value="${d.id}">${d.reg_number||'Б/н'} — ${d.title}</option>`).join('');
+}
+
+function onTypeChange() {
+  const t = document.getElementById('f-type').value;
+  document.getElementById('f-incoming-fields').style.display = t === 'incoming' ? '' : 'none';
+  document.getElementById('f-recipient-group').style.display = t === 'outgoing' ? '' : 'none';
+  document.getElementById('f-outgoing-fields').style.display = t === 'outgoing' ? '' : 'none';
+}
+
+function openDocModal() {
+  currentDocId = null;
+  document.getElementById('modal-title').textContent = 'Новый документ';
+  document.getElementById('doc-form').classList.remove('hidden');
+  document.getElementById('doc-detail').classList.add('hidden');
+  document.getElementById('btn-save').classList.remove('hidden');
+  document.getElementById('btn-register').classList.add('hidden');
+  document.getElementById('btn-assign').classList.add('hidden');
+  document.getElementById('btn-complete').classList.add('hidden');
+  document.getElementById('btn-archive').classList.add('hidden');
+  document.getElementById('f-title').value = '';
+  document.getElementById('f-desc').value = '';
+  document.getElementById('f-sender-num').value = '';
+  document.getElementById('f-sender-date').value = '';
+  document.getElementById('f-recipient').value = '';
+  document.getElementById('f-files').value = '';
+  onTypeChange();
+  document.getElementById('doc-modal').classList.remove('hidden');
+}
+
+function closeDocModal() {
+  document.getElementById('doc-modal').classList.add('hidden');
+}
+
+async function saveDoc() {
+  const d = {
+    doc_type: document.getElementById('f-type').value,
+    title: document.getElementById('f-title').value,
+    description: document.getElementById('f-desc').value,
+    contractor_id: document.getElementById('f-contractor').value || null,
+    recipient_name: document.getElementById('f-recipient').value,
+    sender_name: document.getElementById('f-sender-name').value,
+    sender_doc_number: document.getElementById('f-sender-num').value || document.getElementById('f-out-num').value,
+    sender_doc_date: document.getElementById('f-sender-date').value,
+    reply_to_id: document.getElementById('f-reply-to').value || null,
+    priority: document.getElementById('f-priority').value,
+  };
+  if (!d.title) return alert('Укажите содержание документа');
+  
+  const resp = await fetch('/api/office/docs', {
+    method:'POST', headers:{'Content-Type':'application/json', 'X-CSRF-Token':getCSRF()}, body:JSON.stringify(d)
+  });
+  const r = await resp.json();
+  if (!r.ok) { alert(r.error); return; }
+  
+  // Upload files if any
+  const fileInput = document.getElementById('f-files');
+  if (fileInput.files.length) {
+    const formData = new FormData();
+    for (const f of fileInput.files) formData.append('file', f);
+    await fetch('/api/office/docs/' + r.id + '/files', {
+      method:'POST', headers:{'X-CSRF-Token':getCSRF()}, body:formData
+    });
+  }
+  
+  closeDocModal(); loadDocs(); loadDashboard();
+}
+
+async function openDoc(id) {
+  const resp = await fetch('/api/office/docs/' + id);
+  const data = await resp.json();
+  const doc = data.doc;
+  currentDocId = id;
+  
+  document.getElementById('modal-title').textContent = `📋 ${doc.reg_number || 'Черновик'} — ${doc.type_label}`;
+  document.getElementById('doc-form').classList.add('hidden');
+  document.getElementById('doc-detail').classList.remove('hidden');
+  
+  // Buttons
+  document.getElementById('btn-save').classList.add('hidden');
+  document.getElementById('btn-register').classList.toggle('hidden', doc.status!=='draft');
+  document.getElementById('btn-assign').classList.toggle('hidden', doc.status==='completed'||doc.status==='archived');
+  document.getElementById('btn-complete').classList.toggle('hidden', doc.status!=='in_progress');
+  document.getElementById('btn-archive').classList.toggle('hidden', doc.status!=='completed');
+
+  const files = data.files.map(f => `
+    <div class="ofc-file-item">
+      <span>📎</span>
+      <a href="${f.file_path}" target="_blank" style="color:var(--accent);text-decoration:none;">${f.file_name}</a>
+      <span style="font-size:11px;color:var(--text3);">${f.file_type}</span>
+    </div>
+  `).join('') || '<div style="font-size:13px;color:var(--text3);">Нет файлов</div>';
+
+  const hist = data.history.map(h => `
+    <div class="ofc-history-item">
+      <div class="ofc-history-dot"></div>
+      <div>
+        <b>${h.user_name||'Система'}</b> — ${h.action}<br>
+        <span style="font-size:11px;color:var(--text3);">${h.comment||''} · ${h.created_at}</span>
+      </div>
+    </div>
+  `).join('');
+
+  document.getElementById('detail-content').innerHTML = `
+    <div style="margin-bottom:16px;">
+      <div style="font-size:22px;font-weight:700;">${doc.title}</div>
+      <div style="color:var(--text2);margin-top:4px;">${doc.description||'Нет описания'}</div>
+    </div>
+    <div class="ofc-form-row">
+      <div><span style="color:var(--text3);">Статус:</span> <span class="status-badge status-${doc.status}">${doc.status_label}</span></div>
+      <div><span style="color:var(--text3);">Контрагент:</span> ${doc.sender_name || doc.contractor_name||doc.recipient_name||'—'}</div>
+      <div><span style="color:var(--text3);">Исполнитель:</span> ${doc.assignee_name||'—'}</div>
+      <div><span style="color:var(--text3);">Срок:</span> ${doc.deadline||'—'}</div>
+    </div>
+    ${doc.resolution ? `<div style="margin-top:12px;padding:12px;background:var(--surface2);border-radius:12px;"><b>Резолюция:</b> ${doc.resolution}</div>` : ''}
+    ${doc.reply_to_id ? `<div style="margin-top:8px;color:var(--text2);font-size:13px;">↩ Ответ на: <b>${doc.reply_to_number||'б/н'}</b> — ${doc.reply_to_title||doc.reply_to_number||''}</div>` : ''}
+    
+    <div style="margin-top:20px;"><b style="font-size:14px;">Файлы</b></div>
+    <div style="margin-top:8px;" id="doc-files-list">${files}</div>
+    <div style="margin-top:12px;display:flex;gap:8px;align-items:center;">
+      <input type="file" id="file-upload-input" style="font-size:12px;" multiple>
+      <button class="btn btn-secondary btn-sm" onclick="uploadFile()">Загрузить</button>
+    </div>
+    ${data.acknowledgments && data.acknowledgments.length ? `
+      <div style="margin-top:20px;"><b style="font-size:14px;">Лист ознакомления</b></div>
+      <div style="margin-top:8px;">${data.acknowledgments.map(a => `<div style="font-size:13px;padding:4px 0;">${a.user_name} — ${a.acked_at ? '✅ '+a.acked_at : '⏳ Не ознакомлен'}</div>`).join('')}</div>
+    ` : ''}
+    <div class="ofc-history"><b style="font-size:14px;">История</b><div style="margin-top:8px;">${hist}</div></div>
+  `;
+  
+  document.getElementById('doc-modal').classList.remove('hidden');
+}
+
+async function registerDoc() {
+  showAssignForm('register');
+}
+
+async function assignDoc() {
+  showAssignForm('assign');
+}
+
+function showAssignForm(action) {
+  const users = EMPLOYEES.map(e => `<option value="${e.id}">${e.name} (${e.department||'—'})</option>`).join('');
+  const title = action === 'register' ? 'Направить на рассмотрение' : 'Назначить исполнителя';
+  const needDeadline = action === 'assign';
+  
+  const html = `
+    <div class="ofc-form-group">
+      <label>${action==='register'?'Руководитель':'Исполнитель'}</label>
+      <select id="assign-user"><option value="">— выберите —</option>${users}</select>
+    </div>
+    ${needDeadline ? `<div class="ofc-form-group"><label>Срок исполнения</label><input type="date" id="assign-deadline"></div>
+    <div class="ofc-form-group"><label>Резолюция</label><textarea id="assign-resolution" placeholder="Что нужно сделать..."></textarea></div>` : ''}
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px;">
+      <button class="btn btn-secondary" onclick="closeAssignForm()">Отмена</button>
+      <button class="btn btn-primary" onclick="submitAssign('${action}')">${action==='register'?'Отправить':'Назначить'}</button>
+    </div>
+  `;
+  const container = document.getElementById('assign-form-container');
+  container.innerHTML = html;
+  container.classList.remove('hidden');
+}
+
+function closeAssignForm() {
+  document.getElementById('assign-form-container').classList.add('hidden');
+}
+
+async function submitAssign(action) {
+  const userId = document.getElementById('assign-user').value;
+  if (!userId) return alert('Выберите сотрудника');
+  
+  let body = {};
+  if (action === 'register') {
+    body = {assigned_to_id: parseInt(userId)};
+  } else {
+    const deadline = document.getElementById('assign-deadline').value;
+    if (!deadline) return alert('Укажите срок');
+    body = {
+      assigned_to_id: parseInt(userId),
+      deadline: deadline,
+      resolution: document.getElementById('assign-resolution').value
+    };
+  }
+  
+  const url = action === 'register' ? `/api/office/docs/${currentDocId}/register` : `/api/office/docs/${currentDocId}/assign`;
+  const resp = await fetch(url, {
+    method:'POST', headers:{'Content-Type':'application/json','X-CSRF-Token':getCSRF()}, body:JSON.stringify(body)
+  });
+  const r = await resp.json();
+  if (r.ok) { closeAssignForm(); openDoc(currentDocId); loadDocs(); loadDashboard(); }
+  else alert(r.error);
+}
+
+async function completeDoc() {
+  const comment = prompt('Комментарий к исполнению:');
+  const resp = await fetch('/api/office/docs/'+currentDocId+'/complete', {
+    method:'POST', headers:{'Content-Type':'application/json','X-CSRF-Token':getCSRF()},
+    body:JSON.stringify({comment})
+  });
+  const r = await resp.json();
+  if (r.ok) { closeDocModal(); loadDocs(); loadDashboard(); }
+  else alert(r.error);
+}
+
+async function archiveDoc() {
+  if (!confirm('Отправить документ в архив?')) return;
+  const resp = await fetch('/api/office/docs/'+currentDocId+'/archive', {
+    method:'POST', headers:{'Content-Type':'application/json','X-CSRF-Token':getCSRF()}
+  });
+  const r = await resp.json();
+  if (r.ok) { closeDocModal(); loadDocs(); loadDashboard(); }
+  else alert(r.error);
+}
+
+function getCSRF() {
+  return document.cookie.split(';').map(c=>c.trim()).find(c=>c.startsWith('csrf_token='))?.split('=')[1]||'';
+}
+
+async function uploadFile() {
+  const input = document.getElementById('file-upload-input');
+  if (!input.files.length) return alert('Выберите файл');
+  const formData = new FormData();
+  for (const f of input.files) formData.append('file', f);
+  try {
+    const resp = await fetch('/api/office/docs/' + currentDocId + '/files', {
+      method:'POST', headers:{'X-CSRF-Token':getCSRF()}, body:formData
+    });
+    const r = await resp.json();
+    if (r.ok) { input.value = ''; openDoc(currentDocId); }
+    else alert(r.error);
+  } catch(e) { alert('Ошибка загрузки'); }
+}
+
+// Init
+loadContractors();
+loadIncomingDocs();
+loadDashboard();
+loadDocs();
+</script>
+{% endblock %}

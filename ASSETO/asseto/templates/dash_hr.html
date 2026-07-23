@@ -1,0 +1,244 @@
+{% extends "base.html" %}
+
+{% block title %}ASSETO — Кабинет HR{% endblock %}
+
+{% block content %}
+<div class="wrap">
+  <!-- Role-Based Dashboard Header -->
+  <header class="role-dash-header fade-in">
+    <div>
+      <h1 class="role-welcome">Кабинет HR</h1>
+      <div style="display:flex; gap:8px; margin-top:8px;">
+        <span class="role-badge-pill" style="background:#{{role_info.color}}20; color:#{{role_info.color}};">
+          {{ role_info.label }}
+        </span>
+        <span style="font-size:13px; color:var(--text2); font-weight:500;">Управление приёмом и увольнениями</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- ══ HR DASHBOARD ══ -->
+  <div id="dash-hr" class="fade-up">
+    <div class="pro-card-grid stats-grid" style="grid-template-columns:repeat(auto-fit,minmax(200px,1fr));margin-bottom:20px;">
+      <div class="pro-card" onclick="document.getElementById('hr-onboarding-section').scrollIntoView({behavior:'smooth'})" style="cursor:pointer;">
+        <div class="pro-card-icon" style="background:#34C759;color:#fff;box-shadow:0 8px 24px rgba(52,199,89,0.3);">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+        </div>
+        <div class="pro-card-val" id="hr-onboarding-cnt">0</div>
+        <div class="pro-card-label">Приёмы в процессе</div>
+      </div>
+      <div class="pro-card" onclick="window.location='/requests'" style="cursor:pointer;">
+        <div class="pro-card-icon" style="background:#FF9500;color:#fff;box-shadow:0 8px 24px rgba(255,149,0,0.3);">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><line x1="16" y1="13" x2="8" y2="13"/></svg>
+        </div>
+        <div class="pro-card-val" id="hr-requests-cnt">0</div>
+        <div class="pro-card-label">Заявки сотрудников</div>
+      </div>
+      <div class="pro-card" onclick="window.location='/admin/dismissals'" style="cursor:pointer;">
+        <div class="pro-card-icon" style="background:#FF3B30;color:#fff;box-shadow:0 8px 24px rgba(255,59,48,0.3);">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/></svg>
+        </div>
+        <div class="pro-card-val" id="hr-dismissals-cnt">—</div>
+        <div class="pro-card-label">Увольнения</div>
+      </div>
+    </div>
+
+    <!-- Active onboarding docs -->
+    <div style="margin-bottom:20px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+        <div style="font-size:16px;font-weight:700;color:var(--text);">Активные заявки на оборудование</div>
+        <a href="/documents" style="font-size:13px;font-weight:600;color:var(--accent);text-decoration:none;">Все документы →</a>
+      </div>
+      <div id="hr-onboarding-list" class="card" style="padding:0;overflow:hidden;background:var(--surface);border:.5px solid var(--border);border-radius:24px;">
+        <div style="padding:20px;text-align:center;color:var(--text3);font-size:13px;">⏳ Загрузка…</div>
+      </div>
+    </div>
+
+    <!-- New onboarding request form -->
+    <div id="hr-onboarding-section" class="card" style="padding:24px;margin-bottom:20px;background:var(--surface);border:.5px solid var(--border);border-radius:24px;">
+      <div style="font-size:16px;font-weight:700;margin-bottom:4px;color:var(--text);">Новая заявка на оборудование</div>
+      <div style="font-size:13px;color:var(--text2);margin-bottom:20px;">Для нового сотрудника — запрос пройдёт через АХО → Директора → Бухгалтера</div>
+      
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
+        <div class="field ff">
+          <label>Сотрудник <span style="color:var(--ios-red);">*</span></label>
+          <select id="ob-emp" class="field-select" style="width:100%;padding:12px;border-radius:12px;background:var(--surface2);border:none;outline:none;" onchange="onEmpSelectChange()">
+            <option value="">Выбрать сотрудника...</option>
+            {% for emp in employees %}
+            <option value="{{ emp.id }}" data-dept="{{ emp.department or '' }}">{{ emp.name }}{% if emp.department %} — {{ emp.department }}{% endif %}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="field ff">
+          <label>Отдел / Подразделение</label>
+          <input type="text" id="ob-dept" placeholder="Напр: Бухгалтерия" style="width:100%;padding:12px;border-radius:12px;background:var(--surface2);border:none;outline:none;color:var(--text);">
+        </div>
+        <div class="field ff">
+          <label>Дата приёма на работу</label>
+          <input type="date" id="ob-hire" style="width:100%;padding:12px;border-radius:12px;background:var(--surface2);border:none;outline:none;color:var(--text);">
+        </div>
+        <div class="field ff">
+          <label>Примечания</label>
+          <input type="text" id="ob-notes" placeholder="Особые требования..." style="width:100%;padding:12px;border-radius:12px;background:var(--surface2);border:none;outline:none;color:var(--text);">
+        </div>
+      </div>
+
+      <div style="margin-bottom:16px;">
+        <label style="font-size:13px;font-weight:600;color:var(--text2);margin-bottom:8px;display:block;">Требуемое оборудование <span style="color:var(--ios-red);">*</span></label>
+        <div id="ob-items-list" style="display:flex;flex-direction:column;gap:8px;"></div>
+        <button onclick="addObItem()" style="margin-top:8px;background:none;border:1.5px dashed var(--border);border-radius:12px;padding:12px;font-size:13px;font-weight:600;color:var(--accent);cursor:pointer;width:100%;display:flex;align-items:center;justify-content:center;gap:6px;transition:all .15s;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Добавить позицию
+        </button>
+      </div>
+
+      <button onclick="submitOnboarding()" class="btn btn-primary" style="width:100%;justify-content:center;padding:14px;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13"/><path d="M22 2L15 22 11 13 2 9l20-7z"/></svg>
+        Отправить заявку на согласование
+      </button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  const CATS = {{ categories| tojson }};
+  const DOC_TYPE_LABELS = {onboarding:'Приём сотрудника',dismissal:'Увольнение',writeoff:'Списание',transfer:'Акт приёма-передачи'};
+
+  function fmtDate(s) {
+    if (!s) return '—';
+    return new Date(s).toLocaleDateString('ru-RU', {day:'2-digit',month:'short'});
+  }
+
+  function renderEmpty(msg) {
+    return `<div style="padding:28px;text-align:center;color:var(--text3);font-size:13px;">${msg}</div>`;
+  }
+  function renderErr() {
+    return `<div style="padding:20px;text-align:center;color:var(--ios-red);font-size:13px;">Ошибка загрузки</div>`;
+  }
+
+  function renderOnboardingItem(doc) {
+    var steps = ['АХО','Директор','Бухгалтер'];
+    var step = (doc.current_step||1) - 1;
+    return `<div onclick="window.location='/documents?id=${doc.id}'"
+      style="display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid var(--separator2);cursor:pointer;transition:background .12s;"
+      onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''">
+      <div style="width:36px;height:36px;border-radius:10px;background:rgba(52,199,89,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px;">👤</div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${doc.employee_name||doc.title}</div>
+        <div style="font-size:12px;color:var(--text2);margin-top:2px;">${doc.doc_number} · ${fmtDate(doc.created_at)}</div>
+      </div>
+      <div style="text-align:right;flex-shrink:0;">
+        <div style="font-size:11px;font-weight:600;color:var(--accent);">Шаг ${doc.current_step||1}/3</div>
+        <div style="font-size:11px;color:var(--text3);">${steps[step]||'—'}</div>
+      </div>
+    </div>`;
+  }
+
+  function onEmpSelectChange() {
+    const sel = document.getElementById('ob-emp');
+    const opt = sel.options[sel.selectedIndex];
+    if (opt && opt.value) {
+      document.getElementById('ob-dept').value = opt.getAttribute('data-dept') || '';
+    }
+  }
+
+  function addObItem(cat = '', note = '') {
+    const list = document.getElementById('ob-items-list');
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex;gap:10px;align-items:center;';
+    
+    let options = CATS.map(c => `<option ${c===cat?'selected':''}>${c}</option>`).join('');
+    
+    row.innerHTML = `
+      <select data-ob-cat style="flex:1;padding:12px;border-radius:12px;background:var(--surface2);border:none;outline:none;font-family:var(--sans);color:var(--text);">${options}</select>
+      <input data-ob-note type="text" value="${note}" placeholder="Напр: 16 ГБ ОЗУ, i7" style="flex:2;padding:12px;border-radius:12px;background:var(--surface2);border:none;outline:none;font-family:var(--sans);color:var(--text);">
+      <button onclick="this.parentElement.remove()" style="background:none;border:none;font-size:16px;color:var(--ios-red);cursor:pointer;padding:6px;">✕</button>
+    `;
+    list.appendChild(row);
+  }
+
+  async function submitOnboarding() {
+    const empSel = document.getElementById('ob-emp');
+    const empId = empSel.value;
+    const empOpt = empSel.options[empSel.selectedIndex];
+    const empName = empOpt && empOpt.value ? empOpt.text.split(' — ')[0] : '';
+
+    if (!empName.trim()) {
+      await showAlert('Внимание', 'Выберите сотрудника');
+      return;
+    }
+
+    const list = document.getElementById('ob-items-list');
+    const rows = Array.from(list.children);
+    if (!rows.length) {
+      await showAlert('Внимание', 'Добавьте хотя бы одну позицию оборудования');
+      return;
+    }
+
+    const items = rows.map(r => {
+      const cat = r.querySelector('[data-ob-cat]').value;
+      const note = r.querySelector('[data-ob-note]').value.trim();
+      return { category: cat, notes: note };
+    });
+
+    const payload = {
+      employee_id: parseInt(empId),
+      employee_name: empName,
+      department: document.getElementById('ob-dept').value.trim(),
+      hire_date: document.getElementById('ob-hire').value,
+      notes: document.getElementById('ob-notes').value.trim(),
+      items: items
+    };
+
+    try {
+      const r = await fetch('/api/onboarding/create', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(payload)
+      });
+      const d = await r.json();
+      if (d.ok) {
+        await showAlert('Заявка отправлена', `Заявка ${d.doc_number} отправлена на согласование (АХО → Директор → Бухгалтер)`);
+        location.reload();
+      } else {
+        await showAlert('Ошибка', d.error || 'Ошибка');
+      }
+    } catch(e) {
+      await showAlert('Ошибка', 'Ошибка сети');
+    }
+  }
+
+  async function loadHrDashboard() {
+    try {
+      const r = await fetch('/api/dashboard/role-stats');
+      const d = await r.json();
+      
+      document.getElementById('hr-onboarding-cnt').textContent = d.onboarding_count || 0;
+      document.getElementById('hr-requests-cnt').textContent = d.pending_requests || 0;
+      
+      const hrListEl = document.getElementById('hr-onboarding-list');
+      if (hrListEl) {
+        const onbs = d.onboarding_active || [];
+        hrListEl.innerHTML = onbs.length
+          ? onbs.map(renderOnboardingItem).join('')
+          : renderEmpty('Нет активных приёмов');
+      }
+      
+      // Load dismissals count
+      const disRes = await fetch('/api/dismissals');
+      const disData = await disRes.json();
+      document.getElementById('hr-dismissals-cnt').textContent = disData.length || 0;
+    } catch(e) {
+      console.error(e);
+      document.getElementById('hr-onboarding-list').innerHTML = renderErr();
+    }
+  }
+
+  window.addEventListener('load', () => {
+    loadHrDashboard();
+    addObItem('Ноутбук', 'Core i5, 16GB RAM');
+  });
+</script>
+{% endblock %}

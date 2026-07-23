@@ -1,0 +1,49 @@
+services:
+  db:
+    image: postgres:16-alpine
+    restart: always
+    environment:
+      POSTGRES_DB: asseto
+      POSTGRES_USER: asseto
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-asseto_secret_change_me}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U asseto -d asseto"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  web:
+    build: .
+    restart: always
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./static/photos:/app/static/photos
+      - ./static/signatures:/app/static/signatures
+      - ./backup:/app/backup
+    environment:
+      - FLASK_APP=app.py
+      - FLASK_ENV=production
+      - SECRET_KEY=asseto-dev-secret-key-change-in-production-64-chars!!
+      - SECURE_COOKIES=False
+      - MAX_UPLOAD_MB=16
+      - JWT_EXPIRY=43200
+      - DATABASE_URL=postgresql://asseto:${DB_PASSWORD:-asseto_secret_change_me}@db:5432/asseto
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  pgdata:

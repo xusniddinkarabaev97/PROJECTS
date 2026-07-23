@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Акт приёма-передачи #{{ iss.id }}</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Arial',sans-serif;background:#fff;color:#000;padding:20mm 20mm 20mm 25mm;font-size:11pt;line-height:1.4;}
+@media print{
+  body{padding:10mm 10mm 10mm 15mm;}
+  .no-print{display:none!important;}
+  @page{size:A4;margin:10mm;}
+}
+.header{text-align:center;margin-bottom:22px;border-bottom:2px solid #1E3A5F;padding-bottom:16px;}
+.header h1{font-size:14pt;font-weight:bold;text-transform:uppercase;letter-spacing:1px;color:#1E3A5F;}
+.header .sub{font-size:10pt;color:#666;margin-top:6px;}
+.org-name{font-size:11pt;font-weight:bold;margin-bottom:18px;color:#333;}
+
+.meta-table{width:100%;border-collapse:collapse;margin:14px 0;}
+.meta-table td{padding:6px 10px;border:1px solid #ccc;font-size:10.5pt;}
+.meta-table td:first-child{font-weight:bold;width:36%;background:#f0f4fa;color:#1E3A5F;}
+
+.section-title{font-size:10.5pt;font-weight:bold;margin:18px 0 8px;text-transform:uppercase;letter-spacing:.5px;color:#1E3A5F;border-left:4px solid #1E3A5F;padding-left:8px;}
+
+.items-table{width:100%;border-collapse:collapse;font-size:9.5pt;}
+.items-table th{background:#1E3A5F;color:#fff;padding:7px 8px;text-align:left;font-size:9pt;}
+.items-table td{padding:6px 8px;border-bottom:1px solid #e0e0e0;vertical-align:middle;}
+.items-table tr:nth-child(even) td{background:#f7f9fc;}
+.items-table tfoot td{border-top:2px solid #1E3A5F;font-weight:bold;padding:8px;}
+.num-col{width:32px;text-align:center;color:#888;}
+
+.status-chip{display:inline-block;padding:2px 10px;border-radius:20px;font-size:9pt;font-weight:bold;}
+.chip-ok{background:#d1fae5;color:#065f46;}
+.chip-warn{background:#fef3c7;color:#92400e;}
+.chip-ret{background:#fde8e8;color:#9b1c1c;}
+
+.sign-grid{margin-top:36px;display:grid;grid-template-columns:1fr 1fr;gap:48px;}
+.sign-block .role{font-size:10pt;font-weight:bold;margin-bottom:4px;color:#1E3A5F;}
+.sign-block .name{font-size:10.5pt;margin-bottom:28px;}
+.sign-block .sig-line{border-top:1px solid #777;font-size:8.5pt;color:#888;padding-top:5px;}
+
+.conditions-box{margin-top:20px;background:#f7f9fc;border:1px solid #ccd;border-radius:4px;padding:12px 14px;font-size:9pt;color:#555;}
+.conditions-box strong{color:#333;}
+
+.footer{margin-top:22px;font-size:8.5pt;color:#aaa;border-top:1px solid #eee;padding-top:10px;display:flex;justify-content:space-between;}
+
+.print-btn{position:fixed;bottom:24px;right:24px;padding:12px 24px;background:#007AFF;color:#fff;border:none;border-radius:14px;font-size:14px;font-weight:700;cursor:pointer;box-shadow:0 4px 16px rgba(0,122,255,.4);display:flex;align-items:center;gap:8px;}
+.back-btn{position:fixed;bottom:24px;left:24px;padding:12px 18px;background:#f2f2f7;color:#333;border:none;border-radius:14px;font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:8px;}
+</style>
+</head>
+<body>
+
+<button class="print-btn no-print" onclick="window.print()">
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+  Распечатать акт
+</button>
+<button class="back-btn no-print" onclick="history.back()">← Назад</button>
+
+<div class="header">
+  <div style="font-size:9.5pt;color:#888;margin-bottom:8px;">Система учёта ASSETO · {{ host }}</div>
+  <h1>Акт приёма-передачи материальных ценностей</h1>
+  <div class="sub">№ {{ iss.id }} от {{ iss.created_at[:10] if iss.created_at else '—' }}</div>
+</div>
+
+<table class="meta-table">
+  <tr><td>Получатель (ФИО):</td><td><strong>{{ iss.employee_name }}</strong></td></tr>
+  {% if emp.department %}<tr><td>Подразделение:</td><td>{{ emp.department }}</td></tr>{% endif %}
+  {% if emp.email %}<tr><td>Электронная почта:</td><td>{{ emp.email }}</td></tr>{% endif %}
+  <tr><td>Передал (ответственный):</td><td>{{ iss.issued_by_name }}</td></tr>
+  <tr><td>Дата выдачи:</td><td>{{ iss.created_at[:10] if iss.created_at else '—' }}</td></tr>
+  <tr><td>Статус акта:</td><td>
+    {% if iss.status == 'confirmed' %}
+      <span class="status-chip chip-ok">✓ Подтверждено получателем</span>
+      {% if iss.confirmed_at %} · {{ iss.confirmed_at[:10] }}{% endif %}
+    {% elif iss.status == 'returned' %}
+      <span class="status-chip chip-ret">Возвращено</span>
+    {% else %}
+      <span class="status-chip chip-warn">Ожидает подтверждения</span>
+    {% endif %}
+  </td></tr>
+  {% if iss.note %}<tr><td>Примечание:</td><td>{{ iss.note }}</td></tr>{% endif %}
+</table>
+
+<div class="section-title">Перечень передаваемого имущества</div>
+<table class="items-table">
+  <thead>
+    <tr>
+      <th class="num-col">№</th>
+      <th>Инв. №</th>
+      <th>Наименование</th>
+      <th>Модель / Марка</th>
+      <th>Серийный №</th>
+      <th>Кабинет / Место</th>
+      <th>Состояние</th>
+      <th style="text-align:right;">Стоимость (USD)</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% set ns = namespace(total=0) %}
+    {% for item in items %}
+    {% if item.purchase_price %}{% set ns.total = ns.total + item.purchase_price %}{% endif %}
+    <tr>
+      <td class="num-col">{{ loop.index }}</td>
+      <td style="font-family:monospace;font-weight:bold;font-size:10px;color:#1E3A5F;">{{ item.inv_num }}</td>
+      <td>{{ item.category }}</td>
+      <td style="font-weight:600;">{{ item.model or '—' }}</td>
+      <td style="font-family:monospace;font-size:9px;color:#666;">{{ item.serial_num or '—' }}</td>
+      <td style="font-size:9.5pt;">{{ item.room or '—' }}{% if item.place %} / {{ item.place }}{% endif %}</td>
+      <td>{{ item.condition }}</td>
+      <td style="text-align:right;font-weight:600;">{% if item.purchase_price %}${{ "%.2f"|format(item.purchase_price) }}{% else %}—{% endif %}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+  <tfoot>
+    <tr>
+      <td colspan="6"></td>
+      <td>Итого: <strong>{{ items|length }} шт.</strong></td>
+      <td style="text-align:right;">{% if ns.total > 0 %}<strong>${{ "%.2f"|format(ns.total) }}</strong>{% else %}—{% endif %}</td>
+    </tr>
+  </tfoot>
+</table>
+
+<div class="conditions-box">
+  <strong>Условия передачи:</strong> Указанное имущество передано в технически исправном состоянии согласно данному акту.
+  Получатель обязуется использовать переданное имущество по назначению, обеспечивать его сохранность и уведомлять ответственного лица о повреждениях или неисправностях.
+</div>
+
+<div class="sign-grid">
+  <div class="sign-block">
+    <div class="role">Передал:</div>
+    <div class="name">{{ iss.issued_by_name }}</div>
+    <div class="sig-line">подпись &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; дата</div>
+  </div>
+  <div class="sign-block">
+    <div class="role">Принял:</div>
+    <div class="name">{{ iss.employee_name }}</div>
+    <div class="sig-line">подпись &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; дата</div>
+  </div>
+</div>
+
+<div class="footer">
+  <span>ASSETO v10 · Выдача №{{ iss.id }}</span>
+  <span>Сформировано: {{ iss.created_at[:10] if iss.created_at else '' }}</span>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,954 @@
+<!DOCTYPE html>
+<html lang="ru" data-theme="{{ request.cookies.get('theme','') }}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>{% block title %}ASSETO — Панель управления{% endblock %}</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/asseto-ios.css">
+  <script src="/static/js/csrf.js?v=2"></script>
+  <script src="/static/js/i18n.js"></script>
+  <script src="/static/js/app-polish.js"></script>
+  <script src="https://unpkg.com/html5-qrcode"></script>
+  {% block head %}{% endblock %}
+</head>
+<body>
+
+  <!-- ═══ NAV ═══ -->
+  <nav class="ios-nav" id="ios-nav">
+    <div class="nav-left">
+      <button class="icon-btn desk-hidden" id="hamburger" onclick="toggleSidebar()" aria-label="Меню">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <line x1="3" y1="7" x2="21" y2="7" />
+          <line x1="3" y1="12" x2="21" y2="12" />
+          <line x1="3" y1="17" x2="21" y2="17" />
+        </svg>
+      </button>
+      <div class="flex-gap-sm">
+        <div style="width:28px;height:28px;background:linear-gradient(135deg,var(--ios-blue),var(--ios-purple));border-radius:7px;display:flex;align-items:center;justify-content:center;">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="#fff">
+            <rect x="3" y="3" width="7" height="7" rx="1" />
+            <rect x="14" y="3" width="7" height="7" rx="1" />
+            <rect x="3" y="14" width="7" height="7" rx="1" />
+            <rect x="14" y="14" width="7" height="7" rx="1" />
+          </svg>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;">
+          <button class="icon-btn mob-hidden" onclick="toggleSidebarCollapse()" title="Свернуть/Развернуть" style="width:32px;height:32px;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+          </button>
+          <span style="font-size:17px;font-weight:700;cursor:pointer;" onclick="window.location='/'">ASSETO</span>
+        </div>
+      </div>
+    </div>
+    <div class="nav-right" style="gap:8px;">
+      <!-- Scan QR -->
+      <button class="btn btn-secondary btn-sm" onclick="openScanner()" title="Сканировать QR">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2" />
+        </svg>
+        <span class="mob-hidden">Сканировать</span>
+        <span class="mob-label">QR</span>
+      </button>
+      <!-- Notifications -->
+      <div class="notif-wrap">
+        <button class="icon-btn" id="notif-btn" onclick="toggleNotif()" title="Уведомления">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+            <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+          </svg>
+          <span class="notif-dot" id="notif-dot"></span>
+          <span class="mob-label">Увед.</span>
+        </button>
+        <div class="notif-panel" id="notif-panel">
+          <div class="notif-head" style="display:flex;justify-content:space-between;align-items:center;">
+            <span>Уведомления</span>
+            <button id="notif-clear-all" onclick="markAllNotificationsRead()" style="display:none;background:none;border:none;color:var(--ios-blue);font-size:12px;font-weight:600;cursor:pointer;padding:0;">Прочитать все</button>
+          </div>
+          <div id="notif-list">
+            <div class="notif-empty">⏳ Загрузка…</div>
+          </div>
+        </div>
+      </div>
+      <!-- Theme -->
+      <button class="icon-btn" id="themeBtn" onclick="toggleTheme()" title="Тема">
+        <svg id="theme-ico-dark" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+        </svg>
+        <svg id="theme-ico-light" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="display:none;">
+          <circle cx="12" cy="12" r="5" />
+          <line x1="12" y1="1" x2="12" y2="3" />
+          <line x1="12" y1="21" x2="12" y2="23" />
+          <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+          <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+          <line x1="1" y1="12" x2="3" y2="12" />
+          <line x1="21" y1="12" x2="23" y2="12" />
+          <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+          <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+        </svg>
+        <span class="mob-label">Тема</span>
+      </button>
+      <!-- Command Palette shortcut -->
+      <button class="icon-btn mob-hidden" onclick="openCmdPalette()" title="Поиск (⌘K)" style="gap:4px;padding:0 10px;width:auto;border-radius:var(--r-pill);font-size:12px;font-weight:600;color:var(--text3);">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <span>⌘K</span>
+      </button>
+      <!-- History -->
+      <button class="icon-btn" onclick="window.location='/history'" title="История">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <circle cx="12" cy="12" r="10" />
+          <polyline points="12 6 12 12 16 14" />
+        </svg>
+        <span class="mob-label">История</span>
+      </button>
+      <!-- Profile -->
+      <button class="icon-btn" onclick="window.location='/profile'" title="Профиль">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+          <circle cx="12" cy="7" r="4" />
+        </svg>
+        <span class="mob-label">Профиль</span>
+      </button>
+      <!-- Logout -->
+      <button class="icon-btn" onclick="doLogout()" title="Выйти">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+          <polyline points="16 17 21 12 16 7" />
+          <line x1="21" y1="12" x2="9" y2="12" />
+        </svg>
+        <span class="mob-label">Выход</span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- ═══ SPLASH SCREEN ═══ -->
+  <div id="splash">
+    <div class="splash-content">
+      <div class="splash-logo" style="width:120px; height:120px; background:#fff; border-radius:32px; display:flex; align-items:center; justify-content:center; overflow:hidden; box-shadow:0 30px 60px rgba(0,0,0,0.6); margin:0 auto 32px;">
+        <img src="/static/logo2.png" alt="ASSETO Logo" style="width:85%; height:85%; object-fit:cover; border-radius:18px;">
+      </div>
+      <div class="splash-text" style="background: linear-gradient(135deg, #fff 0%, #94A3B8 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">ASSETO</div>
+      <div class="splash-sub" style="color: #6366F1;">Premium Inventory Ecosystem</div>
+      <div id="splash-status" style="margin-top:24px; font-size:10px; font-weight:700; color:var(--text3); text-transform:uppercase; letter-spacing:0.2em; opacity:0.6;">Загрузка системы...</div>
+    </div>
+  </div>
+  <script>
+    if (sessionStorage.getItem('asseto_splash_shown')) {
+      document.getElementById('splash').style.display = 'none';
+    }
+  </script>
+
+  <!-- Mobile overlay for sidebar -->
+  <div class="mob-overlay" id="mob-overlay" onclick="closeSidebar()"></div>
+
+  <!-- ═══ LAYOUT ═══ -->
+  <div class="page-layout">
+
+    <aside class="sidebar" id="sidebar" style="background: var(--sidebar-bg); border-right: 1px solid var(--glass-border); display: flex; flex-direction: column;">
+      <!-- Sidebar Branding -->
+      <div class="sb-brand" style="padding: 24px 20px; display: flex; align-items: center; gap: 14px; margin-bottom: 8px; border-bottom: 1px solid var(--separator2);">
+        <div class="logo-mark" style="width: 44px; height: 44px; background: linear-gradient(135deg, #fff, #F8FAFC); border-radius: 12px; display: flex; align-items: center; justify-content: center; overflow: hidden; box-shadow: 0 12px 24px rgba(0,0,0,0.15), inset 0 0 0 1px rgba(0,0,0,0.05); position: relative;">
+          <img src="/static/logo2.png" alt="ASSETO Logo" style="width: 80%; height: 80%; object-fit: contain; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));">
+        </div>
+        <div class="sb-brand-text-group">
+          <div style="font-size: 22px; font-weight: 800; letter-spacing: -0.04em; color: var(--text); line-height: 1;">ASSETO</div>
+          <div style="font-size: 10px; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: 0.08em; margin-top: 2px;">Cloud ERP</div>
+        </div>
+      </div>
+
+      <!-- User Profile -->
+      <div class="sb-profile" style="margin: 0 12px 20px; padding: 12px; display: flex; align-items: center; gap: 12px; background: rgba(79, 70, 229, 0.05); border-radius: 16px; border: 1px solid rgba(79, 70, 229, 0.1);">
+        <div class="avatar avatar-sm" style="background: linear-gradient(135deg, #4F46E5, #818CF8); border-radius: 10px; width: 36px; height: 36px; box-shadow: 0 4px 10px rgba(79, 70, 229, 0.3); display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700;">
+          {{ current_user.name[:1].upper() }}
+        </div>
+        <div class="sb-profile-info" style="flex: 1; min-width: 0;">
+          <div style="font-weight: 700; font-size: 14px; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ current_user.name }}</div>
+          <div style="font-size: 10px; color: var(--text2); text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; opacity: 0.8;">{{ role_info.get('label','') }}</div>
+        </div>
+      </div>
+
+      <!-- Command Palette Trigger -->
+      <button onclick="openCmdPalette()" style="margin: 0 12px 16px; display: flex; align-items: center; gap: 10px; padding: 9px 12px; background: var(--surface2); border: 1px solid var(--separator); border-radius: var(--r-sm); cursor: pointer; font-size: 13px; color: var(--text3); font-weight: 500; width: calc(100% - 24px); transition: all 0.2s;" onmouseenter="this.style.background='var(--surface3)'" onmouseleave="this.style.background='var(--surface2)'">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <span style="flex:1;text-align:left;">Поиск…</span>
+        <span style="background:var(--surface);border:1px solid var(--separator);border-radius:5px;padding:2px 6px;font-size:10px;font-weight:700;letter-spacing:0.02em;">⌘K</span>
+      </button>
+
+      <div class="sb-section">
+        <div class="sb-group-label">Разделы кабинета</div>
+        
+        <!-- Dynamic Side Menu per Role -->
+        <button class="sb-nav-btn {% if request.path == '/' or request.path == '/dashboard' %}active{% endif %}" onclick="window.location='/'">
+          <span class="sb-nav-ico" style="background:rgba(0,122,255,.15);">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#007AFF" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+          </span>
+          <span class="sb-nav-label">Дашборд</span>
+        </button>
+
+        {# ── ОБОРУДОВАНИЕ: все #}
+        <button class="sb-nav-btn {% if request.path == '/equipment' %}active{% endif %}" onclick="window.location='/equipment'">
+          <span class="sb-nav-ico" style="background:rgba(8,145,178,.12);">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0891B2" stroke-width="2" stroke-linecap="round"><rect x="4" y="2" width="16" height="20" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M12 14l2-2m0 0l2 2m-2-2v5"/></svg>
+          </span>
+          <span class="sb-nav-label">Оборудование</span>
+        </button>
+
+        {# ── ОРГСТРУКТУРА: все #}
+        <button class="sb-nav-btn {% if request.path == '/orgchart' %}active{% endif %}" onclick="window.location='/orgchart'">
+          <span class="sb-nav-ico" style="background:rgba(76,175,80,.12);">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#4CAF50" stroke-width="2" stroke-linecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          </span>
+          <span class="sb-nav-label">Оргструктура</span>
+        </button>
+
+        {# ── ЗАДАЧИ: все #}
+        <button class="sb-nav-btn {% if request.path == '/tasks' %}active{% endif %}" onclick="window.location='/tasks'">
+          <span class="sb-nav-ico" style="background:rgba(255,107,53,.12);">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FF6B35" stroke-width="2" stroke-linecap="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+          </span>
+          <span class="sb-nav-label">Задачи</span>
+        </button>
+
+        {# ── КАНЦЕЛЯРИЯ: все кроме viewer #}
+        {% if current_user.role != 'viewer' %}
+        <button class="sb-nav-btn {% if request.path == '/office' %}active{% endif %}" onclick="window.location='/office'">
+          <span class="sb-nav-ico" style="background:rgba(0,122,255,.12);">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#007AFF" stroke-width="2" stroke-linecap="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+          </span>
+          <span class="sb-nav-label">Канцелярия</span>
+        </button>
+        {% endif %}
+
+        {# ── ДОКУМЕНТЫ: все кроме viewer #}
+        {% if current_user.role != 'viewer' %}
+        <button class="sb-nav-btn {% if request.path == '/documents' %}active{% endif %}" onclick="window.location='/documents'">
+          <span class="sb-nav-ico" style="background:rgba(255,149,0,.12);">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FF9500" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          </span>
+          <span class="sb-nav-label">{% if current_user.role == 'employee' %}Мои акты{% else %}Документы{% endif %}</span>
+          <span class="sb-nav-count pulse-badge" id="c-docs" style="display:none;"></span>
+        </button>
+        {% endif %}
+
+        {# ── ВЫДАЧИ / УВОЛЬНЕНИЯ: АХО, HR, супер #}
+        {% if current_user.role in ('superadmin','aho','hr') %}
+        <button class="sb-nav-btn {% if request.path == '/admin/issuances' %}active{% endif %}" onclick="window.location='/admin/issuances'">
+          <span class="sb-nav-ico" style="background:rgba(52,199,89,.12);">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#34C759" stroke-width="2" stroke-linecap="round"><path d="M20 12V22H4V12"/><path d="M22 7H2v5h20V7z"/><path d="M12 22V7"/></svg>
+          </span>
+          <span class="sb-nav-label">Выдачи</span>
+        </button>
+        <button class="sb-nav-btn {% if request.path == '/admin/dismissals' %}active{% endif %}" onclick="window.location='/admin/dismissals'">
+          <span class="sb-nav-ico" style="background:rgba(255,59,48,.12);">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FF3B30" stroke-width="2" stroke-linecap="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/></svg>
+          </span>
+          <span class="sb-nav-label">Увольнения</span>
+        </button>
+        {% endif %}
+
+        {# ── РЕМОНТЫ: АХО, супер, director #}
+        {% if current_user.role in ('superadmin','aho','director') %}
+        <button class="sb-nav-btn {% if request.path == '/maintenance' %}active{% endif %}" onclick="window.location='/maintenance'">
+          <span class="sb-nav-ico" style="background:rgba(255,149,0,.12);">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FF9500" stroke-width="2" stroke-linecap="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+          </span>
+          <span class="sb-nav-label">Ремонты</span>
+        </button>
+        {% endif %}
+
+        {# ── ЗАЯВКИ: все кроме viewer/auditor/accountant #}
+        {% if current_user.role in ('superadmin','aho','hr','employee','director','deputy','department_head') %}
+        <button class="sb-nav-btn {% if request.path == '/requests' %}active{% endif %}" onclick="window.location='/requests'">
+          <span class="sb-nav-ico" style="background:rgba(52,199,89,.12);">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#34C759" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          </span>
+          <span class="sb-nav-label">{% if current_user.role == 'employee' %}Мои заявки{% else %}Заявки{% endif %}</span>
+        </button>
+        {% endif %}
+
+        {# ── АНАЛИТИКА: управленцы, аудитор, бухгалтер #}
+        {% if current_user.role in ('superadmin','aho','director','deputy','department_head','auditor','accountant') %}
+        <button class="sb-nav-btn {% if request.path == '/analytics' %}active{% endif %}" onclick="window.location='/analytics'">
+          <span class="sb-nav-ico" style="background:rgba(88,86,214,.12);">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#5856D6" stroke-width="2" stroke-linecap="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+          </span>
+          <span class="sb-nav-label">Аналитика</span>
+        </button>
+        {% endif %}
+
+        {# ── КАБИНЕТЫ: АХО + супер #}
+        {% if current_user.role in ('superadmin','aho') %}
+        <button class="sb-nav-btn {% if request.path == '/rooms' %}active{% endif %}" onclick="window.location='/rooms'">
+          <span class="sb-nav-ico" style="background:rgba(255,149,0,.12);">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FF9500" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18M3 9h6M3 15h6"/></svg>
+          </span>
+          <span class="sb-nav-label">Кабинеты</span>
+        </button>
+        {% endif %}
+
+        {# ── АМОРТИЗАЦИЯ: супер, бухгалтер, АХО #}
+        {% if current_user.role in ('superadmin','aho','accountant','auditor') %}
+        <button class="sb-nav-btn {% if request.path == '/reports/depreciation' %}active{% endif %}" onclick="window.location='/reports/depreciation'">
+          <span class="sb-nav-ico" style="background:rgba(48,176,199,.12);">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#30B0C7" stroke-width="2" stroke-linecap="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          </span>
+          <span class="sb-nav-label">Амортизация</span>
+        </button>
+        {% endif %}
+
+        {# ── ПОЛЬЗОВАТЕЛИ: супер, директор #}
+        {% if current_user.role in ('superadmin','director') %}
+        <button class="sb-nav-btn {% if request.path == '/admin/users' %}active{% endif %}" onclick="window.location='/admin/users'">
+          <span class="sb-nav-ico" style="background:rgba(90,200,250,.12);">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#5AC8FA" stroke-width="2" stroke-linecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+          </span>
+          <span class="sb-nav-label">Пользователи</span>
+        </button>
+        {% endif %}
+
+        {# ── БЕЗОПАСНОСТЬ: только супер #}
+        {% if current_user.role == 'superadmin' %}
+        <button class="sb-nav-btn {% if request.path == '/security' %}active{% endif %}" onclick="window.location='/security'">
+          <span class="sb-nav-ico" style="background:rgba(255,59,48,.1);">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FF3B30" stroke-width="2" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          </span>
+          <span class="sb-nav-label">Безопасность</span>
+        </button>
+        {% endif %}
+
+        {# ── НАСТРОЙКИ: все #}
+        <button class="sb-nav-btn {% if request.path == '/settings' %}active{% endif %}" onclick="window.location='/settings'">
+          <span class="sb-nav-ico" style="background:rgba(142,142,147,.12);">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8E8E93" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2"/></svg>
+          </span>
+          <span class="sb-nav-label">Настройки</span>
+        </button>
+      </div>
+
+      <div class="sb-toggle-wrap">
+        <button class="sb-toggle-btn" onclick="toggleSidebarCollapse()" title="Свернуть">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+      </div>
+    </aside>
+
+    <!-- ═══ MAIN CONTENT ═══ -->
+    <main class="main-content">
+      {% block content %}{% endblock %}
+    </main>
+
+  </div>
+
+
+  <!-- ─── SCANNER MODAL ─── -->
+  <div class="overlay" id="m-scan">
+    <div class="sheet" style="max-width:500px;">
+      <div class="sheet-head">
+        <div>
+          <div class="sheet-title">Сканер QR</div>
+          <div style="font-size:13px;color:var(--text2);">Наведите камеру на QR-код техники</div>
+        </div>
+        <button class="sheet-x" onclick="closeScanner()">✕</button>
+      </div>
+      <div class="sheet-body" style="padding: 10px !important;">
+        <div id="reader" style="width:100%;border-radius:12px;overflow:hidden;background:#000;"></div>
+        <div id="scan-result" style="margin-top:15px;padding:12px;background:var(--surface2);border-radius:10px;font-size:13px;display:none;"></div>
+      </div>
+      <div class="sheet-foot">
+        <button class="btn btn-secondary" style="width:100%;" onclick="closeScanner()">Закрыть</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ GLOBAL JS ═══ -->
+  <script>
+    // Theme
+    function applyTheme(t) {
+      document.documentElement.setAttribute('data-theme', t);
+      const d = document.getElementById('theme-ico-dark');
+      const l = document.getElementById('theme-ico-light');
+      if(d) d.style.display = t === 'dark' ? 'none' : '';
+      if(l) l.style.display = t === 'dark' ? '' : 'none';
+    }
+    function toggleTheme() {
+      const cur = document.documentElement.getAttribute('data-theme') || '';
+      const next = cur === 'dark' ? 'light' : 'dark';
+      localStorage.setItem('asseto-theme', next);
+      applyTheme(next);
+    }
+    (function () {
+      const t = localStorage.getItem('asseto-theme') || (window.matchMedia('(prefers-color-scheme:dark)').matches ? 'dark' : 'light');
+      applyTheme(t);
+    })();
+
+    // Sidebar
+    function toggleSidebarCollapse() {
+      const sb = document.getElementById('sidebar');
+      sb.classList.toggle('collapsed');
+      localStorage.setItem('asseto-sidebar-collapsed', sb.classList.contains('collapsed'));
+    }
+    function toggleSidebar() {
+      const sb = document.getElementById('sidebar');
+      if (sb.classList.contains('mob-open')) {
+        closeSidebar();
+      } else {
+        sb.classList.add('mob-open');
+        document.getElementById('mob-overlay').classList.add('open');
+        document.body.classList.add('sb-open');
+      }
+    }
+    function closeSidebar() {
+      document.getElementById('sidebar').classList.remove('mob-open');
+      document.getElementById('mob-overlay').classList.remove('open');
+      document.body.classList.remove('sb-open');
+    }
+    (function(){
+      if(localStorage.getItem('asseto-sidebar-collapsed') === 'true' && window.innerWidth > 768) {
+        document.getElementById('sidebar').classList.add('collapsed');
+      }
+    })();
+
+    // Logout
+    async function doLogout() {
+      sessionStorage.removeItem('asseto_splash_shown');
+      await fetch('/api/auth/logout', { method: 'POST' });
+      window.location = '/login';
+    }
+
+    // Command Palette
+    function openCmdPalette() { document.getElementById('cmd-palette').classList.add('show'); document.getElementById('cmd-input').focus(); }
+    function hideCmdPalette() { document.getElementById('cmd-palette').classList.remove('show'); }
+    document.addEventListener('keydown', e => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') { e.preventDefault(); openCmdPalette(); }
+      if (e.key === 'Escape') hideCmdPalette();
+    });
+
+    // Scanner
+    let html5QrCode = null;
+    function openScanner() {
+      document.getElementById('m-scan').classList.add('open');
+      document.getElementById('scan-result').style.display = 'none';
+      if (!html5QrCode) html5QrCode = new Html5Qrcode("reader");
+      
+      const config = { fps: 10, qrbox: { width: 250, height: 250 } };
+      html5QrCode.start({ facingMode: "environment" }, config, onScanSuccess)
+        .catch(err => {
+          console.error(err);
+          showToast("Ошибка доступа к камере", "err");
+          closeScanner();
+        });
+    }
+    function onScanSuccess(decodedText, decodedResult) {
+      try {
+        const url = new URL(decodedText);
+        if (url.pathname.startsWith('/asset/')) {
+          html5QrCode.stop().then(() => {
+             document.getElementById('m-scan').classList.remove('open');
+             window.location = decodedText;
+          });
+          return;
+        }
+      } catch(e) {}
+      const resEl = document.getElementById('scan-result');
+      resEl.textContent = "Найдено: " + decodedText;
+      resEl.style.display = 'block';
+      showToast("QR отсканирован", "ok");
+    }
+    function closeScanner() {
+      if (html5QrCode && html5QrCode.isScanning) {
+        html5QrCode.stop().then(() => {
+           document.getElementById('m-scan').classList.remove('open');
+        });
+      } else {
+        document.getElementById('m-scan').classList.remove('open');
+      }
+    }
+
+    // Notifications
+    let notifLoaded = false;
+    async function toggleNotif() {
+      const panel = document.getElementById('notif-panel');
+      panel.classList.toggle('show');
+      if (panel.classList.contains('show') && !notifLoaded) {
+        await loadNotifications();
+      }
+    }
+    async function loadNotifications() {
+      try {
+        const r = await fetch('/api/notifications');
+        const d = await r.json();
+        const list = document.getElementById('notif-list');
+        const dot = document.getElementById('notif-dot');
+        const clearBtn = document.getElementById('notif-clear-all');
+        
+        if (dot) dot.style.display = d.unread_count > 0 ? 'block' : 'none';
+        if (clearBtn) clearBtn.style.display = d.unread_count > 0 ? 'block' : 'none';
+        
+        if (!d.notifications || d.notifications.length === 0) {
+          list.innerHTML = '<div class="notif-empty">Нет новых уведомлений</div>';
+          return;
+        }
+        
+        list.innerHTML = d.notifications.map(n => {
+          const clr = n.is_read ? 'opacity:0.65;' : 'font-weight:600;';
+          const title = n.title || n.label || 'Уведомление';
+          const body = n.body || n.description || '';
+          const badge = n.count && n.count > 0 ? `<div style="background:var(--ios-red);color:#fff;border-radius:12px;padding:2px 8px;font-size:11px;font-weight:700;display:inline-block;white-space:nowrap;flex-shrink:0;">${n.count}</div>` : '';
+          
+          return `
+            <div class="notif-item" style="${clr}cursor:pointer; display:flex; gap:14px; padding:14px 20px; align-items:center;" onclick="window.location.href='${n.link || '/'}'">
+              <div class="notif-ico" style="width:38px; height:38px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0; background:rgba(88,86,214,.15);">🔔</div>
+              <div class="notif-text" style="flex:1; min-width:0; display:flex; flex-direction:column; justify-content:center;">
+                <div style="font-size:14px; font-weight:600; color:var(--text); line-height:1.2; margin-bottom:3px; display:flex; align-items:center; justify-content:space-between; gap:8px;">
+                  <span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${title}</span>
+                  ${badge}
+                </div>
+                ${body ? `<div style="font-size:12px; color:var(--text2); line-height:1.4; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${body}</div>` : ''}
+                <div class="notif-item-time" style="font-size:10px;color:var(--text3);margin-top:4px;">${new Date(n.created_at).toLocaleString('ru')}</div>
+              </div>
+            </div>`;
+        }).join('');
+        notifLoaded = true;
+      } catch(e) {
+        console.error(e);
+      }
+    }
+    async function markAllNotificationsRead() {
+      try {
+        await fetch('/api/notifications', { method: 'POST' });
+        notifLoaded = false;
+        await loadNotifications();
+        showToast("Уведомления прочитаны", "ok");
+      } catch(e) {}
+    }
+    // Update badge count
+    async function updatePulse() {
+      try {
+        const r = await fetch('/api/documents/stats');
+        const d = await r.json();
+        const bd = document.getElementById('c-docs');
+        if (bd) {
+          if (d.pending > 0) {
+            bd.style.display = 'inline-flex';
+            bd.textContent = d.pending;
+          } else {
+            bd.style.display = 'none';
+          }
+        }
+        const notifRes = await fetch('/api/notifications');
+        const notifData = await notifRes.json();
+        const dot = document.getElementById('notif-dot');
+        if (dot) dot.style.display = notifData.unread_count > 0 ? 'block' : 'none';
+      } catch(e) {}
+    }
+    setInterval(updatePulse, 15000);
+    updatePulse();
+
+    // Early splash screen dismiss
+    window.addEventListener('load', () => {
+      const splash = document.getElementById('splash');
+      if (splash) {
+        splash.style.animation = 'splashOut 0.5s ease forwards';
+        setTimeout(() => {
+          splash.remove();
+          sessionStorage.setItem('asseto_splash_shown', 'true');
+        }, 500);
+      }
+    });
+
+    // ── SERVICE WORKER + WEB PUSH ────────────────────────────────────────
+    (function() {
+      if (!('serviceWorker' in navigator)) return;
+
+      // Register SW
+      navigator.serviceWorker.register('/sw.js', { scope: '/' })
+        .then(reg => {
+          window._swReg = reg;
+          // Check for SW update every 5 min
+          setInterval(() => reg.update(), 5 * 60 * 1000);
+        })
+        .catch(e => console.warn('[SW] Registration failed:', e));
+
+      // Offline / online indicator
+      function updateOnlineStatus() {
+        const isOnline = navigator.onLine;
+        let bar = document.getElementById('offline-bar');
+        if (!bar) {
+          bar = document.createElement('div');
+          bar.id = 'offline-bar';
+          bar.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:9999;background:#FF3B30;color:#fff;text-align:center;font-size:13px;font-weight:700;padding:8px;transition:transform .3s;transform:translateY(-100%);';
+          bar.innerHTML = '📡 Нет соединения — показаны кэшированные данные';
+          document.body.appendChild(bar);
+        }
+        bar.style.transform = isOnline ? 'translateY(-100%)' : 'translateY(0)';
+      }
+      window.addEventListener('online', updateOnlineStatus);
+      window.addEventListener('offline', updateOnlineStatus);
+      updateOnlineStatus();
+    })();
+
+    // ── WEB PUSH SUBSCRIPTION ──────────────────────────────────────────────
+    window.ASSETO = window.ASSETO || {};
+    window.ASSETO.push = {
+      _urlBase64ToUint8(base64String) {
+        const padding = '='.repeat((4 - base64String.length % 4) % 4);
+        const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+        const rawData = window.atob(base64);
+        const outputArray = new Uint8Array(rawData.length);
+        for (let i = 0; i < rawData.length; ++i) outputArray[i] = rawData.charCodeAt(i);
+        return outputArray;
+      },
+
+      async subscribe() {
+        if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+          return { ok: false, reason: 'Браузер не поддерживает Push' };
+        }
+        try {
+          // Get VAPID key
+          const r = await fetch('/api/push/vapid-public-key');
+          const { publicKey, enabled } = await r.json();
+          if (!enabled || !publicKey) return { ok: false, reason: 'Push не настроен на сервере' };
+
+          // Request permission
+          const perm = await Notification.requestPermission();
+          if (perm !== 'granted') return { ok: false, reason: 'Разрешение отклонено' };
+
+          // Subscribe
+          const reg = window._swReg || await navigator.serviceWorker.ready;
+          const sub = await reg.pushManager.subscribe({
+            userVisibleOnly: true,
+            applicationServerKey: this._urlBase64ToUint8(publicKey),
+          });
+
+          // Save to backend
+          const saveR = await fetch('/api/push/subscribe', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(sub.toJSON()),
+          });
+          const saveD = await saveR.json();
+          if (saveD.ok) {
+            localStorage.setItem('asseto-push-subscribed', '1');
+            return { ok: true };
+          }
+          return { ok: false, reason: saveD.error };
+        } catch(e) {
+          return { ok: false, reason: e.message };
+        }
+      },
+
+      async unsubscribe() {
+        try {
+          const reg = window._swReg || await navigator.serviceWorker.ready;
+          const sub = await reg.pushManager.getSubscription();
+          if (sub) {
+            await fetch('/api/push/unsubscribe', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ endpoint: sub.endpoint }),
+            });
+            await sub.unsubscribe();
+          }
+          localStorage.removeItem('asseto-push-subscribed');
+          return { ok: true };
+        } catch(e) {
+          return { ok: false, reason: e.message };
+        }
+      },
+
+      isSubscribed() {
+        return localStorage.getItem('asseto-push-subscribed') === '1';
+      },
+
+      // Auto-subscribe if user hasn't chosen yet (after 30s)
+      autoPrompt() {
+        if (this.isSubscribed()) return;
+        if (localStorage.getItem('asseto-push-declined')) return;
+        if (Notification.permission === 'denied') return;
+        if (!('PushManager' in window)) return;
+        setTimeout(() => {
+          if (document.getElementById('push-prompt')) return;
+          const el = document.createElement('div');
+          el.id = 'push-prompt';
+          el.style.cssText = 'position:fixed;bottom:80px;right:20px;z-index:8000;background:var(--surface);border:1px solid var(--separator2);border-radius:18px;padding:18px 20px;max-width:300px;box-shadow:0 16px 48px rgba(0,0,0,.4);animation:wizFadeIn .4s ease;';
+          el.innerHTML = `
+            <div style="font-size:18px;margin-bottom:8px;">🔔</div>
+            <div style="font-size:14px;font-weight:800;margin-bottom:6px;">Включить уведомления?</div>
+            <div style="font-size:13px;color:var(--text2);margin-bottom:14px;line-height:1.5;">Получайте уведомления о документах, ремонтах и важных событиях прямо в браузере.</div>
+            <div style="display:flex;gap:8px;">
+              <button onclick="ASSETO.push._acceptPrompt()" style="flex:1;background:var(--accent);color:#fff;border:none;border-radius:10px;padding:9px;font-size:13px;font-weight:700;cursor:pointer;">Включить</button>
+              <button onclick="ASSETO.push._declinePrompt()" style="background:var(--surface2);border:1px solid var(--separator2);border-radius:10px;padding:9px 12px;font-size:13px;font-weight:600;cursor:pointer;color:var(--text2);">Нет</button>
+            </div>
+          `;
+          document.body.appendChild(el);
+        }, 30000); // Show after 30 seconds
+      },
+
+      async _acceptPrompt() {
+        document.getElementById('push-prompt')?.remove();
+        const result = await this.subscribe();
+        if (result.ok) {
+          if (window.showToast) showToast('🔔 Уведомления включены', 'ok');
+        } else {
+          if (window.showToast) showToast('Не удалось: ' + result.reason, 'err');
+        }
+      },
+
+      _declinePrompt() {
+        document.getElementById('push-prompt')?.remove();
+        localStorage.setItem('asseto-push-declined', '1');
+      }
+    };
+
+    // Auto-prompt after page stabilizes
+    window.addEventListener('load', () => {
+      setTimeout(() => window.ASSETO.push.autoPrompt(), 5000);
+    });
+  </script>
+  {% block scripts %}{% endblock %}
+
+<!-- ONBOARDING WIZARD: временно отключён, см. wizard_disabled.html -->
+{% if false and current_user and not current_user.onboarding_done %}
+<style>
+#wizard-backdrop {
+  position:fixed;inset:0;z-index:9000;
+  background:rgba(0,0,0,.75);
+  backdrop-filter:blur(16px);
+  -webkit-backdrop-filter:blur(16px);
+  display:flex;align-items:center;justify-content:center;
+  padding:20px;
+  animation:wizFadeIn .4s ease;
+}
+@keyframes wizFadeIn{from{opacity:0}to{opacity:1}}
+@keyframes wizSlideIn{from{opacity:0;transform:scale(0.92) translateY(16px)}to{opacity:1;transform:scale(1) translateY(0)}}
+@keyframes wizSlideOut{from{opacity:1;transform:scale(1)}to{opacity:0;transform:scale(0.95) translateY(-8px)}}
+
+#wizard-card {
+  background:var(--surface);
+  border:.5px solid var(--separator2);
+  border-radius:28px;
+  width:100%;max-width:480px;
+  box-shadow:0 40px 120px rgba(0,0,0,.6);
+  overflow:hidden;
+  animation:wizSlideIn .4s cubic-bezier(0.16,1,0.3,1);
+}
+.wiz-progress {
+  height:3px;
+  background:var(--separator2);
+  position:relative;
+}
+.wiz-progress-bar {
+  height:100%;
+  background:linear-gradient(90deg,var(--accent),#5856D6);
+  transition:width .4s cubic-bezier(0.16,1,0.3,1);
+  border-radius:0 3px 3px 0;
+}
+.wiz-body {
+  padding:40px 40px 32px;
+  text-align:center;
+}
+.wiz-emoji {
+  font-size:56px;
+  margin-bottom:20px;
+  display:block;
+  animation:wizEmoji .5s cubic-bezier(0.34,1.56,0.64,1);
+}
+@keyframes wizEmoji{from{transform:scale(0) rotate(-20deg)}to{transform:scale(1) rotate(0)}}
+.wiz-step-label {
+  font-size:11px;font-weight:800;text-transform:uppercase;
+  letter-spacing:.1em;color:var(--text3);margin-bottom:12px;
+}
+.wiz-title {
+  font-size:24px;font-weight:900;letter-spacing:-.6px;
+  color:var(--text);margin-bottom:12px;line-height:1.2;
+}
+.wiz-desc {
+  font-size:15px;color:var(--text2);line-height:1.65;margin-bottom:8px;
+}
+.wiz-tip {
+  display:inline-flex;align-items:center;gap:6px;
+  margin-top:12px;padding:8px 14px;
+  background:rgba(0,122,255,.08);border:1px solid rgba(0,122,255,.15);
+  border-radius:12px;font-size:13px;color:var(--accent);font-weight:600;
+}
+.wiz-dots {
+  display:flex;justify-content:center;gap:7px;margin-top:24px;
+}
+.wiz-dot {
+  width:7px;height:7px;border-radius:50%;
+  background:var(--separator2);transition:all .25s;
+}
+.wiz-dot.on {
+  width:24px;border-radius:4px;
+  background:var(--accent);
+}
+.wiz-footer {
+  padding:0 40px 32px;
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+}
+.wiz-btn {
+  display:inline-flex;align-items:center;gap:7px;
+  padding:12px 24px;border-radius:14px;
+  font-size:14px;font-weight:800;
+  border:none;cursor:pointer;font-family:var(--sans);
+  transition:all .15s;
+}
+.wiz-btn-primary {
+  background:linear-gradient(135deg,var(--accent),#5856D6);
+  color:#fff;
+  box-shadow:0 8px 24px rgba(0,122,255,.3);
+}
+.wiz-btn-primary:hover{transform:translateY(-2px);box-shadow:0 12px 32px rgba(0,122,255,.45);}
+.wiz-btn-secondary {
+  background:var(--surface2);color:var(--text2);
+  border:.5px solid var(--separator2);
+}
+.wiz-btn-secondary:hover{color:var(--text);}
+.wiz-skip {
+  background:none;border:none;font-size:13px;
+  color:var(--text3);cursor:pointer;padding:8px;
+  font-family:var(--sans);transition:color .15s;
+}
+.wiz-skip:hover{color:var(--text2);}
+</style>
+
+<div id="wizard-backdrop" onclick="if(event.target===this){}">
+  <div id="wizard-card">
+    <div class="wiz-progress"><div class="wiz-progress-bar" id="wiz-bar"></div></div>
+    <div class="wiz-body" id="wiz-body"></div>
+    <div class="wiz-footer">
+      <button class="wiz-skip" id="wiz-skip" onclick="wizSkip()">Пропустить тур</button>
+      <div style="display:flex;gap:10px;">
+        <button class="wiz-btn wiz-btn-secondary" id="wiz-back" onclick="wizBack()" style="display:none;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+          Назад
+        </button>
+        <button class="wiz-btn wiz-btn-primary" id="wiz-next" onclick="wizNext()">
+          Далее
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function() {
+  const ROLE = '{{ current_user.role }}';
+  const NAME = '{{ current_user.name.split()[0] if current_user.name else "друг" }}';
+
+  // Role-specific steps
+  const STEPS = {
+    superadmin: [
+      { emoji:'🎉', title:`Добро пожаловать, ${NAME}!`, desc:'Вы — Superadmin ASSETO. У вас полный доступ ко всем функциям платформы учёта оборудования.', tip:'⌘K — быстрый переход к любому разделу' },
+      { emoji:'💻', title:'Управление активами', desc:'Весь список техники на главном экране. Добавляйте, редактируйте, передавайте оборудование. Используйте QR-этикетки для мгновенной идентификации.', tip:'Кнопка «+ Добавить предмет» — правый верхний угол' },
+      { emoji:'📄', title:'Документооборот', desc:'Все важные процессы проходят через документы: списание, закупка, онбординг, ремонт. Цепочки подписей — от АХО до Директора.', tip:'Раздел «Документы» в левом меню' },
+      { emoji:'👥', title:'Управление пользователями', desc:'Создавайте аккаунты, назначайте роли, блокируйте доступ. 9 ролей с различными уровнями полномочий.', tip:'Раздел «Пользователи» → «+ Создать»' },
+      { emoji:'⚙️', title:'Настройки системы', desc:'Настройте SMTP для email, подключите Telegram, задайте SECRET_KEY и загрузите логотип компании.', tip:'Настройки → Email уведомления (SMTP)' },
+      { emoji:'🚀', title:'ASSETO готов к работе!', desc:'Платформа настроена. Начните с добавления первой техники или пригласите коллег через раздел «Пользователи».', tip:null },
+    ],
+    aho: [
+      { emoji:'👋', title:`Привет, ${NAME}!`, desc:'Вы — АХО / IT. ASSETO — ваш центр управления всем оборудованием компании.', tip:'⌘K — быстрый поиск по платформе' },
+      { emoji:'💻', title:'Склад и учёт', desc:'Главный экран — таблица всех активов. Фильтруйте по категории, кабинету, сотруднику. Кликните на строку чтобы редактировать.', tip:'Кнопка QR ▾ → печать этикеток' },
+      { emoji:'📦', title:'Добавление техники', desc:'Нажмите «+ Добавить предмет» — 3 шага: Место → Техника → Детали. Система сама сгенерирует инвентарный номер.', tip:'Или используйте «Импорт» для загрузки из Excel' },
+      { emoji:'📋', title:'Инвентаризация', desc:'Запускайте плановые сессии инвентаризации. Сканируйте QR каждого актива — система покажет кто найден, а кто пропал.', tip:'Раздел «Инвентаризация» в меню' },
+      { emoji:'📄', title:'Документы и онбординг', desc:'Когда HR оформляет нового сотрудника — заявка сначала приходит вам. Проверьте наличие техники и согласуйте.', tip:'Раздел «Документы» → «Ожидают подписи»' },
+      { emoji:'🔧', title:'Ремонты и SLA', desc:'Заявки на ремонт видны на дашборде с цветовой индикацией SLA. Красный = просрочено. Реагируйте вовремя!', tip:'Раздел «Ремонты» в меню' },
+      { emoji:'✅', title:'Вы готовы!', desc:'Добавьте первую технику или запустите инвентаризацию. Удачной работы!', tip:null },
+    ],
+    hr: [
+      { emoji:'👋', title:`Привет, ${NAME}!`, desc:'Вы — HR менеджер. ASSETO помогает оформлять приём и увольнение сотрудников с полным контролем техники.', tip:'Все ваши процессы — на главном экране' },
+      { emoji:'🧑‍💼', title:'Онбординг новых сотрудников', desc:'Когда выходит новый сотрудник — создайте заявку на оборудование. Она пройдёт: АХО → Директор → Бухгалтер. После — АХО выдаст технику.', tip:'Раздел «Онбординг» на главном экране' },
+      { emoji:'📦', title:'Шаблоны оборудования', desc:'Сохраняйте типичные наборы техники по должностям: «Пакет разработчика», «Пакет менеджера». Экономьте время при каждом найме.', tip:'Кнопка «+ Сохранить набор» на главном экране' },
+      { emoji:'🚪', title:'Увольнение сотрудника', desc:'При увольнении — запустите процесс возврата техники. Сотрудник получит ссылку на телефон для подтверждения и подписи.', tip:'Раздел «Увольнения» в меню' },
+      { emoji:'✅', title:'Вы готовы!', desc:'Начните с создания первой онбординг-заявки или изучите список активных заявок.', tip:null },
+    ],
+    director: [
+      { emoji:'👋', title:`Добрый день, ${NAME}!`, desc:'Вы — Генеральный Директор. ASSETO показывает вам всё самое важное в первую очередь.', tip:'Документы на подписи — прямо на главном экране' },
+      { emoji:'📄', title:'Документы на подписи', desc:'Все бумаги, требующие вашего решения, отображаются первым блоком. Нажмите на документ → изучите → подпишите. 30 секунд.', tip:'Красный бейдж на «Документы» = есть новое' },
+      { emoji:'📊', title:'Аналитика компании', desc:'Стоимость активов, износ по категориям, проблемная техника — всё в разделе «Аналитика». Принимайте решения на основе данных.', tip:'Раздел «Аналитика» → «CAPEX и бюджет»' },
+      { emoji:'✅', title:'Готово!', desc:'Проверьте документы ожидающие вашей подписи и изучите аналитику по стоимости активов.', tip:null },
+    ],
+    deputy: [
+      { emoji:'👋', title:`Привет, ${NAME}!`, desc:'Вы — Заместитель Директора. ASSETO помогает контролировать документооборот и технические процессы.', tip:'Документы на подписи — на главном экране' },
+      { emoji:'📄', title:'Согласование документов', desc:'Заявки на закупку и ремонт проходят через вашу подпись. Ваш этап — между АХО и Директором.', tip:'Раздел «Документы» → «Ожидают подписи»' },
+      { emoji:'✅', title:'Готово!', desc:'Проверьте текущие документы, требующие вашего решения.', tip:null },
+    ],
+    accountant: [
+      { emoji:'👋', title:`Добрый день, ${NAME}!`, desc:'Вы — Бухгалтер. ASSETO автоматически рассчитывает стоимость активов и амортизацию для финансового учёта.', tip:'МОЛ-отчёт — на главном экране' },
+      { emoji:'💰', title:'Финансовый учёт', desc:'Ваш дашборд показывает балансовую и остаточную стоимость всех активов с амортизацией. МОЛ — кто за что отвечает.', tip:'Раздел «Аналитика» → CAPEX' },
+      { emoji:'📄', title:'Документы к учёту', desc:'Последний этап согласования — всегда у вас. После вашей подписи документ принимается к учёту. Можно распечатать.', tip:'Кнопка «Распечатать» в документе' },
+      { emoji:'✅', title:'Готово!', desc:'Проверьте документы ожидающие вашей подписи и изучите МОЛ-отчёт на дашборде.', tip:null },
+    ],
+    auditor: [
+      { emoji:'👋', title:`Привет, ${NAME}!`, desc:'Вы — Аудитор. ASSETO даёт вам полный доступ к данным для проверки и инвентаризации.', tip:'Все данные в режиме только чтения' },
+      { emoji:'📋', title:'Инвентаризация', desc:'Запускайте и управляйте сессиями инвентаризации. Сканируйте QR-коды активов, фиксируйте состояние, получайте diff-отчёт.', tip:'Раздел «Инвентаризация» в меню' },
+      { emoji:'📊', title:'Аналитика', desc:'Полный доступ к аналитике: износ, прогнозы замены, отчёты по категориям. Экспортируйте в Excel.', tip:'Раздел «Аналитика»' },
+      { emoji:'✅', title:'Готово!', desc:'Начните с запуска новой сессии инвентаризации или изучите аналитику.', tip:null },
+    ],
+    employee: [
+      { emoji:'👋', title:`Привет, ${NAME}!`, desc:'Добро пожаловать в ASSETO. Здесь вы видите всё своё оборудование и можете управлять своими запросами.', tip:'Всё персонализировано специально для вас' },
+      { emoji:'💻', title:'Ваша техника', desc:'На главном экране — всё оборудование, закреплённое за вами. Нажмите на любое устройство чтобы увидеть детали.', tip:'QR-код → мгновенный доступ к карточке актива' },
+      { emoji:'📦', title:'Запросить технику', desc:'Нужен новый ноутбук или другое оборудование? Нажмите «Запросить технику» — запрос уйдёт на рассмотрение в АХО.', tip:'Кнопка «Запросить» на главном экране' },
+      { emoji:'🔧', title:'Сообщить о проблеме', desc:'Если техника сломалась — откройте её карточку и нажмите «Сообщить о проблеме». АХО получит заявку на ремонт.', tip:'Кнопка «🔧 Сообщить о проблеме» на карточке актива' },
+      { emoji:'✅', title:'Готово!', desc:'Изучите свою технику и при необходимости создайте запрос. Хорошей работы!', tip:null },
+    ],
+  };
+
+  const steps = STEPS[ROLE] || STEPS.employee;
+  let cur = 0;
+
+  function render() {
+    const s = steps[cur];
+    const pct = ((cur + 1) / steps.length * 100).toFixed(1);
+
+    document.getElementById('wiz-bar').style.width = pct + '%';
+    document.getElementById('wiz-back').style.display = cur > 0 ? 'inline-flex' : 'none';
+    document.getElementById('wiz-skip').style.display = cur < steps.length - 1 ? 'inline-block' : 'none';
+
+    const nextBtn = document.getElementById('wiz-next');
+    const isLast = cur === steps.length - 1;
+    nextBtn.innerHTML = isLast
+      ? '🚀 Начать работу'
+      : 'Далее <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>';
+
+    const body = document.getElementById('wiz-body');
+    body.innerHTML = `
+      <span class="wiz-emoji">${s.emoji}</span>
+      <div class="wiz-step-label">Шаг ${cur + 1} из ${steps.length}</div>
+      <div class="wiz-title">${s.title}</div>
+      <div class="wiz-desc">${s.desc}</div>
+      ${s.tip ? `<div class="wiz-tip"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>${s.tip}</div>` : ''}
+      <div class="wiz-dots">${steps.map((_,i) => `<div class="wiz-dot${i===cur?' on':''}"></div>`).join('')}</div>
+    `;
+  }
+
+  function wizNext() {
+    if (cur < steps.length - 1) {
+      cur++;
+      render();
+    } else {
+      wizDone();
+    }
+  }
+  function wizBack() { if (cur > 0) { cur--; render(); } }
+
+  async function wizDone() {
+    document.getElementById('wizard-backdrop').style.animation = 'wizFadeIn .3s ease reverse forwards';
+    setTimeout(() => {
+      const el = document.getElementById('wizard-backdrop');
+      if (el) el.remove();
+    }, 300);
+    try {
+      await fetch('/api/onboarding/complete', { method: 'POST' });
+    } catch(e) {}
+  }
+
+  function wizSkip() { wizDone(); }
+
+  window.addEventListener('DOMContentLoaded', render);
+})();
+</script>
+{% endif %}
+</body>
+</html>

@@ -1,0 +1,45 @@
+version: "3.8"
+services:
+  asseto:
+    build: ./ASSETO/asseto
+    container_name: asseto
+    restart: always
+    ports:
+      - "8000:8000"
+    environment:
+      - FLASK_ENV=production
+      - DATABASE_URL=postgresql://dlpdpi:dlpdpi_dev_password@postgres:5432/asseto
+      - SECRET_KEY=CHANGE_ME_USE_RANDOM_64_CHAR_STRING_IN_PRODUCTION
+      - HOST=0.0.0.0
+      - PORT=8000
+    volumes:
+      - asseto_uploads:/app/static/photos
+      - asseto_signatures:/app/static/signatures
+      - asseto_logs:/app/logs
+      - asseto_backups:/app/backups
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: asseto-db
+    restart: always
+    environment:
+      POSTGRES_DB: asseto
+      POSTGRES_USER: dlpdpi
+      POSTGRES_PASSWORD: dlpdpi_dev_password
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dlpdpi -d asseto"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  pgdata:
+  asseto_uploads:
+  asseto_signatures:
+  asseto_logs:
+  asseto_backups:

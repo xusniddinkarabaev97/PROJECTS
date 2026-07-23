@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Амортизация — ASSETO</title>
+<link rel="stylesheet" href="/static/css/asseto-ios.css">
+<script src="/static/js/csrf.js?v=2"></script>
+<style>
+:root{--accent:#007AFF;--surface:#F2F2F7;--surface2:#FFFFFF;--border:rgba(0,0,0,.08);--text1:#000;--text2:#3C3C43;--text3:#8E8E93;--ios-red:#FF3B30;--ios-green:#34C759;--ios-orange:#FF9500;}
+@media(prefers-color-scheme:dark){:root{--surface:#1C1C1E;--surface2:#2C2C2E;--border:rgba(255,255,255,.08);--text1:#FFF;--text2:rgba(255,255,255,.75);--text3:#636366;}}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display',sans-serif;background:var(--surface);color:var(--text1);min-height:100vh;}
+.top-bar{background:var(--surface2);border-bottom:.5px solid var(--border);padding:14px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;backdrop-filter:blur(20px);}
+.back-btn{display:inline-flex;align-items:center;gap:6px;color:var(--accent);font-size:15px;font-weight:500;text-decoration:none;}
+.page-title{font-size:17px;font-weight:700;}
+.toolbar{display:flex;gap:8px;}
+.btn{border:none;border-radius:12px;padding:8px 16px;font-size:14px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:6px;}
+.btn-primary{background:var(--accent);color:#fff;}
+.btn-ghost{background:var(--surface);border:.5px solid var(--border);color:var(--text2);}
+.content{max-width:1200px;margin:0 auto;padding:24px 16px;}
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:24px;}
+.stat-card{background:var(--surface2);border-radius:16px;padding:18px 20px;border:.5px solid var(--border);}
+.stat-label{font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;}
+.stat-val{font-size:26px;font-weight:800;margin-top:4px;}
+.stat-sub{font-size:11px;color:var(--text3);margin-top:3px;}
+.filter-bar{background:var(--surface2);border-radius:14px;padding:14px 16px;margin-bottom:16px;display:flex;gap:10px;flex-wrap:wrap;border:.5px solid var(--border);}
+.filter-select{background:var(--surface);border:.5px solid var(--border);border-radius:10px;padding:8px 12px;font-size:14px;color:var(--text1);outline:none;}
+.search-input{flex:1;min-width:150px;background:var(--surface);border:.5px solid var(--border);border-radius:10px;padding:8px 12px;font-size:14px;color:var(--text1);outline:none;}
+.table-wrap{background:var(--surface2);border-radius:16px;border:.5px solid var(--border);overflow:hidden;}
+.data-table{width:100%;border-collapse:collapse;font-size:13px;}
+.data-table th{font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;padding:10px 12px;text-align:left;border-bottom:.5px solid var(--border);white-space:nowrap;background:var(--surface);}
+.data-table td{padding:11px 12px;border-bottom:.5px solid var(--border);vertical-align:middle;}
+.data-table tr:hover td{background:var(--surface);}
+.pct-bar{width:80px;height:6px;border-radius:3px;background:var(--border);overflow:hidden;display:inline-block;vertical-align:middle;margin-right:6px;}
+.pct-fill{height:100%;border-radius:3px;}
+.badge{font-size:10px;font-weight:700;padding:2px 8px;border-radius:8px;}
+.inv-num{font-family:monospace;font-size:12px;font-weight:700;color:var(--accent);}
+.empty{text-align:center;padding:60px;color:var(--text3);}
+
+/* Chart */
+.chart-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:24px;}
+.chart-card{background:var(--surface2);border-radius:16px;padding:18px;border:.5px solid var(--border);}
+.chart-title{font-size:14px;font-weight:700;margin-bottom:14px;}
+canvas{max-height:200px;}
+@media(max-width:640px){.chart-row{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+<div class="top-bar">
+  <a href="javascript:history.back()" class="back-btn">
+    <svg width="9" height="15" viewBox="0 0 9 15" fill="none"><path d="M8 1L1 7.5L8 14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+    Назад
+  </a>
+  <span class="page-title">Амортизация и остаточная стоимость</span>
+  <div class="toolbar">
+    <button class="btn btn-ghost" onclick="window.location.href='/api/reports/depreciation/export'">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Excel
+    </button>
+    <button class="btn btn-primary" onclick="window.print()">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+      Печать
+    </button>
+  </div>
+</div>
+
+<div class="content">
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-label">Всего позиций</div>
+      <div class="stat-val" id="s-total">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Балансовая стоимость</div>
+      <div class="stat-val" id="s-purchase">—</div>
+      <div class="stat-sub" id="s-purchase-uzs"></div>
+    </div>
+    <div class="stat-card" style="border-left:3px solid var(--ios-green);">
+      <div class="stat-label">Остаточная стоимость</div>
+      <div class="stat-val" style="color:var(--ios-green);" id="s-residual">—</div>
+      <div class="stat-sub" id="s-residual-uzs"></div>
+    </div>
+    <div class="stat-card" style="border-left:3px solid var(--ios-red);">
+      <div class="stat-label">Накопленный износ</div>
+      <div class="stat-val" style="color:var(--ios-red);" id="s-depr">—</div>
+      <div class="stat-sub" id="s-avg-pct"></div>
+    </div>
+  </div>
+
+  <div class="chart-row">
+    <div class="chart-card">
+      <div class="chart-title">Остаточная стоимость по категориям</div>
+      <canvas id="chart-cat"></canvas>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">Распределение по износу</div>
+      <canvas id="chart-depr"></canvas>
+    </div>
+  </div>
+
+  <div class="filter-bar">
+    <input class="search-input" id="f-search" placeholder="Поиск по модели / сотруднику…" oninput="renderTable()">
+    <select class="filter-select" id="f-cat" onchange="renderTable()">
+      <option value="">Все категории</option>
+    </select>
+    <select class="filter-select" id="f-depr" onchange="renderTable()">
+      <option value="">Все</option>
+      <option value="low">Мало изношено (&lt;40%)</option>
+      <option value="mid">Средний износ (40–75%)</option>
+      <option value="high">Высокий износ (&gt;75%)</option>
+    </select>
+    <select class="filter-select" id="f-sort" onchange="renderTable()">
+      <option value="depr_desc">↓ Износ</option>
+      <option value="depr_asc">↑ Износ</option>
+      <option value="residual_desc">↓ Остаточная</option>
+      <option value="purchase_desc">↓ Балансовая</option>
+    </select>
+  </div>
+
+  <div class="table-wrap">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Инв. №</th>
+          <th>Категория</th>
+          <th>Модель</th>
+          <th>Сотрудник</th>
+          <th>Дата покупки</th>
+          <th>Срок (лет)</th>
+          <th style="text-align:right;">Балансовая</th>
+          <th>Износ</th>
+          <th style="text-align:right;">Остаточная</th>
+          <th>Гарантия</th>
+        </tr>
+      </thead>
+      <tbody id="tbl-body"></tbody>
+    </table>
+  </div>
+  <div id="tbl-empty" class="empty" style="display:none;">
+    <div style="font-size:40px;margin-bottom:12px;">📊</div>
+    <p>Нет данных по заданным фильтрам</p>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+<script>
+const USD_RATE = 13000;
+function fmtUSD(v){return v!=null?(Math.round(v*13000)).toLocaleString('ru')+' сум':'—';}
+function fmtUZS(v){return v!=null?(Math.round(v*USD_RATE)).toLocaleString('ru')+' сум':'—';}
+const CAT_COLORS={'Ноутбук':'#007AFF','Монитор':'#5856D6','Телефон':'#34C759','Клавиатура':'#FF9500','Мышь':'#FF2D55','Принтер':'#AF52DE','Наушники':'#FF2D55','Удлинитель':'#636366','Кресло':'#8E8E93','Стол':'#30B0C7','Другое':'#C7C7CC'};
+
+let allData = [], summary = {};
+
+async function load(){
+  const res = await fetch('/api/reports/depreciation');
+  const d = await res.json();
+  allData = d.items; summary = d.summary;
+
+  // stats
+  document.getElementById('s-total').textContent = summary.total_items;
+  document.getElementById('s-purchase').textContent = fmtUSD(summary.total_purchase);
+  document.getElementById('s-purchase-uzs').textContent = fmtUZS(summary.total_purchase);
+  document.getElementById('s-residual').textContent = fmtUSD(summary.total_residual);
+  document.getElementById('s-residual-uzs').textContent = fmtUZS(summary.total_residual);
+  document.getElementById('s-depr').textContent = fmtUSD(summary.total_depreciation);
+  document.getElementById('s-avg-pct').textContent = `Средний износ: ${summary.avg_depreciation_pct}%`;
+
+  // filter categories
+  const cats = [...new Set(allData.map(r=>r.category))].sort();
+  const sel = document.getElementById('f-cat');
+  cats.forEach(c=>{ const o=document.createElement('option'); o.value=c; o.textContent=c; sel.appendChild(o); });
+
+  renderCharts();
+  renderTable();
+}
+
+function renderCharts(){
+  // By category
+  const catMap = {};
+  allData.forEach(r=>{
+    if(!catMap[r.category]) catMap[r.category]={purchase:0,residual:0};
+    catMap[r.category].purchase += r.purchase_price || 0;
+    catMap[r.category].residual += r.residual_value || 0;
+  });
+  const cats = Object.keys(catMap);
+  new Chart(document.getElementById('chart-cat'),{
+    type:'bar',
+    data:{labels:cats,datasets:[
+      {label:'Балансовая',data:cats.map(c=>catMap[c].purchase.toFixed(0)),backgroundColor:cats.map(c=>CAT_COLORS[c]||'#8E8E93')+'80'},
+      {label:'Остаточная',data:cats.map(c=>catMap[c].residual.toFixed(0)),backgroundColor:cats.map(c=>CAT_COLORS[c]||'#8E8E93')},
+    ]},
+    options:{responsive:true,maintainAspectRatio:true,plugins:{legend:{position:'bottom',labels:{font:{size:10}}}},
+      scales:{y:{ticks:{callback:v=>(Math.round(v*13000)).toLocaleString('ru')+' сум'},grid:{color:'rgba(0,0,0,.05)'}},x:{grid:{display:false}}}}
+  });
+
+  // Depreciation buckets
+  const low=allData.filter(r=>r.depreciation_pct<40).length;
+  const mid=allData.filter(r=>r.depreciation_pct>=40&&r.depreciation_pct<75).length;
+  const high=allData.filter(r=>r.depreciation_pct>=75).length;
+  new Chart(document.getElementById('chart-depr'),{
+    type:'doughnut',
+    data:{labels:['Хорошее (<40%)','Среднее (40-75%)','Высокое (>75%)'],
+          datasets:[{data:[low,mid,high],backgroundColor:['#34C759','#FF9500','#FF3B30'],borderWidth:0}]},
+    options:{responsive:true,maintainAspectRatio:true,plugins:{legend:{position:'bottom',labels:{font:{size:10}}}}}
+  });
+}
+
+function renderTable(){
+  const q = document.getElementById('f-search').value.toLowerCase();
+  const cat = document.getElementById('f-cat').value;
+  const depr = document.getElementById('f-depr').value;
+  const sortBy = document.getElementById('f-sort').value;
+
+  let data = allData.filter(r=>{
+    if(q && !`${r.model} ${r.employee||''}`.toLowerCase().includes(q)) return false;
+    if(cat && r.category !== cat) return false;
+    if(depr === 'low' && r.depreciation_pct >= 40) return false;
+    if(depr === 'mid' && (r.depreciation_pct < 40 || r.depreciation_pct >= 75)) return false;
+    if(depr === 'high' && r.depreciation_pct < 75) return false;
+    return true;
+  });
+
+  data.sort((a,b)=>{
+    if(sortBy==='depr_asc') return a.depreciation_pct-b.depreciation_pct;
+    if(sortBy==='depr_desc') return b.depreciation_pct-a.depreciation_pct;
+    if(sortBy==='residual_desc') return (b.residual_value||0)-(a.residual_value||0);
+    if(sortBy==='purchase_desc') return (b.purchase_price||0)-(a.purchase_price||0);
+    return 0;
+  });
+
+  const tbody = document.getElementById('tbl-body');
+  const empty = document.getElementById('tbl-empty');
+
+  if(!data.length){tbody.innerHTML=''; empty.style.display='block'; return;}
+  empty.style.display='none';
+
+  const today = new Date();
+  tbody.innerHTML = data.map(r=>{
+    const pct = r.depreciation_pct || 0;
+    const fillColor = pct<40?'#34C759':(pct<75?'#FF9500':'#FF3B30');
+    const badgeStyle = `background:${fillColor}18;color:${fillColor};`;
+
+    let warrantyCls = ''; let warrantyTxt = r.warranty_until || '—';
+    if(r.warranty_until){
+      const wDate = new Date(r.warranty_until);
+      warrantyCls = wDate > today ? 'color:#34C759;font-weight:700;' : 'color:#FF3B30;';
+      warrantyTxt = r.warranty_until;
+    }
+
+    return `<tr>
+      <td><span class="inv-num">${r.inv_num}</span></td>
+      <td>${r.category}</td>
+      <td style="font-weight:600;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${r.model}">${r.model}</td>
+      <td style="color:var(--text2);max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${r.employee||'—'}</td>
+      <td style="color:var(--text2);">${r.purchase_date||'—'}</td>
+      <td style="color:var(--text3);text-align:center;">${r.useful_life||'—'}</td>
+      <td style="text-align:right;font-weight:600;">${fmtUSD(r.purchase_price)}</td>
+      <td style="min-width:120px;">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div class="pct-bar"><div class="pct-fill" style="width:${pct}%;background:${fillColor};"></div></div>
+          <span class="badge" style="${badgeStyle}">${pct}%</span>
+        </div>
+      </td>
+      <td style="text-align:right;font-weight:700;color:${fillColor};">${fmtUSD(r.residual_value)}</td>
+      <td style="${warrantyCls}font-size:12px;">${warrantyTxt}</td>
+    </tr>`;
+  }).join('');
+}
+
+load();
+</script>
+</body>
+</html>

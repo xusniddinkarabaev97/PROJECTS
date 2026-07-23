@@ -1,6 +1,7 @@
 # OS
 Thumbs.db
 .DS_Store
+nul
 
 # IDE
 .vscode/
@@ -12,3 +13,28 @@ Thumbs.db
 # Temp
 tmp/
 temp/
+
+# Archives & binaries
+*.rar
+*.exe
+*.zip
+
+# Build artifacts
+build/
+dist/
+__pycache__/
+*.pyc
+
+# Database files
+*.db
+*.db-shm
+*.db-wal
+*.db-journal
+
+# Agent package binaries
+AgentPackage/
+agent_standalone/build/
+agent_standalone/dist/
+
+# Generated
+*.spec

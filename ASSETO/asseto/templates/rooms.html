@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Кабинеты — ASSETO</title>
+<link rel="stylesheet" href="/static/css/asseto-ios.css">
+<script src="/static/js/csrf.js?v=2"></script>
+<style>
+:root{--accent:#007AFF;--surface:#F2F2F7;--surface2:#FFFFFF;--border:rgba(0,0,0,.08);--text1:#000;--text2:#3C3C43;--text3:#8E8E93;--ios-red:#FF3B30;--ios-green:#34C759;}
+@media(prefers-color-scheme:dark){:root{--surface:#1C1C1E;--surface2:#2C2C2E;--border:rgba(255,255,255,.08);--text1:#FFF;--text2:rgba(255,255,255,.75);--text3:#636366;}}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display',sans-serif;background:var(--surface);color:var(--text1);min-height:100vh;}
+.top-bar{background:var(--surface2);border-bottom:.5px solid var(--border);padding:14px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;backdrop-filter:blur(20px);}
+.back-btn{display:inline-flex;align-items:center;gap:6px;color:var(--accent);font-size:15px;font-weight:500;text-decoration:none;background:none;border:none;cursor:pointer;}
+.page-title{font-size:17px;font-weight:700;}
+.btn-add{background:var(--accent);color:#fff;border:none;border-radius:12px;padding:8px 16px;font-size:14px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:6px;}
+.content{max-width:1100px;margin:0 auto;padding:24px 16px;}
+.stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:24px;}
+.stat-card{background:var(--surface2);border-radius:16px;padding:16px 18px;border:.5px solid var(--border);}
+.stat-label{font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;}
+.stat-val{font-size:26px;font-weight:800;margin-top:4px;}
+.rooms-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;margin-bottom:24px;}
+.room-card{background:var(--surface2);border-radius:20px;border:.5px solid var(--border);overflow:hidden;transition:transform .15s,box-shadow .15s;cursor:pointer;}
+.room-card:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.1);}
+.room-header{padding:18px 18px 14px;display:flex;align-items:flex-start;gap:12px;}
+.room-icon{width:44px;height:44px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;}
+.room-info{flex:1;min-width:0;}
+.room-name{font-size:16px;font-weight:700;}
+.room-sub{font-size:12px;color:var(--text3);margin-top:3px;}
+.room-body{padding:0 18px 16px;display:flex;justify-content:space-between;align-items:center;}
+.room-count{font-size:28px;font-weight:800;color:var(--accent);}
+.room-count-label{font-size:11px;color:var(--text3);margin-top:2px;}
+.room-actions{display:flex;gap:6px;}
+.btn-sm{background:var(--surface);border:.5px solid var(--border);border-radius:10px;padding:6px 10px;cursor:pointer;font-size:12px;color:var(--text2);display:inline-flex;align-items:center;gap:4px;}
+.btn-sm:hover{background:var(--border);}
+.btn-sm.danger{color:var(--ios-red);}
+.empty{text-align:center;padding:60px 20px;color:var(--text3);}
+.empty-icon{font-size:52px;margin-bottom:16px;}
+
+/* Modal */
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);backdrop-filter:blur(4px);z-index:200;align-items:center;justify-content:center;}
+.modal-bg.open{display:flex;}
+.modal-box{background:var(--surface2);border-radius:22px;padding:28px;width:min(480px,92vw);max-height:90vh;overflow-y:auto;}
+.modal-title{font-size:20px;font-weight:700;margin-bottom:20px;}
+.form-group{margin-bottom:14px;}
+.form-label{font-size:12px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;display:block;}
+.form-input{width:100%;background:var(--surface);border:.5px solid var(--border);border-radius:12px;padding:11px 14px;font-size:15px;color:var(--text1);outline:none;transition:border .15s;}
+.form-input:focus{border-color:var(--accent);}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.modal-actions{display:flex;gap:10px;margin-top:20px;}
+.btn-cancel{flex:1;background:var(--surface);border:.5px solid var(--border);border-radius:14px;padding:13px;font-size:15px;font-weight:600;cursor:pointer;color:var(--text2);}
+.btn-save{flex:2;background:var(--accent);border:none;border-radius:14px;padding:13px;font-size:15px;font-weight:600;cursor:pointer;color:#fff;}
+.btn-danger-full{flex:1;background:var(--ios-red);border:none;border-radius:14px;padding:13px;font-size:15px;font-weight:600;cursor:pointer;color:#fff;}
+
+/* Items drawer */
+.drawer-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:300;align-items:flex-end;justify-content:center;}
+.drawer-bg.open{display:flex;}
+.drawer{background:var(--surface2);border-radius:22px 22px 0 0;padding:24px;width:min(700px,100vw);max-height:85vh;overflow-y:auto;}
+.drawer-title{font-size:18px;font-weight:700;margin-bottom:16px;display:flex;align-items:center;gap:10px;}
+.items-table{width:100%;border-collapse:collapse;font-size:13px;}
+.items-table th{font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;padding:8px 10px;text-align:left;border-bottom:.5px solid var(--border);}
+.items-table td{padding:12px 10px;border-bottom:.5px solid var(--border);}
+.close-btn{background:var(--surface);border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;font-size:18px;color:var(--text3);margin-left:auto;display:flex;align-items:center;justify-content:center;}
+
+/* Color picker */
+.color-picker-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px;}
+.color-dot{width:28px;height:28px;border-radius:50%;cursor:pointer;transition:transform .1s;border:2px solid transparent;}
+.color-dot.sel{border-color:var(--text1);transform:scale(1.2);}
+</style>
+</head>
+<body>
+<div class="top-bar">
+  <a href="javascript:history.back()" class="back-btn">
+    <svg width="9" height="15" viewBox="0 0 9 15" fill="none"><path d="M8 1L1 7.5L8 14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+    Назад
+  </a>
+  <span class="page-title">Кабинеты</span>
+  {% if user.role in ['superadmin','aho'] %}
+  <button class="btn-add" onclick="openRoomModal()">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+    Добавить
+  </button>
+  {% else %}
+  <div></div>
+  {% endif %}
+</div>
+
+<div class="content">
+  <div class="stats-row" id="stats-row">
+    <div class="stat-card"><div class="stat-label">Кабинетов</div><div class="stat-val" id="stat-total">—</div></div>
+    <div class="stat-card"><div class="stat-label">Техники размещено</div><div class="stat-val" id="stat-items">—</div></div>
+    <div class="stat-card"><div class="stat-label">Без техники</div><div class="stat-val" id="stat-empty-rooms">—</div></div>
+    <div class="stat-card"><div class="stat-label">Самый загруженный</div><div class="stat-val" style="font-size:16px;" id="stat-busiest">—</div></div>
+  </div>
+
+  <div class="rooms-grid" id="rooms-grid">
+    <div class="empty"><div class="empty-icon">🏢</div><p>Загрузка...</p></div>
+  </div>
+</div>
+
+<!-- Add/Edit Modal -->
+<div class="modal-bg" id="m-room">
+  <div class="modal-box">
+    <div class="modal-title" id="modal-title">Новый кабинет</div>
+    <input type="hidden" id="edit-id" value="">
+    <div class="form-group">
+      <label class="form-label">Название *</label>
+      <input class="form-input" id="r-name" placeholder="Кабинет директора, Серверная, Склад…">
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Этаж</label>
+        <input class="form-input" id="r-floor" placeholder="1" value="1">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Крыло / Блок</label>
+        <input class="form-input" id="r-wing" placeholder="А, Б, В…">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Вместимость (мест)</label>
+        <input class="form-input" id="r-capacity" type="number" placeholder="0" min="0">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Ответственный</label>
+        <input class="form-input" id="r-responsible" placeholder="ФИО или должность">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Описание</label>
+      <input class="form-input" id="r-desc" placeholder="Необязательно">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Цвет карточки</label>
+      <div class="color-picker-row" id="color-picker">
+        <div class="color-dot sel" style="background:#007AFF;" data-c="#007AFF" onclick="pickColor(this)"></div>
+        <div class="color-dot" style="background:#34C759;" data-c="#34C759" onclick="pickColor(this)"></div>
+        <div class="color-dot" style="background:#FF9500;" data-c="#FF9500" onclick="pickColor(this)"></div>
+        <div class="color-dot" style="background:#FF2D55;" data-c="#FF2D55" onclick="pickColor(this)"></div>
+        <div class="color-dot" style="background:#AF52DE;" data-c="#AF52DE" onclick="pickColor(this)"></div>
+        <div class="color-dot" style="background:#5856D6;" data-c="#5856D6" onclick="pickColor(this)"></div>
+        <div class="color-dot" style="background:#FF6B35;" data-c="#FF6B35" onclick="pickColor(this)"></div>
+        <div class="color-dot" style="background:#636366;" data-c="#636366" onclick="pickColor(this)"></div>
+      </div>
+      <input type="hidden" id="r-color" value="#007AFF">
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal()">Отмена</button>
+      <button id="btn-del-room" class="btn-danger-full" style="display:none;" onclick="deleteRoom()">Удалить</button>
+      <button class="btn-save" onclick="saveRoom()">Сохранить</button>
+    </div>
+  </div>
+</div>
+
+<!-- Items Drawer -->
+<div class="drawer-bg" id="d-items">
+  <div class="drawer">
+    <div class="drawer-title">
+      <span id="d-room-name">Техника в кабинете</span>
+      <button class="close-btn" onclick="closeDrawer()">✕</button>
+    </div>
+    <div id="d-items-body"></div>
+  </div>
+</div>
+
+<script>
+const CAT_EMOJI = {'Ноутбук':'💻','Монитор':'🖥️','Телефон':'📱','Клавиатура':'⌨️','Мышь':'🖱️','Принтер':'🖨️','Наушники':'🎧','Удлинитель':'🔌','Кресло':'🪑','Стол':'🪵','Другое':'📦'};
+const COND_CLR = {'Хорошее':'#34C759','Потёрто':'#FF9500','Требует ремонта':'#FF3B30','Списано':'#8E8E93'};
+const ROOM_ICONS = ['🏢','💼','🖥️','🏭','📦','🔧','📊','🚪','🖨️','📡'];
+let allRooms = [];
+
+async function loadRooms() {
+  const res = await fetch('/api/rooms');
+  allRooms = await res.json();
+  renderRooms(allRooms);
+}
+
+function renderRooms(rooms) {
+  const grid = document.getElementById('rooms-grid');
+  const totalItems = rooms.reduce((s,r) => s + (r.item_count||0), 0);
+  const emptyRooms = rooms.filter(r => !r.item_count).length;
+  const busiest = rooms.reduce((a,b) => (b.item_count||0) > (a.item_count||0) ? b : a, {name:'—',item_count:0});
+
+  document.getElementById('stat-total').textContent = rooms.length;
+  document.getElementById('stat-items').textContent = totalItems;
+  document.getElementById('stat-empty-rooms').textContent = emptyRooms;
+  document.getElementById('stat-busiest').textContent = busiest.name !== '—' ? `${busiest.name} (${busiest.item_count})` : '—';
+
+  if (!rooms.length) {
+    grid.innerHTML = `<div class="empty"><div class="empty-icon">🏢</div><p style="font-size:14px;">Кабинеты не добавлены</p><p style="font-size:12px;margin-top:6px;color:var(--text3);">Нажмите «Добавить», чтобы создать первый</p></div>`;
+    return;
+  }
+
+  grid.innerHTML = rooms.map((r,i) => {
+    const icon = ROOM_ICONS[i % ROOM_ICONS.length];
+    const floorStr = r.floor ? `Этаж ${r.floor}` : '';
+    const wingStr = r.wing ? ` · Крыло ${r.wing}` : '';
+    const respStr = r.responsible ? ` · ${r.responsible}` : '';
+    const sub = [floorStr + wingStr, respStr].filter(Boolean).join('');
+    return `<div class="room-card" onclick="showRoomItems(${r.id}, '${r.name.replace(/'/g,"\\'")}')">
+      <div class="room-header">
+        <div class="room-icon" style="background:${r.color}22;">${icon}</div>
+        <div class="room-info">
+          <div class="room-name">${r.name}</div>
+          <div class="room-sub">${sub || 'Кабинет'}</div>
+          ${r.description ? `<div class="room-sub" style="margin-top:4px;font-style:italic;">${r.description}</div>` : ''}
+        </div>
+      </div>
+      <div class="room-body">
+        <div>
+          <div class="room-count" style="color:${r.color};">${r.item_count || 0}</div>
+          <div class="room-count-label">единиц техники</div>
+        </div>
+        <div class="room-actions" onclick="event.stopPropagation()">
+          <button class="btn-sm" onclick="openRoomModal(${JSON.stringify(r).replace(/"/g,'&quot;')})">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            Изменить
+          </button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function openRoomModal(room) {
+  document.getElementById('modal-title').textContent = room ? 'Редактировать кабинет' : 'Новый кабинет';
+  document.getElementById('edit-id').value = room ? room.id : '';
+  document.getElementById('r-name').value = room ? room.name : '';
+  document.getElementById('r-floor').value = room ? (room.floor || '1') : '1';
+  document.getElementById('r-wing').value = room ? (room.wing || '') : '';
+  document.getElementById('r-capacity').value = room ? (room.capacity || 0) : 0;
+  document.getElementById('r-responsible').value = room ? (room.responsible || '') : '';
+  document.getElementById('r-desc').value = room ? (room.description || '') : '';
+  const color = room ? (room.color || '#007AFF') : '#007AFF';
+  document.getElementById('r-color').value = color;
+  document.querySelectorAll('.color-dot').forEach(d => {
+    d.classList.toggle('sel', d.dataset.c === color);
+  });
+  document.getElementById('btn-del-room').style.display = room ? 'block' : 'none';
+  document.getElementById('m-room').classList.add('open');
+  setTimeout(() => document.getElementById('r-name').focus(), 50);
+}
+
+function closeModal() { document.getElementById('m-room').classList.remove('open'); }
+
+function pickColor(el) {
+  document.querySelectorAll('.color-dot').forEach(d => d.classList.remove('sel'));
+  el.classList.add('sel');
+  document.getElementById('r-color').value = el.dataset.c;
+}
+
+async function saveRoom() {
+  const id = document.getElementById('edit-id').value;
+  const body = {
+    name: document.getElementById('r-name').value.trim(),
+    floor: document.getElementById('r-floor').value.trim(),
+    wing: document.getElementById('r-wing').value.trim(),
+    capacity: parseInt(document.getElementById('r-capacity').value) || 0,
+    responsible: document.getElementById('r-responsible').value.trim(),
+    description: document.getElementById('r-desc').value.trim(),
+    color: document.getElementById('r-color').value,
+  };
+  if (!body.name) { alert('Введите название кабинета'); return; }
+  const url = id ? `/api/rooms/${id}` : '/api/rooms';
+  const method = id ? 'PUT' : 'POST';
+  const res = await fetch(url, {method, headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)});
+  const data = await res.json();
+  if (!res.ok) { alert(data.error || 'Ошибка'); return; }
+  closeModal();
+  loadRooms();
+}
+
+async function deleteRoom() {
+  const id = document.getElementById('edit-id').value;
+  if (!id || !confirm('Удалить кабинет?')) return;
+  const res = await fetch(`/api/rooms/${id}`, {method:'DELETE'});
+  const data = await res.json();
+  if (!res.ok) { alert(data.error || 'Ошибка'); return; }
+  closeModal();
+  loadRooms();
+}
+
+async function showRoomItems(rid, rname) {
+  document.getElementById('d-room-name').textContent = `${rname}`;
+  document.getElementById('d-items-body').innerHTML = '<p style="color:var(--text3);padding:20px;">Загрузка...</p>';
+  document.getElementById('d-items').classList.add('open');
+  const res = await fetch(`/api/rooms/${rid}/items`);
+  const items = await res.json();
+  if (!items.length) {
+    document.getElementById('d-items-body').innerHTML = '<div style="text-align:center;padding:40px;color:var(--text3);"><div style="font-size:32px;margin-bottom:10px;">📭</div><p>В этом кабинете нет техники</p></div>';
+    return;
+  }
+  document.getElementById('d-items-body').innerHTML = `
+    <table class="items-table">
+      <thead><tr>
+        <th>Инв. №</th><th>Категория</th><th>Модель</th><th>Состояние</th><th>Сотрудник</th><th style="text-align:right;">Стоимость</th>
+      </tr></thead>
+      <tbody>${items.map(i => `
+        <tr>
+          <td><span style="font-family:monospace;font-size:12px;font-weight:700;color:var(--accent);">${i.inv_num}</span></td>
+          <td>${CAT_EMOJI[i.category]||'📦'} ${i.category}</td>
+          <td style="font-weight:600;">${i.model}</td>
+          <td><span style="font-size:11px;font-weight:700;color:${COND_CLR[i.condition]||'#34C759'};">${i.condition}</span></td>
+          <td style="color:var(--text2);">${i.employee || '—'}</td>
+          <td style="text-align:right;font-weight:600;">${i.purchase_price ? '$'+parseFloat(i.purchase_price).toLocaleString('en',{maximumFractionDigits:0}) : '—'}</td>
+        </tr>`).join('')}
+      </tbody>
+    </table>`;
+}
+
+function closeDrawer() { document.getElementById('d-items').classList.remove('open'); }
+
+document.getElementById('d-items').addEventListener('click', e => { if(e.target === e.currentTarget) closeDrawer(); });
+document.getElementById('m-room').addEventListener('click', e => { if(e.target === e.currentTarget) closeModal(); });
+
+loadRooms();
+</script>
+</body>
+</html>
