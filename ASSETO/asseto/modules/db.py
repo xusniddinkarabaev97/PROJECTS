@@ -6,19 +6,23 @@ def get_db():
     return _db.connect(DATABASE_URL)
 
 def add_col(db, table, col, t):
-    """Add a column — if already exists, rollback and continue."""
+    """Add a column using savepoint — protects main transaction."""
     try:
+        db.execute("SAVEPOINT add_col_sp")
         db.execute(f"ALTER TABLE {table} ADD COLUMN {col} {t}")
+        db.execute("RELEASE SAVEPOINT add_col_sp")
         db.commit()
-    except (OperationalError, ProgrammingError) as e:
-        db.rollback()
+    except Exception as e:
+        try:
+            db.execute("ROLLBACK TO SAVEPOINT add_col_sp")
+        except Exception:
+            pass
         msg = str(e).lower()
         if "duplicate column" in msg or "already exists" in msg:
             return
+        if "does not exist" in msg:
+            return
         print(f"  [!] Ошибка миграции ({table}.{col}): {e}")
-    except Exception as e:
-        db.rollback()
-        print(f"  [!] Ошибка при добавлении колонки {col}: {e}")
 
 def migrate_db():
     """Safe migrations for existing databases."""
