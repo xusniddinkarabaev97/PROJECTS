@@ -6,16 +6,18 @@ def get_db():
     return _db.connect(DATABASE_URL)
 
 def add_col(db, table, col, t):
-    """Add a column — SQLite raises if column already exists, which is safe to ignore."""
+    """Add a column — if already exists, rollback and continue."""
     try:
         db.execute(f"ALTER TABLE {table} ADD COLUMN {col} {t}")
         db.commit()
     except (OperationalError, ProgrammingError) as e:
+        db.rollback()
         msg = str(e).lower()
         if "duplicate column" in msg or "already exists" in msg:
             return
         print(f"  [!] Ошибка миграции ({table}.{col}): {e}")
     except Exception as e:
+        db.rollback()
         print(f"  [!] Ошибка при добавлении колонки {col}: {e}")
 
 def migrate_db():
