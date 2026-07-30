@@ -160,6 +160,10 @@
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
         База знаний
       </button>
+      <button class="btn btn-secondary btn-sm mob-hidden" onclick="window.location='/inventory'" title="Инвентаризация">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 14h3v3m0 4h4M21 14h-4v4"/></svg>
+        Инвентаризация
+      </button>
       {% if role_info.get('can_edit') %}
       <button class="btn btn-primary btn-sm mob-hidden" onclick="document.getElementById('ocr-file').click()" title="AI Скан накладной" style="background:var(--ios-purple); border-color:var(--ios-purple);">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h18v18H3z"/><circle cx="12" cy="12" r="3"/></svg>
@@ -381,6 +385,18 @@
           </div>
         </div>
 
+        <!-- Bundle / Kit -->
+        <div style="margin-top:20px;">
+          <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);margin-bottom:10px;">Комплект</div>
+          <div id="bundle-parent-info" style="display:none;margin-bottom:8px;"></div>
+          <div id="bundle-children-list" style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px;"></div>
+          <div id="bundle-attach-row" style="display:flex;gap:8px;">
+            <input id="bundle-attach-input" list="bundle-attach-datalist" autocomplete="off" placeholder="Инв. № или модель актива для прикрепления…" style="flex:1;padding:8px 10px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px;">
+            <datalist id="bundle-attach-datalist"></datalist>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="attachToBundle()">+ Прикрепить</button>
+          </div>
+        </div>
+
         <!-- History -->
         <div style="margin-top:20px;">
           <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);margin-bottom:10px;">История изменений</div>
@@ -536,6 +552,8 @@
     const sub = document.getElementById('edit-sub');
     if (sub) sub.textContent = item.inv_num + (item.model ? ' · ' + item.model : '');
 
+    renderBundle(item);
+
     // QR button
     const qrBtn = document.getElementById('edit-qr-btn');
     if (qrBtn) {
@@ -592,6 +610,80 @@
       showToast('Сохранено', 'ok');
       closeM('m-edit');
       refresh();
+    } else {
+      showToast(d.error || 'Ошибка', 'err');
+    }
+  }
+
+  function renderBundle(item) {
+    const parentBox = document.getElementById('bundle-parent-info');
+    const childrenBox = document.getElementById('bundle-children-list');
+    const attachRow = document.getElementById('bundle-attach-row');
+    const dl = document.getElementById('bundle-attach-datalist');
+    const rowStyle = 'display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;background:var(--surface2);border-radius:10px;font-size:13px;';
+
+    if (item.bundle_parent_id) {
+      const parent = _items.find(x => x.id === item.bundle_parent_id);
+      parentBox.style.cssText = rowStyle;
+      parentBox.innerHTML = `
+        <span>Входит в комплект: <b>${parent ? (parent.inv_num + (parent.model ? ' · ' + parent.model : '')) : '—'}</b></span>
+        <button type="button" class="btn btn-secondary btn-sm" onclick="detachFromBundle(${item.id})">Открепить</button>
+      `;
+      childrenBox.innerHTML = '';
+      attachRow.style.display = 'none';
+      return;
+    }
+
+    parentBox.style.display = 'none';
+    parentBox.innerHTML = '';
+    attachRow.style.display = 'flex';
+
+    const children = _items.filter(x => x.bundle_parent_id === item.id);
+    childrenBox.innerHTML = children.map(c => `
+      <div style="${rowStyle}">
+        <span>${c.inv_num}${c.model ? ' · ' + c.model : ''}</span>
+        <button type="button" class="btn btn-secondary btn-sm" onclick="detachFromBundle(${c.id})">Открепить</button>
+      </div>
+    `).join('');
+
+    // Кандидаты для прикрепления: не сам актив, ещё ни к чему не прикреплён,
+    // и сам не является "родителем" в другом комплекте (без вложенности)
+    const parentIds = new Set(_items.filter(x => x.bundle_parent_id).map(x => x.bundle_parent_id));
+    const candidates = _items.filter(x => x.id !== item.id && !x.bundle_parent_id && !parentIds.has(x.id));
+    dl.innerHTML = candidates.map(c => `<option value="${c.inv_num}${c.model ? ' · ' + c.model : ''}">`).join('');
+    document.getElementById('bundle-attach-input').value = '';
+  }
+
+  async function attachToBundle() {
+    const id = parseInt(document.getElementById('e-id').value);
+    const raw = document.getElementById('bundle-attach-input').value.trim();
+    if (!raw) return;
+    const inv = raw.split(' · ')[0];
+    const child = _items.find(x => x.inv_num === inv);
+    if (!child) { showToast('Актив не найден в списке — выберите вариант из подсказки', 'err'); return; }
+    const r = await fetch(`/api/items/${id}/attach`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ child_id: child.id })
+    });
+    const d = await r.json();
+    if (d.ok) {
+      showToast('Прикреплено ✓', 'ok');
+      await refresh();
+      openEdit(id);
+    } else {
+      showToast(d.error || 'Ошибка', 'err');
+    }
+  }
+
+  async function detachFromBundle(childId) {
+    const r = await fetch(`/api/items/${childId}/detach`, { method: 'POST' });
+    const d = await r.json();
+    if (d.ok) {
+      showToast('Откреплено', 'ok');
+      const id = parseInt(document.getElementById('e-id').value);
+      await refresh();
+      openEdit(id);
     } else {
       showToast(d.error || 'Ошибка', 'err');
     }

@@ -123,13 +123,29 @@ def roles_required(*roles):
         @wraps(f)
         @login_required
         def dec(*a, **kw):
-            if request.current_user["role"] not in roles:
+            # Супер-Админ имеет доступ ко всему, независимо от списка ролей роута
+            if request.current_user["role"] != "superadmin" and request.current_user["role"] not in roles:
                 if request.is_json:
                     return jsonify({"error": "Нет доступа"}), 403
                 abort(403)
             return f(*a, **kw)
         return dec
     return decorator
+
+
+def assert_role_assignable(actor_role, target_role):
+    """Защита от эскалации привилегий: нельзя назначить/сохранить роль выше или равную своей
+    (кроме superadmin). Возвращает сообщение об ошибке или None, если можно."""
+    from modules.config import ROLE_RANK
+    if actor_role == "superadmin":
+        return None
+    my_rank = ROLE_RANK.get(actor_role, 0)
+    target_rank = ROLE_RANK.get(target_role, 0)
+    if target_rank > my_rank:
+        return "Нельзя назначить роль выше своей"
+    if target_role == actor_role:
+        return "Нельзя назначить роль равную своей"
+    return None
 
 
 def get_lan_ip():
@@ -462,8 +478,14 @@ def index():
             "SELECT id, name, department FROM users WHERE active=1 AND role='employee' ORDER BY name"
         ).fetchall()]
 
-    if role in ('superadmin', 'deputy', 'director', 'department_head'):
+    if role == 'superadmin':
+        return redirect("/security")
+    if role == 'director':
+        template = "dash_director.html"
+    elif role == 'deputy':
         template = "dash_executive.html"
+    elif role == 'department_head':
+        template = "dash_department.html"
     elif role == 'hr':
         template = "dash_hr.html"
     elif role == 'accountant':
@@ -530,7 +552,7 @@ def asset_page(inv_num):
 @login_required
 def employee_page(name):
     with get_db() as db:
-        items = db.execute("SELECT * FROM items WHERE employee=? ORDER BY category", (name,)).fetchall()
+        items = db.execute("SELECT * FROM items WHERE employee=? ORDER BY CASE WHEN category='Монитор' THEN 0 ELSE 1 END,category", (name,)).fetchall()
     return render_template("employee.html", employee=name, items=[dict(i) for i in items], user=request.current_user)
 
 
@@ -615,6 +637,15 @@ def update_profile():
 # ══════════════════════════════════════════════════════════════════════════════════
 #  PWA / OFFLINE
 # ══════════════════════════════════════════════════════════════════════════════════
+
+@bp.route("/docs")
+@login_required
+def docs_page():
+    """База знаний."""
+    u = request.current_user
+    return render_template("docs.html", user=u, current_user=u,
+        role_info=ROLES.get(u["role"], {}), roles=ROLES)
+
 
 @bp.route("/offline")
 def offline_page():

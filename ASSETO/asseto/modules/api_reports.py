@@ -86,29 +86,52 @@ def dashboard():
     u = request.current_user
     role = u["role"]
     res = {"role": role}
-    
+
+    # department_head видит только свой отдел — scope через users.department
+    dept_scope = role == "department_head"
+    dept = u.get("department") or "" if dept_scope else None
+    dept_emp_sql = "employee IN (SELECT name FROM users WHERE department=?)"
+
     with get_db() as db:
         # ── Stats ──
-        res["total_items"] = db.execute("SELECT COUNT(*) FROM items").fetchone()[0]
+        if dept_scope:
+            res["total_items"] = db.execute(f"SELECT COUNT(*) FROM items WHERE {dept_emp_sql}", (dept,)).fetchone()[0]
+            res["total_value"] = db.execute(f"SELECT COALESCE(SUM(purchase_price),0) FROM items WHERE {dept_emp_sql}", (dept,)).fetchone()[0] or 0
+        else:
+            res["total_items"] = db.execute("SELECT COUNT(*) FROM items").fetchone()[0]
+            res["total_value"] = db.execute("SELECT COALESCE(SUM(purchase_price),0) FROM items").fetchone()[0] or 0
         res["free_count"] = db.execute("SELECT COUNT(*) FROM items WHERE status='Свободно'").fetchone()[0]
-        res["total_value"] = db.execute("SELECT COALESCE(SUM(purchase_price),0) FROM items").fetchone()[0] or 0
-        
+
         # ── Analytics (charts + toxic/eol) ──
-        res["by_cat"] = [dict(r) for r in db.execute(
-            "SELECT category, COUNT(*) as cnt FROM items GROUP BY category ORDER BY cnt DESC").fetchall()]
-        res["by_condition"] = [dict(r) for r in db.execute(
-            "SELECT condition, COUNT(*) as cnt FROM items GROUP BY condition").fetchall()]
-        res["toxic_assets"] = [dict(r) for r in db.execute("""
-            SELECT i.id,i.inv_num,i.model,i.category, COUNT(h.id) as repair_count
-            FROM items i LEFT JOIN history h ON h.item_id=i.id AND h.action='Ремонт'
-            WHERE i.status!='Списано' GROUP BY i.id HAVING COUNT(h.id)>=3 LIMIT 10""").fetchall()]
-        res["eol_assets"] = [dict(r) for r in db.execute("""
-            SELECT id,inv_num,model,category,purchase_date FROM items
-            WHERE purchase_date IS NOT NULL AND purchase_date < date('now','-3 years')
-            AND status!='Списано' LIMIT 10""").fetchall()]
-        
-        # ── Pending docs ──
-        if role in ('superadmin','director','deputy','department_head'):
+        if dept_scope:
+            res["by_cat"] = [dict(r) for r in db.execute(
+                f"SELECT category, COUNT(*) as cnt FROM items WHERE {dept_emp_sql} GROUP BY category ORDER BY cnt DESC", (dept,)).fetchall()]
+            res["by_condition"] = [dict(r) for r in db.execute(
+                f"SELECT condition, COUNT(*) as cnt FROM items WHERE {dept_emp_sql} GROUP BY condition", (dept,)).fetchall()]
+            res["toxic_assets"] = [dict(r) for r in db.execute(f"""
+                SELECT i.id,i.inv_num,i.model,i.category, COUNT(h.id) as repair_count
+                FROM items i LEFT JOIN history h ON h.item_id=i.id AND h.action='Ремонт'
+                WHERE i.status!='Списано' AND i.{dept_emp_sql} GROUP BY i.id HAVING repair_count>=3 LIMIT 10""", (dept,)).fetchall()]
+            res["eol_assets"] = [dict(r) for r in db.execute(f"""
+                SELECT id,inv_num,model,category,purchase_date FROM items
+                WHERE purchase_date IS NOT NULL AND purchase_date < date('now','-3 years')
+                AND status!='Списано' AND {dept_emp_sql} LIMIT 10""", (dept,)).fetchall()]
+        else:
+            res["by_cat"] = [dict(r) for r in db.execute(
+                "SELECT category, COUNT(*) as cnt FROM items GROUP BY category ORDER BY cnt DESC").fetchall()]
+            res["by_condition"] = [dict(r) for r in db.execute(
+                "SELECT condition, COUNT(*) as cnt FROM items GROUP BY condition").fetchall()]
+            res["toxic_assets"] = [dict(r) for r in db.execute("""
+                SELECT i.id,i.inv_num,i.model,i.category, COUNT(h.id) as repair_count
+                FROM items i LEFT JOIN history h ON h.item_id=i.id AND h.action='Ремонт'
+                WHERE i.status!='Списано' GROUP BY i.id HAVING repair_count>=3 LIMIT 10""").fetchall()]
+            res["eol_assets"] = [dict(r) for r in db.execute("""
+                SELECT id,inv_num,model,category,purchase_date FROM items
+                WHERE purchase_date IS NOT NULL AND purchase_date < date('now','-3 years')
+                AND status!='Списано' LIMIT 10""").fetchall()]
+
+        # ── Pending docs (department_head не согласует ничего — нечего показывать) ──
+        if role in ('superadmin','director','deputy','accountant'):
             res["pending_docs"] = [dict(r) for r in db.execute("""
                 SELECT d.id,d.doc_number,d.doc_type,d.title,d.priority,d.status,d.created_at
                 FROM documents d WHERE d.pending_role=? AND d.status='pending'
@@ -117,24 +140,31 @@ def dashboard():
         else:
             res["pending_docs"] = []
             res["pending_docs_count"] = 0
-        
+
         # ── Staff with embedded items ──
-        users = db.execute("""
-            SELECT u.id,u.name,u.email,u.role,u.department,u.active,u.avatar_color,
-                   COUNT(i.id) as item_count, COALESCE(SUM(i.purchase_price),0) as total_value
-            FROM users u LEFT JOIN items i ON (i.employee_id=u.id OR i.employee=u.name) AND i.status='Занято'
-            WHERE u.active=1 GROUP BY u.id ORDER BY u.name""").fetchall()
+        if dept_scope:
+            users = db.execute("""
+                SELECT u.id,u.name,u.email,u.role,u.department,u.active,u.avatar_color,
+                       COUNT(i.id) as item_count, COALESCE(SUM(i.purchase_price),0) as total_value
+                FROM users u LEFT JOIN items i ON (i.employee_id=u.id OR i.employee=u.name) AND i.status='Занято'
+                WHERE u.active=1 AND u.department=? GROUP BY u.id ORDER BY u.name""", (dept,)).fetchall()
+        else:
+            users = db.execute("""
+                SELECT u.id,u.name,u.email,u.role,u.department,u.active,u.avatar_color,
+                       COUNT(i.id) as item_count, COALESCE(SUM(i.purchase_price),0) as total_value
+                FROM users u LEFT JOIN items i ON (i.employee_id=u.id OR i.employee=u.name) AND i.status='Занято'
+                WHERE u.active=1 GROUP BY u.id ORDER BY u.name""").fetchall()
         staff = []
         for us in users:
             ud = dict(us)
             items = db.execute("""
                 SELECT id,inv_num,category,model,condition,place,room,purchase_price,purchase_date,serial_num
                 FROM items WHERE (employee_id=? OR employee=?) AND status='Занято'
-                ORDER BY category,model""", (us["id"],us["name"])).fetchall()
+                ORDER BY CASE WHEN category='Монитор' THEN 0 ELSE 1 END,category,model""", (us["id"],us["name"])).fetchall()
             ud["items"] = [dict(i) for i in items]
             staff.append(ud)
         res["staff"] = staff
-        
+
     return jsonify(res)
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -177,7 +207,7 @@ def stats():
 # ══════════════════════════════════════════════════════════════════════════════
 
 @bp.route("/api/export")
-@roles_required("superadmin","aho","auditor")
+@roles_required("superadmin","aho","auditor","accountant")
 def export_excel():
     q = request.args.get('q','').strip()
     cat = request.args.get('category','').strip()
@@ -185,7 +215,7 @@ def export_excel():
     cond = request.args.get('condition','').strip()
     
     with get_db() as db:
-        rows = db.execute("SELECT * FROM items ORDER BY place,category").fetchall()
+        rows = db.execute("SELECT * FROM items ORDER BY place,CASE WHEN category='Монитор' THEN 0 ELSE 1 END,category").fetchall()
     
     # Apply filters
     if q:
@@ -266,7 +296,7 @@ def unified_search():
     pat = f"%{q}%"
     with get_db() as db:
         # Items
-        if u["role"] in ("employee", "viewer"):
+        if not ROLES.get(u["role"], {}).get("can_view_all"):
             items = db.execute(
                 """SELECT id,inv_num,category,model,room,employee,status FROM items
                    WHERE (inv_num LIKE ? OR model LIKE ? OR serial_num LIKE ? OR employee LIKE ?)
@@ -290,7 +320,7 @@ def unified_search():
             (pat,pat,pat,u["id"], "1=1") if not is_admin else (pat,pat,pat)
         ).fetchall()
         # Employees
-        if u["role"] not in ("employee", "viewer"):
+        if ROLES.get(u["role"], {}).get("can_view_all"):
             emps = db.execute(
                 """SELECT id,name,email,role,department FROM users
                    WHERE (name LIKE ? OR email LIKE ?) AND active=1 LIMIT 5""",
@@ -310,7 +340,7 @@ def unified_search():
 # ══════════════════════════════════════════════════════════════════════════════
 
 @bp.route("/api/analytics")
-@roles_required("superadmin", "aho", "auditor")
+@roles_required("aho", "auditor", "director", "deputy", "accountant")
 def analytics():
     """Расширенная аналитика для дашборда."""
     with get_db() as db:
@@ -365,7 +395,7 @@ def analytics():
             WHERE m.status = 'resolved'
             GROUP BY i.id
             HAVING COUNT(m.id) >= 3
-            ORDER BY COUNT(m.id) DESC
+            ORDER BY repair_count DESC
             LIMIT 5
         """).fetchall()
 
@@ -407,7 +437,7 @@ def analytics():
 
 
 @bp.route("/api/analytics/predictive")
-@roles_required("superadmin", "aho", "auditor")
+@roles_required("aho", "auditor")
 def predictive_analytics():
     with get_db() as db:
         items = db.execute("SELECT id, inv_num, category, model, purchase_date, condition FROM items WHERE status != 'Списано'").fetchall()
@@ -438,7 +468,7 @@ def predictive_analytics():
 
 
 @bp.route("/api/analytics/capex")
-@roles_required("superadmin", "accountant", "director")
+@roles_required("accountant", "director")
 def capex_budgeting():
     with get_db() as db:
         items = db.execute("SELECT category, purchase_price, purchase_date FROM items WHERE status != 'Списано'").fetchall()
@@ -471,7 +501,7 @@ def capex_budgeting():
 
 
 @bp.route("/api/analytics/ml_insights")
-@roles_required("superadmin", "aho")
+@roles_required("aho", "auditor", "director", "deputy", "accountant")
 def ml_insights():
     try:
         from sklearn.ensemble import RandomForestClassifier
@@ -523,7 +553,7 @@ def ml_insights():
 
 
 @bp.route("/api/analytics/mol")
-@roles_required("superadmin", "aho", "director", "deputy", "accountant", "auditor")
+@roles_required("aho", "director", "deputy", "accountant", "auditor")
 def mol_report():
     """Отчёт МОЛ: кто за какое оборудование отвечает, с балансовой стоимостью."""
     with get_db() as db:
@@ -571,7 +601,7 @@ def mol_report():
 # ══════════════════════════════════════════════════════════════════════════════
 
 @bp.route("/api/financials")
-@roles_required("superadmin","aho","director","deputy","accountant","auditor")
+@roles_required("aho","director","deputy","accountant","auditor")
 def financials():
     with get_db() as db:
         total = db.execute("SELECT COALESCE(SUM(purchase_price),0) FROM items WHERE purchase_price IS NOT NULL").fetchone()[0]
@@ -584,19 +614,19 @@ def financials():
 # ══════════════════════════════════════════════════════════════════════════════
 
 @bp.route("/reports/depreciation")
-@roles_required("superadmin","aho","auditor","accountant","director","deputy")
+@roles_required("aho","auditor","accountant","director","deputy")
 def depreciation_report_page():
     return render_template("depreciation.html", user=request.current_user, host=bhost())
 
 
 @bp.route("/api/reports/depreciation")
-@roles_required("superadmin","aho","auditor","accountant","director","deputy")
+@roles_required("aho","auditor","accountant","director","deputy")
 def depreciation_report_api():
     with get_db() as db:
         items = db.execute("""
             SELECT id, inv_num, category, model, condition, status, employee, room, place,
                    purchase_price, purchase_date, warranty_until, serial_num
-            FROM items WHERE status != 'Списано' ORDER BY category, model
+            FROM items WHERE status != 'Списано' ORDER BY CASE WHEN category='Монитор' THEN 0 ELSE 1 END, category, model
         """).fetchall()
     results = [_calc_depreciation(dict(i)) for i in items]
     total_purchase = sum(r["purchase_price"] or 0 for r in results)
@@ -616,14 +646,14 @@ def depreciation_report_api():
 
 
 @bp.route("/api/reports/depreciation/export")
-@roles_required("superadmin","aho","auditor","accountant","director")
+@roles_required("aho","auditor","accountant","director")
 def depreciation_export():
     from datetime import date as _d
     with get_db() as db:
         items = db.execute("""
             SELECT id, inv_num, category, model, condition, status, employee, room, place,
                    purchase_price, purchase_date, warranty_until, serial_num
-            FROM items WHERE status != 'Списано' ORDER BY category, model
+            FROM items WHERE status != 'Списано' ORDER BY CASE WHEN category='Монитор' THEN 0 ELSE 1 END, category, model
         """).fetchall()
     rows = [_calc_depreciation(dict(i)) for i in items]
 
@@ -695,7 +725,7 @@ def depreciation_export():
 # ══════════════════════════════════════════════════════════════════════════════
 
 @bp.route("/api/reports/summary")
-@roles_required("superadmin","aho","auditor")
+@roles_required("aho","auditor")
 def report_summary():
     with get_db() as db:
         by_room = db.execute("""SELECT room,COUNT(*) as total,
@@ -721,10 +751,10 @@ def report_summary():
 
 
 @bp.route("/api/reports/export-full")
-@roles_required("superadmin","aho","auditor")
+@roles_required("aho","auditor","director","deputy","accountant")
 def export_full_report():
     with get_db() as db:
-        items      = db.execute("SELECT * FROM items ORDER BY room,place,category").fetchall()
+        items      = db.execute("SELECT * FROM items ORDER BY room,place,CASE WHEN category='Монитор' THEN 0 ELSE 1 END,category").fetchall()
         hist       = db.execute("""SELECT h.ts,h.user_name,h.action,h.field,h.old_val,h.new_val,i.inv_num,i.category
             FROM history h LEFT JOIN items i ON h.item_id=i.id ORDER BY h.ts DESC LIMIT 2000""").fetchall()
         dismissals = db.execute("SELECT * FROM dismissals ORDER BY created_at DESC").fetchall()
@@ -844,7 +874,7 @@ def maintenance_sla():
 # ══════════════════════════════════════════════════════════════════════════════
 
 @bp.route("/analytics")
-@roles_required("superadmin","aho","director","deputy","auditor","accountant")
+@roles_required("aho","director","deputy","auditor","accountant")
 def analytics_page():
     u = request.current_user
     return render_template("analytics.html", user=u, current_user=u,

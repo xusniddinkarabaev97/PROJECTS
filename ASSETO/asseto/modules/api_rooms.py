@@ -71,7 +71,7 @@ def room_items(rid):
         if not room: return jsonify({"error": "Не найдено"}), 404
         items = db.execute("""SELECT id, inv_num, category, model, condition, status, employee,
                                      purchase_price, serial_num
-                              FROM items WHERE room=? ORDER BY category, model""",
+                              FROM items WHERE room=? ORDER BY CASE WHEN category='Монитор' THEN 0 ELSE 1 END, category, model""",
                            (room["name"],)).fetchall()
     return jsonify([dict(i) for i in items])
 

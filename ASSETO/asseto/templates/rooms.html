@@ -304,7 +304,7 @@ async function showRoomItems(rid, rname) {
           <td style="font-weight:600;">${i.model}</td>
           <td><span style="font-size:11px;font-weight:700;color:${COND_CLR[i.condition]||'#34C759'};">${i.condition}</span></td>
           <td style="color:var(--text2);">${i.employee || '—'}</td>
-          <td style="text-align:right;font-weight:600;">${i.purchase_price ? '$'+parseFloat(i.purchase_price).toLocaleString('en',{maximumFractionDigits:0}) : '—'}</td>
+          <td style="text-align:right;font-weight:600;">${i.purchase_price ? Math.round(i.purchase_price*13000).toLocaleString('ru')+' сум' : '—'}</td>
         </tr>`).join('')}
       </tbody>
     </table>`;

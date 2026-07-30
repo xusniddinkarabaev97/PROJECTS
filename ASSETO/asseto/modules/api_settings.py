@@ -261,8 +261,17 @@ def security_page():
             ).fetchall()
             logs = [dict(r) for r in logs]
         except Exception: logs = []
+        try:
+            item_logs = db.execute(
+                "SELECT h.ts, h.action, h.user_name, i.inv_num, i.category, i.model, "
+                "i.status, i.condition "
+                "FROM history h LEFT JOIN items i ON h.item_id=i.id "
+                "ORDER BY h.ts DESC LIMIT 300"
+            ).fetchall()
+            item_logs = [dict(r) for r in item_logs]
+        except Exception: item_logs = []
     return render_template("security.html", user=u, current_user=u,
-        role_info=ROLES.get(u["role"],{}), roles=ROLES, logs=logs)
+        role_info=ROLES.get(u["role"],{}), roles=ROLES, logs=logs, item_logs=item_logs)
 
 
 # ══════════════════════════════════════════════════════════════════════════════

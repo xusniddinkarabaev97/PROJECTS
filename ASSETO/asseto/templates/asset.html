@@ -133,7 +133,7 @@ html.is-leaving .transition-fade { opacity: 0; transform: translateY(-15px); }
     <div class="rows">
       <div class="row">
         <span class="row-label">Текущая стоимость</span>
-        <span class="row-val" style="font-weight:800; color:var(--green); font-size:16px;">{{ financials.residual_value }}</span>
+        <span class="row-val" style="font-weight:800; color:var(--green); font-size:16px;">{{ (financials.residual_value * 13000) | int | string + ' сум' }}</span>
       </div>
       <div class="row">
         <span class="row-label">Износ (Depreciation)</span>

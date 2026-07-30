@@ -33,7 +33,7 @@ from modules.api_office   import bp as office_bp
 from modules.api_reports  import bp as reports_bp
 from modules.api_settings import bp as settings_bp
 from modules.api_orgchart  import bp as orgchart_bp
-from modules.api_tasks    import bp as tasks_bp
+from modules.api_finance  import bp as finance_bp
 
 app.register_blueprint(auth_bp)
 app.register_blueprint(items_bp)
@@ -46,7 +46,7 @@ app.register_blueprint(office_bp)
 app.register_blueprint(reports_bp)
 app.register_blueprint(settings_bp)
 app.register_blueprint(orgchart_bp)
-app.register_blueprint(tasks_bp)
+app.register_blueprint(finance_bp)
 
 # ── Initialize database tables ───────────────────────────────────────────
 from modules.db import init_db, migrate_db

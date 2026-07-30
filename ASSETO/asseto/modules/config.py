@@ -34,12 +34,10 @@ IntegrityError   = _db.IntegrityError
 
 app = Flask(__name__, template_folder=os.path.join(BASE_DIR, 'templates'),
          static_folder=os.path.join(BASE_DIR, 'static'))
-app.config["TEMPLATES_AUTO_RELOAD"] = True
-
-# ProxyFix: respect X-Forwarded-Prefix header for sub-path proxying
+app.config['TEMPLATES_AUTO_RELOAD'] = True
+# ProxyFix: respect X-Forwarded-Prefix for sub-path proxying
 from werkzeug.middleware.proxy_fix import ProxyFix
 app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
-
 
 # ── Security Config ─────────────────────────────────────────────────────────────
 _secret = os.environ.get('SECRET_KEY', '')
@@ -96,8 +94,12 @@ ROLES = {
     "employee":   {"label":"Сотрудник",     "color":"8E8E93","can_manage_users":False,"can_delete":False,"can_edit":False,"can_view_all":False,"can_issue":False,"can_export":False,"can_approve":False},
     "auditor":    {"label":"Аудитор",       "color":"5AC8FA","can_manage_users":False,"can_delete":False,"can_edit":False,"can_view_all":True, "can_issue":False,"can_export":True, "can_approve":False},
     "deputy":          {"label":"Зам. Директора",      "color":"FF9500","can_manage_users":False,"can_delete":False,"can_edit":False,"can_view_all":True, "can_issue":False,"can_export":True, "can_approve":True},
-    "department_head": {"label":"Начальник департамента","color":"FF6B35","can_manage_users":False,"can_delete":False,"can_edit":False,"can_view_all":True, "can_issue":False,"can_export":True, "can_approve":True},
+    "department_head": {"label":"Начальник департамента","color":"FF6B35","can_manage_users":False,"can_delete":False,"can_edit":False,"can_view_all":True, "can_issue":False,"can_export":True, "can_approve":False},
     "director":   {"label":"Ген. Директор", "color":"FF3B30","can_manage_users":True, "can_delete":True, "can_edit":True, "can_view_all":True, "can_issue":True, "can_export":True, "can_approve":True},
     "accountant": {"label":"Бухгалтер",     "color":"30B0C7","can_manage_users":False,"can_delete":False,"can_edit":False,"can_view_all":True, "can_issue":False,"can_export":True, "can_approve":True},
     "viewer":     {"label":"Наблюдатель",   "color":"5AC8FA","can_manage_users":False,"can_delete":False,"can_edit":False,"can_view_all":True, "can_issue":False,"can_export":False,"can_approve":False},
 }
+
+# Иерархия ролей для защиты от эскалации привилегий (нельзя назначить/иметь роль выше своей)
+ROLE_RANK = {"employee": 0, "viewer": 0, "hr": 1, "auditor": 1, "accountant": 1, "department_head": 1,
+             "deputy": 2, "aho": 3, "director": 3, "superadmin": 4}

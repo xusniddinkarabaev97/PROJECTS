@@ -7,12 +7,12 @@
   <!-- Role-Based Dashboard Header -->
   <header class="role-dash-header fade-in">
     <div>
-      <h1 class="role-welcome">Кабинет Бухгалтера</h1>
+      <h1 class="role-welcome" data-t="df_title">Кабинет Бухгалтера</h1>
       <div style="display:flex; gap:8px; margin-top:8px;">
         <span class="role-badge-pill" style="background:#{{role_info.color}}20; color:#{{role_info.color}};">
           {{ role_info.label }}
         </span>
-        <span style="font-size:13px; color:var(--text2); font-weight:500;">Учёт ценностей и списание</span>
+        <span style="font-size:13px; color:var(--text2); font-weight:500;" data-t="df_subtitle">Учёт ценностей и списание</span>
       </div>
     </div>
   </header>
@@ -22,13 +22,13 @@
     <div style="margin-bottom:20px;">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
         <div>
-          <div style="font-size:18px;font-weight:700;color:var(--text);">Документы для финансового учёта</div>
-          <div style="font-size:13px;color:var(--text2);margin-top:2px;">Требуют вашей подписи и принятия к учёту</div>
+          <div style="font-size:18px;font-weight:700;color:var(--text);" data-t="df_docs_title">Документы для финансового учёта</div>
+          <div style="font-size:13px;color:var(--text2);margin-top:2px;" data-t="df_docs_sub">Требуют вашей подписи и принятия к учёту</div>
         </div>
-        <a href="/documents" style="font-size:13px;font-weight:600;color:var(--accent);text-decoration:none;padding:6px 14px;background:rgba(0,122,255,.08);border-radius:var(--r-pill);">Все документы →</a>
+        <a href="/documents" style="font-size:13px;font-weight:600;color:var(--accent);text-decoration:none;padding:6px 14px;background:rgba(0,122,255,.08);border-radius:var(--r-pill);" data-t="all_documents">Все документы →</a>
       </div>
       <div id="acc-pending-docs" class="card" style="padding:0;overflow:hidden;background:var(--surface);border:.5px solid var(--border);border-radius:24px;">
-        <div style="padding:24px;text-align:center;color:var(--text3);font-size:13px;">⏳ Загрузка…</div>
+        <div style="padding:24px;text-align:center;color:var(--text3);font-size:13px;" data-t="loading">⏳ Загрузка…</div>
       </div>
     </div>
 
@@ -38,28 +38,35 @@
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
         </div>
         <div class="pro-card-val" id="acc-pending-cnt" style="color:var(--ios-orange);">0</div>
-        <div class="pro-card-label">На вашей подписи</div>
+        <div class="pro-card-label" data-t="pc_pending_sign">На вашей подписи</div>
       </div>
       <div class="pro-card">
         <div class="pro-card-icon" style="background:#34C759;color:#fff;box-shadow:0 8px 24px rgba(52,199,89,0.3);">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
         </div>
         <div class="pro-card-val" id="acc-approved-cnt">0</div>
-        <div class="pro-card-label">Утверждено (всего)</div>
+        <div class="pro-card-label" data-t="pc_total_assets">Всего активов</div>
       </div>
       <div class="pro-card" onclick="window.location='/analytics'" style="cursor:pointer;">
         <div class="pro-card-icon" style="background:#5856D6;color:#fff;box-shadow:0 8px 24px rgba(88,86,214,0.3);">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
         </div>
         <div class="pro-card-val" id="acc-val" style="font-size:18px;">—</div>
-        <div class="pro-card-label">Стоимость активов</div>
+        <div class="pro-card-label" data-t="pc_asset_value">Стоимость активов</div>
       </div>
-      <div class="pro-card" onclick="sync1C()" style="cursor:pointer; background: linear-gradient(135deg, rgba(255,204,0,0.1), transparent);">
-        <div class="pro-card-icon" style="background:#FFCC00;color:#000;box-shadow:0 8px 24px rgba(255,204,0,0.3);">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+      <div class="pro-card" onclick="window.location='/finance'" style="cursor:pointer;">
+        <div class="pro-card-icon" style="background:#30B0C7;color:#fff;box-shadow:0 8px 24px rgba(48,176,199,0.3);">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
         </div>
-        <div class="pro-card-val" style="font-size:18px; color:var(--text);">Синхронизация</div>
-        <div class="pro-card-label">Выгрузка в 1С:Бухгалтерия</div>
+        <div class="pro-card-val" style="font-size:18px;">→</div>
+        <div class="pro-card-label" data-t="pc_finance_link">Финансы: заявки, акты, бюджет</div>
+      </div>
+      <div class="pro-card" onclick="window.location='/inventory'" style="cursor:pointer;">
+        <div class="pro-card-icon" style="background:#007AFF;color:#fff;box-shadow:0 8px 24px rgba(0,122,255,0.3);">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 14h3v3m0 4h4M21 14h-4v4"/></svg>
+        </div>
+        <div class="pro-card-val" style="font-size:18px;">→</div>
+        <div class="pro-card-label" data-t="pc_inventory">Инвентаризация</div>
       </div>
     </div>
   </div>
@@ -68,9 +75,9 @@
 
 {% block scripts %}
 <script>
-  const DOC_TYPE_LABELS = {onboarding:'Приём сотрудника',dismissal:'Увольнение',writeoff:'Списание',transfer:'Акт приёма-передачи'};
-  var PRIORITY_COLOR = {high:'var(--ios-red)',normal:'var(--accent)',low:'var(--text3)'};
-  var PRIORITY_LABEL = {high:'Срочно',normal:'Обычный',low:'Низкий'};
+  function docTypeLabels() { return {doc_request:t('dt_doc_request'),write_off:t('dt_write_off'),repair:t('dt_repair'),transfer:t('dt_transfer')}; }
+  function priorityColor() { return {high:'var(--ios-red)',normal:'var(--accent)',low:'var(--text3)'}; }
+  function priorityLabel() { return {high:t('prio_urgent'),normal:t('prio_normal'),low:t('prio_low')}; }
 
   function fmtDate(s) {
     if (!s) return '—';
@@ -86,9 +93,9 @@
       </div>
       <div style="flex:1;min-width:0;">
         <div style="font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${doc.title||doc.doc_number}</div>
-        <div style="font-size:12px;color:var(--text2);margin-top:2px;">${DOC_TYPE_LABELS[doc.doc_type]||doc.doc_type} · ${doc.doc_number} · ${fmtDate(doc.created_at)}</div>
+        <div style="font-size:12px;color:var(--text2);margin-top:2px;">${docTypeLabels()[doc.doc_type]||doc.doc_type} · ${doc.doc_number} · ${fmtDate(doc.created_at)}</div>
       </div>
-      <span style="font-size:11px;font-weight:700;padding:3px 8px;border-radius:20px;background:${PRIORITY_COLOR[doc.priority]||'var(--accent)'};color:#fff;flex-shrink:0;">${PRIORITY_LABEL[doc.priority]||''}</span>
+      <span style="font-size:11px;font-weight:700;padding:3px 8px;border-radius:20px;background:${priorityColor()[doc.priority]||'var(--accent)'};color:#fff;flex-shrink:0;">${priorityLabel()[doc.priority]||''}</span>
     </div>`;
   }
 
@@ -96,44 +103,28 @@
     return `<div style="padding:28px;text-align:center;color:var(--text3);font-size:13px;">${msg}</div>`;
   }
   function renderErr() {
-    return `<div style="padding:20px;text-align:center;color:var(--ios-red);font-size:13px;">Ошибка загрузки</div>`;
+    return `<div style="padding:20px;text-align:center;color:var(--ios-red);font-size:13px;">${t('load_error')}</div>`;
   }
 
   async function loadAccountantData() {
     try {
-      // 1. Load Analytics for valuation
-      const a = await (await fetch('/api/analytics')).json();
+      // Единый эндпоинт: стоимость активов + документы, ожидающие вашей подписи
+      const data = await (await fetch('/api/dashboard')).json();
       const valEl = document.getElementById('acc-val');
-      if (valEl) valEl.textContent = new Intl.NumberFormat('ru-RU', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(a.total_value);
-      
-      // 2. Load Role Pending Docs
-      const resp = await fetch('/api/dashboard/role-stats');
-      const data = await resp.json();
-      
+      if (valEl) valEl.textContent = Math.round((data.total_value||0) * 13000).toLocaleString('ru') + ' сум';
+
       const accEl = document.getElementById('acc-pending-docs');
       if (accEl) {
         const docs = data.pending_docs || [];
         document.getElementById('acc-pending-cnt').textContent = data.pending_docs_count || 0;
-        document.getElementById('acc-approved-cnt').textContent = a.approved_docs_count || data.total_items || 0;
+        document.getElementById('acc-approved-cnt').textContent = data.total_items || 0;
         accEl.innerHTML = docs.length
           ? docs.map(renderDocItem).join('')
-          : renderEmpty('Нет документов, ожидающих вашей подписи');
+          : renderEmpty(t('no_pending_docs'));
       }
     } catch(e) {
       console.error(e);
       document.getElementById('acc-pending-docs').innerHTML = renderErr();
-    }
-  }
-
-  async function sync1C() {
-    if(!confirm("Запустить синхронизацию с 1С? Будут выгружены все утвержденные акты списания.")) return;
-    try {
-      const r = await fetch('/api/integrations/1c/export');
-      const d = await r.json();
-      if(d.ok) alert(`Успешно выгружено записей: ${d.data.length}`);
-      else alert('Ошибка выгрузки: ' + d.error);
-    } catch(e) {
-      alert('Ошибка соединения с сервером');
     }
   }
 

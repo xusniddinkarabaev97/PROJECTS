@@ -364,7 +364,7 @@
       return;
     }
 
-    const canAct = ['superadmin', 'aho', 'hr'].includes(USER_ROLE);
+    const canAct = ['superadmin', 'aho', 'hr', 'accountant'].includes(USER_ROLE);
     
     list.innerHTML = rows.map(r => {
       const initial = (r.employee_name || '?').charAt(0).toUpperCase();

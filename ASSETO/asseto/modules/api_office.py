@@ -5,11 +5,13 @@ from datetime import date
 
 from flask import Blueprint, render_template, request, jsonify
 
-from modules.auth import login_required
+from modules.auth import login_required, roles_required
 from modules.db import get_db
 from modules.config import ROLES
 
 bp = Blueprint('office', __name__)
+
+OFFICE_EDITORS = ("superadmin", "aho", "hr", "director", "deputy")
 
 # ══════════════════════════════════════════════════════════════════════════════
 #  CONSTANTS
@@ -81,7 +83,7 @@ def office_contractors_list():
 
 
 @bp.route('/api/office/contractors', methods=['POST'])
-@login_required
+@roles_required(*OFFICE_EDITORS)
 def office_contractors_add():
     d = request.json or {}
     name = d.get('name','').strip()
@@ -94,7 +96,7 @@ def office_contractors_add():
 
 
 @bp.route('/api/office/contractors/<int:cid>', methods=['PUT'])
-@login_required
+@roles_required(*OFFICE_EDITORS)
 def office_contractors_update(cid):
     d = request.json or {}
     with get_db() as db:
@@ -104,7 +106,7 @@ def office_contractors_update(cid):
 
 
 @bp.route('/api/office/contractors/<int:cid>', methods=['DELETE'])
-@login_required
+@roles_required(*OFFICE_EDITORS)
 def office_contractors_delete(cid):
     with get_db() as db:
         db.execute('DELETE FROM contractors WHERE id=?',(cid,))
@@ -214,7 +216,7 @@ def office_doc_create():
 
 
 @bp.route('/api/office/docs/<int:did>', methods=['PUT'])
-@login_required
+@roles_required(*OFFICE_EDITORS)
 def office_doc_update(did):
     d = request.json or {}
     with get_db() as db:
@@ -232,7 +234,7 @@ def office_doc_update(did):
 # ══════════════════════════════════════════════════════════════════════════════
 
 @bp.route('/api/office/docs/<int:did>/register', methods=['POST'])
-@login_required
+@roles_required(*OFFICE_EDITORS)
 def office_doc_register(did):
     """Регистратор регистрирует документ и присваивает номер."""
     u = request.current_user
@@ -263,7 +265,7 @@ def office_doc_register(did):
 
 
 @bp.route('/api/office/docs/<int:did>/assign', methods=['POST'])
-@login_required
+@roles_required(*OFFICE_EDITORS)
 def office_doc_assign(did):
     """Руководитель накладывает резолюцию: назначает исполнителя и дедлайн."""
     u = request.current_user
@@ -311,7 +313,7 @@ def office_doc_complete(did):
 
 
 @bp.route('/api/office/docs/<int:did>/archive', methods=['POST'])
-@login_required
+@roles_required(*OFFICE_EDITORS)
 def office_doc_archive(did):
     """Регистратор отправляет в архив."""
     u = request.current_user
@@ -354,7 +356,7 @@ def office_doc_acknowledge(did):
 
 
 @bp.route('/api/office/docs/<int:did>/add-ack-users', methods=['POST'])
-@login_required
+@roles_required(*OFFICE_EDITORS)
 def office_doc_add_ack_users(did):
     """Добавить сотрудников в лист ознакомления."""
     d = request.json or {}

@@ -165,6 +165,7 @@
     .toast.err { background: var(--ios-red); }
   </style>
   <script src="/static/js/csrf.js"></script>
+  <script src="/static/js/i18n.js"></script>
   <script src="/static/js/app.js"></script>
 </head>
 <body>
@@ -187,7 +188,7 @@
 </nav>
 
 <div class="container">
-  {% if user.role in ('superadmin','aho') %}
+  {% if user.role in ('superadmin','aho','accountant') %}
   <button class="btn-primary" onclick="open_m()">
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
     Начать инвентаризацию
@@ -259,7 +260,7 @@
         const pct = s.total_items ? Math.round(s.checked_items / s.total_items * 100) : 0;
         const done = s.status === 'completed';
         return `
-          <div class="card" onclick="location.href='/inventory/${s.id}'">
+          <div class="card" onclick="location.href='/inventory/${s.id}${done ? '/report' : ''}'">
             <div class="card-header">
               <span class="card-title">${s.title}</span>
               <span class="status-chip ${done ? 'b-done' : 'b-active'}">${done ? 'Завершено' : 'Активна'}</span>

@@ -49,6 +49,7 @@ def migrate_db():
             ("items", "warranty_until", "DATE"),
             ("items", "check_date", "TEXT"),
             ("items", "employee_id", "INTEGER"),
+            ("items", "bundle_parent_id", "INTEGER"),
             ("issuances", "signature", "TEXT"),
             ("returns", "signature", "TEXT"),
             ("history", "field", "TEXT"),
@@ -87,9 +88,19 @@ def migrate_db():
             ("issuances",   "company_id", "INTEGER DEFAULT 1"),
             ("returns",     "company_id", "INTEGER DEFAULT 1"),
             ("inventory_sessions", "company_id", "INTEGER DEFAULT 1"),
+            ("inventory_checks", "condition", "TEXT"),
         ]
         for table, col, typ in migrations:
             add_col(db, table, col, typ)
+
+        # -- Модуль "Задачи" удалён: сносим таблицы у уже развёрнутых баз --
+        for table in ("task_time_log", "task_participants", "task_comments",
+                      "task_checklist_items", "tasks"):
+            try:
+                db.execute(f"DROP TABLE IF EXISTS {table}")
+                db.commit()
+            except Exception as e:
+                print(f"  [!] Ошибка удаления таблицы {table}: {e}")
 
 def _init_docflow_tables(db):
     """Создать таблицы документооборота (вызывается из init_db)."""
@@ -358,9 +369,9 @@ def init_db():
 
         if db.execute("SELECT COUNT(*) FROM users").fetchone()[0] == 0:
             pw = bcrypt.hashpw(b"admin123", bcrypt.gensalt()).decode()
-            db.execute("INSERT INTO users (name,email,password_hash,role) VALUES (?,?,?,?)",
+            db.execute("INSERT INTO users (name,email,password_hash,role,force_password_change) VALUES (?,?,?,?,1)",
                        ("Администратор","admin@asseto.uz",pw,"superadmin"))
-            print("  👤  admin@asseto.uz / admin123")
+            print("  👤  admin@asseto.uz / admin123 (требуется смена пароля при первом входе)")
 
         # ── Office / Clerical tables ─────────────────────────────────────
         db.execute("""CREATE TABLE IF NOT EXISTS contractors (
@@ -416,49 +427,11 @@ def init_db():
             acked_at TIMESTAMP,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)""")
 
-        # -- Tasks & Projects --
-        db.execute("""CREATE TABLE IF NOT EXISTS tasks (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            title TEXT NOT NULL, description TEXT DEFAULT '',
-            status TEXT DEFAULT 'new', priority TEXT DEFAULT 'medium',
-            priority_order INTEGER DEFAULT 1,
-            deadline TIMESTAMP, planned_hours REAL,
-            creator_id INTEGER REFERENCES users(id),
-            responsible_id INTEGER REFERENCES users(id),
-            project_id INTEGER,
-            rating INTEGER, budget REAL,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)""")
-        db.execute("""CREATE TABLE IF NOT EXISTS task_checklist_items (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            task_id INTEGER REFERENCES tasks(id) ON DELETE CASCADE,
-            text TEXT NOT NULL, done INTEGER DEFAULT 0,
-            sort_order INTEGER DEFAULT 0,
-            assignee_id INTEGER REFERENCES users(id))""")
-        db.execute("""CREATE TABLE IF NOT EXISTS task_comments (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            task_id INTEGER REFERENCES tasks(id) ON DELETE CASCADE,
-            user_id INTEGER REFERENCES users(id),
-            body TEXT NOT NULL,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)""")
-        db.execute("""CREATE TABLE IF NOT EXISTS task_participants (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            task_id INTEGER REFERENCES tasks(id) ON DELETE CASCADE,
-            user_id INTEGER REFERENCES users(id),
-            role TEXT DEFAULT 'participant')""")
-        db.execute("""CREATE TABLE IF NOT EXISTS task_time_log (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            task_id INTEGER REFERENCES tasks(id) ON DELETE CASCADE,
-            user_id INTEGER REFERENCES users(id),
-            minutes INTEGER NOT NULL DEFAULT 0,
-            description TEXT DEFAULT '',
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)""")
-
         if db.execute("SELECT COUNT(*) FROM users").fetchone()[0] == 0:
             pw = bcrypt.hashpw(b"admin123", bcrypt.gensalt()).decode()
-            db.execute("INSERT INTO users (name,email,password_hash,role) VALUES (?,?,?,?)",
+            db.execute("INSERT INTO users (name,email,password_hash,role,force_password_change) VALUES (?,?,?,?,1)",
                        ("Администратор","admin@asseto.uz",pw,"superadmin"))
-            print("  👤  admin@asseto.uz / admin123")
+            print("  👤  admin@asseto.uz / admin123 (требуется смена пароля при первом входе)")
 
 _FIELD_LIMITS = {
     "model": 200, "serial_num": 100, "place": 200, "room": 100,

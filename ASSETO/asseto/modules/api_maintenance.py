@@ -64,13 +64,17 @@ def requests_page():
 @bp.route("/api/maintenance", methods=["GET"])
 @login_required
 def list_maintenance():
+    u = request.current_user
+    q = """SELECT m.*, i.inv_num, i.category, i.model, i.room
+           FROM maintenance m
+           LEFT JOIN items i ON m.item_id = i.id"""
+    params = []
+    if not ROLES.get(u["role"], {}).get("can_view_all"):
+        q += " WHERE m.reported_by_id=?"
+        params.append(u["id"])
+    q += " ORDER BY m.created_at DESC LIMIT 100"
     with get_db() as db:
-        rows = db.execute(
-            """SELECT m.*, i.inv_num, i.category, i.model, i.room
-               FROM maintenance m
-               LEFT JOIN items i ON m.item_id = i.id
-               ORDER BY m.created_at DESC LIMIT 100"""
-        ).fetchall()
+        rows = db.execute(q, params).fetchall()
     return jsonify([dict(r) for r in rows])
 
 
@@ -259,7 +263,7 @@ def update_request(rid):
 
 
 @bp.route("/api/requests/<int:rid>/action", methods=["POST"])
-@roles_required("superadmin", "aho", "deputy", "accountant")
+@roles_required("superadmin", "aho", "hr", "deputy", "accountant")
 def request_action(rid):
     """Approve or reject an asset purchase request."""
     d = request.json

@@ -1,6 +1,6 @@
 """Organization Chart Blueprint — org structure like Bitrix24."""
 from flask import Blueprint, render_template, request, jsonify
-from modules.auth import login_required
+from modules.auth import login_required, roles_required, assert_role_assignable
 from modules.db import get_db
 from modules.config import ROLES
 
@@ -39,7 +39,7 @@ def orgchart_data():
 
 
 @bp.route('/api/orgchart', methods=['POST'])
-@login_required
+@roles_required("superadmin", "director")
 def orgchart_update():
     """Update user orgchart fields."""
     d = request.json or {}
@@ -63,14 +63,21 @@ def orgchart_update():
 
 
 @bp.route('/api/orgchart/user', methods=['POST'])
-@login_required
+@roles_required("superadmin", "director")
 def orgchart_add_user():
     """Add new user via orgchart."""
     d = request.json or {}
+    u = request.current_user
     name = (d.get('name') or '').strip()
     email = (d.get('email') or '').strip().lower()
     if not name or not email:
         return jsonify({'error': 'Имя и email обязательны'}), 400
+    role = d.get('role', 'employee')
+    if role not in ROLES:
+        role = 'employee'
+    err = assert_role_assignable(u['role'], role)
+    if err:
+        return jsonify({'error': err}), 403
     import bcrypt
     pw = bcrypt.hashpw(b'123456', bcrypt.gensalt()).decode()
     with get_db() as db:
@@ -78,7 +85,7 @@ def orgchart_add_user():
         cur = db.execute('''
             INSERT INTO users (name,email,password_hash,role,department,position,manager_id,active,onboarding_done)
             VALUES (?,?,?,?,?,?,?,1,0)
-        ''', (name, email, pw, d.get('role','employee'), d.get('department'),
+        ''', (name, email, pw, role, d.get('department'),
               d.get('position'), mgr))
         # Prevent self-reference after insert
         if mgr and cur.lastrowid == int(mgr):
@@ -87,7 +94,7 @@ def orgchart_add_user():
 
 
 @bp.route('/api/orgchart/user/<int:uid>', methods=['DELETE'])
-@login_required
+@roles_required("superadmin", "director")
 def orgchart_remove_user(uid):
     """Deactivate user (soft delete)."""
     with get_db() as db:

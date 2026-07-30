@@ -204,6 +204,10 @@
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
     </button>
   </div>
+  <button class="segment active" style="background:var(--accent); color:#fff; padding:12px; display:flex; align-items:center; justify-content:center; gap:8px;" onclick="openScanner()">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 14h3v3m0 4h4M21 14h-4v4"/></svg>
+    Сканировать QR
+  </button>
   <div class="segments">
     <button class="segment active" onclick="setFilter('all', this)">Все</button>
     <button class="segment" onclick="setFilter('pending', this)">Ожидают</button>
@@ -219,9 +223,9 @@
 </div>
 
 <div class="footer" id="finish-wrap" style="display: none;">
-  <button class="btn-finish" onclick="location.href='/inventory'">
+  <button class="btn-finish" onclick="location.href='/inventory/' + SID + '/report'">
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-    Завершить работу
+    Завершить и посмотреть отчёт
   </button>
 </div>
 
@@ -231,20 +235,38 @@
     <div class="sheet-title" id="m-title">Активы</div>
     <div class="sheet-row"><span class="sheet-label">Инв. номер:</span><span class="sheet-val" id="m-inv"></span></div>
     <div class="sheet-row"><span class="sheet-label">Кабинет:</span><span class="sheet-val" id="m-room"></span></div>
+    <div class="sheet-row" style="flex-direction:column; align-items:stretch; gap:8px;">
+      <span class="sheet-label">Состояние / износ:</span>
+      <select id="m-cond" class="sheet-area" style="padding:10px 12px;">
+        {% for c in conditions %}<option value="{{ c }}">{{ c }}</option>{% endfor %}
+      </select>
+    </div>
     <textarea id="m-note-val" class="sheet-area" rows="3" placeholder="Добавьте заметку (напр. поврежден экран)..."></textarea>
     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 20px;">
       <button class="segment" style="background: var(--surface2); padding: 12px;" onclick="closeM()">Отмена</button>
-      <button class="segment active" style="background: var(--accent); color: #fff; padding: 12px;" onclick="saveNote()">Сохранить</button>
+      <button id="m-save-btn" class="segment active" style="background: var(--accent); color: #fff; padding: 12px;" onclick="saveNote()">Сохранить</button>
     </div>
   </div>
 </div>
 
+<!-- Scanner Overlay -->
+<div class="overlay" id="m-scan" style="align-items:center;">
+  <div class="sheet" style="max-width:420px; text-align:center;">
+    <div class="sheet-title">Сканирование QR</div>
+    <div id="reader" style="width:100%; border-radius:16px; overflow:hidden; margin:12px 0;"></div>
+    <div id="scan-status" style="font-size:13px; color:var(--text2); margin-bottom:14px;">Наведите камеру на QR-этикетку</div>
+    <button class="segment" style="background:var(--surface2); padding:12px; width:100%;" onclick="closeScanner()">Закрыть</button>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
+<script src="https://unpkg.com/html5-qrcode"></script>
 
 <script>
   let ALL = [], FILT = 'all', Q = '';
   const SID = {{ session.id }};
   const ICONS = {Ноутбук:'💻',Монитор:'🖥️',Кресло:'🪑',Стол:'🪵',Принтер:'🖨️',Телефон:'📱',Клавиатура:'⌨️',Мышь:'🖱️'};
+  const CAN_CHECK = {{ 'true' if current_user.role in ('superadmin','aho','auditor','accountant') else 'false' }};
 
   function startDictation() {
     if (!('webkitSpeechRecognition' in window)) {
@@ -328,14 +350,14 @@
           <div class="card-meta">${i.room} · ${i.employee || '—'}</div>
           <div class="status-badge s-${i.status}">${getStatusLabel(i.status)}</div>
         </div>
-        <div class="card-actions" onclick="event.stopPropagation()">
+        ${CAN_CHECK ? `<div class="card-actions" onclick="event.stopPropagation()">
           <button class="action-btn btn-missing ${i.status === 'not_found' ? 'active' : ''}" onclick="submit(${i.id}, 'not_found')">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
           </button>
           <button class="action-btn btn-found ${i.status === 'found' ? 'active' : ''}" onclick="submit(${i.id}, 'found')">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
           </button>
-        </div>
+        </div>` : ''}
       </div>
     `).join('');
   }
@@ -348,12 +370,12 @@
     return s;
   }
 
-  async function submit(cid, status) {
+  async function submit(cid, status, extra) {
     try {
       const r = await fetch(`/api/inventory/check/${cid}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status })
+        body: JSON.stringify(Object.assign({ status }, extra || {}))
       });
       const d = await r.json();
       if (d.ok) {
@@ -372,6 +394,10 @@
     document.getElementById('m-inv').textContent = i.inv_num;
     document.getElementById('m-room').textContent = i.room;
     document.getElementById('m-note-val').value = i.note || '';
+    if (i.condition) document.getElementById('m-cond').value = i.condition;
+    document.getElementById('m-note-val').disabled = !CAN_CHECK;
+    document.getElementById('m-cond').disabled = !CAN_CHECK;
+    document.getElementById('m-save-btn').style.display = CAN_CHECK ? '' : 'none';
     document.getElementById('m-note').classList.add('open');
   }
 
@@ -379,8 +405,9 @@
 
   async function saveNote() {
     const note = document.getElementById('m-note-val').value;
+    const condition = document.getElementById('m-cond').value;
     const i = ALL.find(x => x.id === curCid);
-    await submit(curCid, i.status === 'pending' ? 'found' : i.status); // Keep status or set to found
+    await submit(curCid, i.status === 'pending' ? 'found' : i.status, { note, condition }); // Keep status or set to found
     closeM();
   }
 
@@ -389,6 +416,58 @@
     el.textContent = m;
     el.classList.add('show');
     setTimeout(() => el.classList.remove('show'), 2000);
+  }
+
+  // ─── QR SCANNER ───
+  let qrScanner = null, lastScanTs = 0, lastScanCode = '';
+
+  function openScanner() {
+    document.getElementById('m-scan').classList.add('open');
+    document.getElementById('scan-status').textContent = 'Наведите камеру на QR-этикетку';
+    if (!qrScanner) qrScanner = new Html5Qrcode('reader');
+    qrScanner.start(
+      { facingMode: 'environment' },
+      { fps: 10, qrbox: 220 },
+      onScanSuccess,
+      () => {}
+    ).catch(() => {
+      document.getElementById('scan-status').textContent = 'Не удалось открыть камеру. Проверьте разрешения.';
+    });
+  }
+
+  function closeScanner() {
+    document.getElementById('m-scan').classList.remove('open');
+    if (qrScanner) {
+      qrScanner.stop().catch(() => {});
+    }
+  }
+
+  function onScanSuccess(decodedText) {
+    const now = Date.now();
+    if (decodedText === lastScanCode && now - lastScanTs < 2500) return; // debounce repeat scans
+    lastScanCode = decodedText;
+    lastScanTs = now;
+
+    // decodedText is a full asset URL, e.g. https://host/asset/НТБ-0001
+    let invNum = decodedText;
+    try {
+      const parts = decodedText.split('/asset/');
+      if (parts.length > 1) invNum = decodeURIComponent(parts[1]);
+    } catch (e) {}
+
+    const item = ALL.find(i => i.inv_num === invNum);
+    if (!item) {
+      document.getElementById('scan-status').textContent = `⚠ ${invNum} — не найден в этой сессии`;
+      if (navigator.vibrate) navigator.vibrate(200);
+      return;
+    }
+    if (item.status !== 'pending') {
+      document.getElementById('scan-status').textContent = `${item.model || item.inv_num} — уже отмечено`;
+      return;
+    }
+    if (navigator.vibrate) navigator.vibrate(60);
+    document.getElementById('scan-status').textContent = `✓ ${item.model || item.category} (${item.inv_num}) — найдено`;
+    submit(item.id, 'found');
   }
 
   load();

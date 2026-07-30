@@ -5,7 +5,7 @@ services:
     environment:
       POSTGRES_DB: asseto
       POSTGRES_USER: asseto
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-asseto_secret_change_me}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD must be set in .env, see .env.example}
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
@@ -34,11 +34,11 @@ services:
     environment:
       - FLASK_APP=app.py
       - FLASK_ENV=production
-      - SECRET_KEY=asseto-dev-secret-key-change-in-production-64-chars!!
-      - SECURE_COOKIES=False
+      - SECRET_KEY=${SECRET_KEY:?SECRET_KEY must be set in .env, see .env.example}
+      - SECURE_COOKIES=${SECURE_COOKIES:-True}
       - MAX_UPLOAD_MB=16
       - JWT_EXPIRY=43200
-      - DATABASE_URL=postgresql://asseto:${DB_PASSWORD:-asseto_secret_change_me}@db:5432/asseto
+      - DATABASE_URL=postgresql://asseto:${DB_PASSWORD:?DB_PASSWORD must be set in .env, see .env.example}@db:5432/asseto
     logging:
       driver: "json-file"
       options:

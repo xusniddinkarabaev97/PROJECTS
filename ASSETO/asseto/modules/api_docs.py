@@ -677,7 +677,7 @@ def free_items_for_onboarding():
     q    = "SELECT * FROM items WHERE status='Свободно'"
     p    = []
     if room: q += " AND room=?"; p.append(room)
-    q += " ORDER BY category,room,inv_num"
+    q += " ORDER BY CASE WHEN category='Монитор' THEN 0 ELSE 1 END,category,room,inv_num"
     with get_db() as db:
         items = db.execute(q,p).fetchall()
     grouped = {}

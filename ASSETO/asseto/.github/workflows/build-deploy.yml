@@ -1,0 +1,176 @@
+name: ASSETO Build & Deploy
+
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Target environment'
+        required: true
+        default: 'production'
+        type: choice
+        options:
+          - production
+          - staging
+
+env:
+  # Elastic IP (public) → internal server 10.0.1.131
+  SSH_HOST: ${{ secrets.SSH_HOST }}
+  SSH_USER: ${{ secrets.SSH_USER }}
+  APP_DIR: /opt/asseto
+  IMAGE_NAME: asseto-web
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment || 'production' }}
+
+    steps:
+      # ── Checkout ──────────────────────────────────────────────────────────
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # ── Setup QEMU & Buildx (multi-arch ready) ────────────────────────────
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # ── Login to GitHub Container Registry ────────────────────────────────
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # ── Docker metadata ───────────────────────────────────────────────────
+      - name: Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository_owner }}/asseto-web
+          tags: |
+            type=sha,format=short
+            type=ref,event=branch
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      # ── Build & Push ──────────────────────────────────────────────────────
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./asseto
+          file: ./asseto/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            BUILDKIT_INLINE_CACHE=1
+
+      # ── Deploy to 10.0.1.131 via Elastic IP ───────────────────────────────
+      - name: Deploy to server
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT || 22 }}
+          script: |
+            set -e
+
+            IMAGE="ghcr.io/${{ github.repository_owner }}/asseto-web:${{ github.sha }}"
+            APP_DIR="/opt/asseto"
+
+            echo "=== Pulling image: $IMAGE ==="
+            docker pull "$IMAGE"
+
+            echo "=== Writing docker-compose.yml ==="
+            cat > "$APP_DIR/docker-compose.yml" <<'COMPOSE'
+            services:
+              db:
+                image: postgres:16-alpine
+                restart: always
+                environment:
+                  POSTGRES_DB: asseto
+                  POSTGRES_USER: asseto
+                  POSTGRES_PASSWORD: ${DB_PASSWORD}
+                volumes:
+                  - pgdata:/var/lib/postgresql/data
+                healthcheck:
+                  test: ["CMD-SHELL", "pg_isready -U asseto -d asseto"]
+                  interval: 5s
+                  timeout: 5s
+                  retries: 5
+                logging:
+                  driver: "json-file"
+                  options:
+                    max-size: "10m"
+                    max-file: "3"
+
+              web:
+                image: IMAGE_PLACEHOLDER
+                restart: always
+                ports:
+                  - "8000:8000"
+                depends_on:
+                  db:
+                    condition: service_healthy
+                volumes:
+                  - ./static/photos:/app/static/photos
+                  - ./static/signatures:/app/static/signatures
+                  - ./backup:/app/backup
+                environment:
+                  - FLASK_APP=app.py
+                  - FLASK_ENV=production
+                  - SECRET_KEY=${SECRET_KEY}
+                  - SECURE_COOKIES=True
+                  - MAX_UPLOAD_MB=16
+                  - JWT_EXPIRY=43200
+                  - DATABASE_URL=postgresql://asseto:${DB_PASSWORD}@db:5432/asseto
+                logging:
+                  driver: "json-file"
+                  options:
+                    max-size: "10m"
+                    max-file: "3"
+
+            volumes:
+              pgdata:
+            COMPOSE
+
+            # Replace image placeholder
+            sed -i "s|IMAGE_PLACEHOLDER|$IMAGE|g" "$APP_DIR/docker-compose.yml"
+
+            echo "=== Deploying with docker compose ==="
+            cd "$APP_DIR"
+            docker compose --env-file .env down --remove-orphans || true
+            docker compose --env-file .env up -d --wait
+
+            echo "=== Pruning old images ==="
+            docker image prune -af --filter "until=24h" || true
+
+            echo "=== Deploy done! ==="
+            docker compose ps
+
+      # ── Health check ───────────────────────────────────────────────────────
+      - name: Health check
+        run: |
+          sleep 5
+          for i in 1 2 3; do
+            echo "Attempt $i..."
+            curl -fsS "http://${{ secrets.SSH_HOST }}/api/health" && exit 0
+            sleep 5
+          done
+          echo "Health check failed after 3 attempts"
+          exit 1
+
+      # ── Notification to main server (10.0.1.16) ────────────────────────────
+      - name: Notify main server
+        if: always()
+        run: |
+          STATUS="${{ job.status }}"
+          echo "Deploy status: $STATUS"
+          # Optional: send webhook to main server 10.0.1.16
+          # curl -X POST http://10.0.1.16:5000/api/v1/deploy-hook \
+          #   -H "Content-Type: application/json" \
+          #   -d "{\"status\":\"$STATUS\",\"commit\":\"${{ github.sha }}\",\"server\":\"10.0.1.131\"}"

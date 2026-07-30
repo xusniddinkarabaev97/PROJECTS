@@ -93,7 +93,7 @@ body{font-family:'Arial',sans-serif;background:#fff;color:#000;padding:20mm 20mm
       <th>Серийный №</th>
       <th>Кабинет / Место</th>
       <th>Состояние</th>
-      <th style="text-align:right;">Стоимость (USD)</th>
+      <th style="text-align:right;">Стоимость (сум)</th>
     </tr>
   </thead>
   <tbody>
@@ -108,7 +108,7 @@ body{font-family:'Arial',sans-serif;background:#fff;color:#000;padding:20mm 20mm
       <td style="font-family:monospace;font-size:9px;color:#666;">{{ item.serial_num or '—' }}</td>
       <td style="font-size:9.5pt;">{{ item.room or '—' }}{% if item.place %} / {{ item.place }}{% endif %}</td>
       <td>{{ item.condition }}</td>
-      <td style="text-align:right;font-weight:600;">{% if item.purchase_price %}${{ "%.2f"|format(item.purchase_price) }}{% else %}—{% endif %}</td>
+      <td style="text-align:right;font-weight:600;">{% if item.purchase_price %}{{ (item.purchase_price * 13000) | int | string }} сум{% else %}—{% endif %}</td>
     </tr>
     {% endfor %}
   </tbody>
@@ -116,7 +116,7 @@ body{font-family:'Arial',sans-serif;background:#fff;color:#000;padding:20mm 20mm
     <tr>
       <td colspan="6"></td>
       <td>Итого: <strong>{{ items|length }} шт.</strong></td>
-      <td style="text-align:right;">{% if ns.total > 0 %}<strong>${{ "%.2f"|format(ns.total) }}</strong>{% else %}—{% endif %}</td>
+      <td style="text-align:right;">{% if ns.total > 0 %}<strong>{{ (ns.total * 13000) | int | string }} сум</strong>{% else %}—{% endif %}</td>
     </tr>
   </tfoot>
 </table>

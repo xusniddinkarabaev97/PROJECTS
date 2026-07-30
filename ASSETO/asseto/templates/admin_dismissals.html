@@ -249,6 +249,11 @@ td{padding:13px 16px;font-size:13px;vertical-align:middle;}
 <div class="toast" id="toast"><span class="ti" id="ti">●</span><span id="tm"></span></div>
 
 <script>
+const USER_ROLE = "{{ user.role }}";
+const CAN_AHO_ACCEPT = ['superadmin','aho'].includes(USER_ROLE);
+const CAN_IT_ACCEPT = ['superadmin','aho','deputy'].includes(USER_ROLE);
+const CAN_HR_FINALIZE = ['superadmin','hr'].includes(USER_ROLE);
+
 // Stats
 const dismissals = {{ dismissals|tojson }};
 function computeStats(){
@@ -409,7 +414,7 @@ async function openDetail(id){
         ${d.aho_cleared ? `<div style="margin-top:16px;display:flex;align-items:center;gap:12px;padding:12px;background:rgba(52,199,89,0.05);border-radius:12px;border:1px solid rgba(52,199,89,0.1);font-size:13px;">
           <img src="${d.aho_signature}" style="height:36px;background:#fff;border-radius:6px;border:1px solid var(--border);">
           <div style="color:var(--text2);">Проверено: <b style="color:var(--text);">${d.aho_by_name}</b></div>
-        </div>` : (d.employee_signature && (d.status==='pending_aho'||d.status==='photos_submitted') ? `
+        </div>` : (CAN_AHO_ACCEPT && d.employee_signature && (d.status==='pending_aho'||d.status==='photos_submitted') ? `
           <div class="sig-box"><canvas id="sig-pad-aho"></canvas></div>
           <div class="sig-hint">Распишитесь для подтверждения приёма всей техники</div>
           <button class="btn btn-primary" style="width:100%;margin-top:16px;height:48px;font-weight:700;" onclick="signOff(${id},'aho')">Подтвердить приём</button>
@@ -427,7 +432,7 @@ async function openDetail(id){
         ${d.it_cleared ? `<div style="margin-top:16px;display:flex;align-items:center;gap:12px;padding:12px;background:rgba(52,199,89,0.05);border-radius:12px;font-size:13px;">
           <img src="${d.it_signature}" style="height:36px;background:#fff;border-radius:6px;border:1px solid var(--border);">
           <div style="color:var(--text2);">Проверено: <b style="color:var(--text);">${d.it_by_name}</b></div>
-        </div>` : (d.status==='pending_it' ? `
+        </div>` : (CAN_IT_ACCEPT && d.status==='pending_it' ? `
           <div class="sig-box"><canvas id="sig-pad-it"></canvas></div>
           <div class="sig-hint">Подтвердите деактивацию всех корпоративных аккаунтов</div>
           <button class="btn btn-primary" style="width:100%;margin-top:16px;height:48px;font-weight:700;" onclick="signOff(${id},'it')">Подтвердить IT-выход</button>
@@ -445,7 +450,7 @@ async function openDetail(id){
         ${d.status==='completed' ? `<div style="margin-top:16px;display:flex;align-items:center;gap:12px;padding:12px;background:rgba(52,199,89,0.05);border-radius:12px;font-size:13px;">
           <img src="${d.hr_signature}" style="height:36px;background:#fff;border-radius:6px;border:1px solid var(--border);">
           <div style="color:var(--text2);">Завершил: <b style="color:var(--text);">${d.hr_by_name}</b></div>
-        </div>` : (d.status==='pending_hr' ? `
+        </div>` : (CAN_HR_FINALIZE && d.status==='pending_hr' ? `
           <div class="sig-box"><canvas id="sig-pad-hr"></canvas></div>
           <div class="sig-hint">Финальная подпись HR для деактивации сотрудника</div>
           <button class="btn btn-red" style="width:100%;margin-top:16px;height:48px;font-weight:700;" onclick="signOff(${id},'hr')">Завершить увольнение</button>
@@ -498,13 +503,6 @@ async function requestPhotos(id){
   toast('Статус обновлён','ok');
   closeDetail();
   location.reload();
-}
-
-async function confirmDismissal(id){
-  if(!await showConfirm('Подтверждение передачи', 'Подтвердить передачу? Техника будет освобождена, сотрудник деактивирован.')) return;
-  const r = await (await fetch('/api/dismissals/'+id+'/confirm',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'})).json();
-  if(r.ok){ toast('Готово! Техника освобождена','ok'); closeDetail(); location.reload(); }
-  else toast(r.error||'Ошибка','err');
 }
 
 async function cancelDismissal(id){

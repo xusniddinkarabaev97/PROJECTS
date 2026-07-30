@@ -56,7 +56,7 @@ def admin_dismissals_page():
     with get_db() as db:
         rows = db.execute("SELECT * FROM dismissals ORDER BY created_at DESC").fetchall()
     return render_template("admin_dismissals.html", dismissals=[dict(r) for r in rows],
-                           user=request.current_user)
+                           user=request.current_user, current_user=request.current_user)
 
 
 @bp.route("/dismissal/<int:did>")
@@ -295,70 +295,6 @@ def cancel_dismissal(did):
 def request_dismissal_photos(did):
     with get_db() as db:
         db.execute("UPDATE dismissals SET status='photos_requested' WHERE id=?", (did,))
-    return jsonify({"ok": True})
-
-
-@bp.route("/api/dismissals/<int:did>/receive-item", methods=["POST"])
-@roles_required("superadmin", "aho")
-def receive_dismissal_item(did):
-    """Marks a specific item in the dismissal list as physically received."""
-    d = request.json
-    iid = d.get("item_id")
-    if not iid: return jsonify({"error": "ID предмета не указан"}), 400
-
-    with get_db() as db:
-        dis = db.execute("SELECT items_json FROM dismissals WHERE id=?", (did,)).fetchone()
-        if not dis: return jsonify({"error": "Обходной лист не найден"}), 404
-
-        items = json.loads(dis["items_json"])
-        found = False
-        for item in items:
-            if item["id"] == iid:
-                item["received"] = True
-                item["received_at"] = datetime.now().isoformat()
-                item["received_by"] = request.current_user["name"]
-                found = True
-                break
-
-        if not found: return jsonify({"error": "Предмет не найден в списке"}), 404
-
-        db.execute("UPDATE dismissals SET items_json=? WHERE id=?", (json.dumps(items), did))
-    return jsonify({"ok": True})
-
-
-@bp.route("/api/dismissals/<int:did>/finalize", methods=["POST"])
-@roles_required("superadmin", "hr")
-def finalize_dismissal(did):
-    """
-    Finalizes the dismissal process ONLY if all items are received.
-    """
-    u = request.current_user
-    with get_db() as db:
-        dis = db.execute("SELECT * FROM dismissals WHERE id=?", (did,)).fetchone()
-        if not dis: return jsonify({"error": "Обходной лист не найден"}), 404
-        if dis["status"] == "completed": return jsonify({"error": "Уже завершено"}), 400
-
-        # Check if all items are received
-        items = json.loads(dis["items_json"])
-        for item in items:
-            if not item.get("received"):
-                return jsonify({"error": f"Сначала примите все вещи (не принят: {item.get('inv_num')})"}), 400
-
-        emp_id = dis["employee_id"]
-        emp_name = dis["employee_name"]
-
-        # Deactivate User and Release Assets
-        db.execute("UPDATE users SET active=0 WHERE id=?", (emp_id,))
-        asset_items = db.execute("SELECT id FROM items WHERE employee_id=? OR employee=?", (emp_id, emp_name)).fetchall()
-        for item in asset_items:
-            db.execute("UPDATE items SET employee_id=NULL, employee='—', status='Свободно' WHERE id=?", (item["id"],))
-            log_h(db, item["id"], f"Освобождено (увольнение {emp_name})", uid=u["id"], uname=u["name"])
-
-        db.execute("UPDATE dismissals SET status='completed', completed_at=CURRENT_TIMESTAMP, confirmed_by=?, confirmed_by_name=? WHERE id=?",
-                   (u["id"], u["name"], did))
-
-        send_tg_notification(dis["initiated_by"], f"<b>✅ Обходной лист закрыт</b>\nСотрудник: {emp_name}\nВсе вещи приняты АХО.")
-
     return jsonify({"ok": True})
 
 

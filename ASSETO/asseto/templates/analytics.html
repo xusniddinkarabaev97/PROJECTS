@@ -210,7 +210,7 @@
     <!-- CAPEX Budget -->
     <div class="kpi-card" style="background:var(--surface);">
       <div style="font-size:13px; color:var(--text2); font-weight:600; margin-bottom:8px;">Авто-бюджет CAPEX на <span id="capex-q">Q-</span></div>
-      <div id="capex-val" style="font-size:28px; font-weight:700; color:var(--ios-green); margin-bottom:4px;">$0</div>
+      <div id="capex-val" style="font-size:28px; font-weight:700; color:var(--ios-green); margin-bottom:4px;">0 сум</div>
       <div id="capex-items" style="font-size:12px; color:var(--text2);">Требует замены: 0 ед.</div>
     </div>
     <!-- ML Feature Importance -->
@@ -240,7 +240,7 @@
       const [stats, analytics, fin, notif, capex, ml] = await Promise.all([
         fetch('/api/stats').then(r => r.json()).catch(() => ({})),
         fetch('/api/analytics').then(r => r.json()).catch(() => ({})),
-        fetch('/api/finance').then(r => r.json()).catch(() => ({})),
+        fetch('/api/financials').then(r => r.json()).catch(() => ({})),
         fetch('/api/notifications').then(r => r.json()).catch(() => []),
         fetch('/api/analytics/capex').then(r => r.json()).catch(() => ({total_budget:0, items_count:0, quarter:'Q?'})),
         fetch('/api/analytics/ml_insights').then(r => r.json()).catch(() => ({insights:[], accuracy:'Error'}))
@@ -382,7 +382,7 @@
 
       // Render AI/ML Blocks
       document.getElementById('capex-q').textContent = capex.quarter || 'Q?';
-      document.getElementById('capex-val').textContent = (capex.total_budget || 0).toLocaleString('ru-RU') + ' ₸';
+      document.getElementById('capex-val').textContent = Math.round((capex.total_budget || 0) * 13000).toLocaleString('ru-RU') + ' сум';
       document.getElementById('capex-items').textContent = `Требует замены: ${capex.items_count || 0} ед.`;
       
       document.getElementById('ml-acc').textContent = 'Точность: ' + (ml.accuracy || '--');
@@ -404,7 +404,7 @@
       // 5. Financials
       const fg = document.getElementById('fin-grid');
       if (fin.total_purchase_value) {
-        const fmt = v => new Intl.NumberFormat('ru', { maximumFractionDigits: 0 }).format(v) + ' UZS';
+        const fmt = v => new Intl.NumberFormat('ru', { maximumFractionDigits: 0 }).format(Math.round((v||0) * 13000)) + ' сум';
         fg.innerHTML = `
           <div class="kpi-card">
             <div class="kpi-val" style="font-size: 20px;">${fmt(fin.total_purchase_value)}</div>

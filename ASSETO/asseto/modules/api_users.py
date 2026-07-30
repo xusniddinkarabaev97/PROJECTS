@@ -15,7 +15,7 @@ from modules.config import (app, ROLES, CATEGORIES, CONDITIONS, STATUSES,
                             UPLOADS, SIGS, SECURE_COOKIES, MAX_UPLOAD_MB,
                             JWT_EXPIRY, IntegrityError)
 from modules.db import get_db, _trunc
-from modules.auth import login_required, roles_required, bhost, rate_limit
+from modules.auth import login_required, roles_required, bhost, rate_limit, assert_role_assignable
 from modules.api_items import qr_png, _db_error
 
 bp = Blueprint('users', __name__)
@@ -26,7 +26,7 @@ bp = Blueprint('users', __name__)
 # ══════════════════════════════════════════════════════════════════════════════
 
 @bp.route("/api/users")
-@roles_required("superadmin", "aho", "hr", "director")
+@roles_required("superadmin", "hr", "director")
 def get_users():
     with get_db() as db:
         rows = db.execute("""
@@ -41,7 +41,7 @@ def get_users():
 
 
 @bp.route("/api/users", methods=["POST"])
-@roles_required("superadmin", "aho", "director")
+@roles_required("superadmin", "director")
 @rate_limit(max_calls=20, window_sec=60)
 def create_user():
     d = request.json or {}
@@ -73,18 +73,13 @@ def create_user():
 
 
 @bp.route("/api/users/<int:uid>", methods=["PUT"])
-@roles_required("superadmin", "aho", "director")
+@roles_required("superadmin", "director")
 def update_user(uid):
     d = request.json or {}; u = request.current_user
-    # Role escalation guard: cannot assign role with more privileges than your own
-    _ROLE_RANK = {"employee": 0, "viewer": 0, "hr": 1, "auditor": 1, "accountant": 1,
-                  "deputy": 2, "aho": 3, "director": 3, "superadmin": 4}
-    my_rank = _ROLE_RANK.get(u["role"], 0)
-    target_rank = _ROLE_RANK.get(d.get("role", ""), 0)
-    if d.get("role") and target_rank > my_rank and u["role"] != "superadmin":
-        return jsonify({"error": "Нельзя назначить роль выше своей"}), 403
-    if d.get("role") and d["role"] == u["role"] and u["role"] != "superadmin":
-        return jsonify({"error": "Нельзя назначить роль равную своей"}), 403
+    if d.get("role"):
+        err = assert_role_assignable(u["role"], d["role"])
+        if err:
+            return jsonify({"error": err}), 403
     ALLOWED = frozenset({"name", "email", "role", "active", "department", "doc_role",
                          "telegram_chat_id", "expires_at", "avatar_color"})
     sets = []; vals = []
@@ -152,7 +147,7 @@ def get_user_items_api(uid):
             SELECT id, inv_num, category, model, condition, place, room,
                    purchase_price, purchase_date, serial_num
             FROM items WHERE (employee_id=? OR employee=?) AND status='Занято'
-            ORDER BY category, model
+            ORDER BY CASE WHEN category='Монитор' THEN 0 ELSE 1 END, category, model
         """, (uid, user["name"])).fetchall()
     return jsonify([dict(i) for i in items])
 
@@ -195,7 +190,7 @@ def get_staff():
                        purchase_price, purchase_date, serial_num
                 FROM items
                 WHERE (employee_id = ? OR employee = ?) AND status = 'Занято'
-                ORDER BY category, model
+                ORDER BY CASE WHEN category='Монитор' THEN 0 ELSE 1 END, category, model
             """, (u["id"], u["name"])).fetchall()
             ud["items"] = [dict(i) for i in items]
             result.append(ud)
@@ -245,16 +240,19 @@ def get_dept_items(dept):
             """SELECT i.* FROM items i
                JOIN users u ON u.name = i.employee AND u.active=1
                WHERE u.department=?
-               ORDER BY u.name, i.category""",
+               ORDER BY u.name, CASE WHEN i.category='Монитор' THEN 0 ELSE 1 END, i.category""",
             (dept,)
         ).fetchall()
     return jsonify([dict(r) for r in rows])
 
 
 @bp.route("/api/departments/<path:dept>/export")
-@roles_required("superadmin", "aho", "auditor")
+@roles_required("superadmin", "aho", "auditor", "department_head")
 def export_dept(dept):
     """Excel-экспорт по отделу."""
+    u = request.current_user
+    if u["role"] == "department_head" and dept != (u.get("department") or ""):
+        return jsonify({"error": "Нет доступа к чужому отделу"}), 403
     with get_db() as db:
         rows = db.execute(
             """SELECT i.inv_num, i.category, i.model, i.serial_num,
@@ -263,7 +261,7 @@ def export_dept(dept):
                FROM items i
                JOIN users u ON u.name = i.employee AND u.active=1
                WHERE u.department=?
-               ORDER BY u.name, i.category""",
+               ORDER BY u.name, CASE WHEN i.category='Монитор' THEN 0 ELSE 1 END, i.category""",
             (dept,)
         ).fetchall()
     wb = Workbook(); ws = wb.active; ws.title = dept[:31]
@@ -339,6 +337,7 @@ def export_history():
 # ══════════════════════════════════════════════════════════════════════════════
 
 @bp.route("/admin/users")
+@roles_required("superadmin", "director")
 def admin_users_page():
     with get_db() as db:
         users = db.execute("SELECT id,name,email,role,department,active FROM users ORDER BY role,name").fetchall()
@@ -347,6 +346,7 @@ def admin_users_page():
 
 
 @bp.route("/history")
+@login_required
 def history_page():
     u = request.current_user
     with get_db() as db:

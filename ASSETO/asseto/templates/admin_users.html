@@ -403,7 +403,7 @@ async function openEdit(id) {
       document.getElementById('sc-cnt').textContent = su.item_count || 0;
       const val = su.total_value;
       document.getElementById('sc-val').innerHTML = val
-        ? `$${parseFloat(val).toLocaleString('en',{maximumFractionDigits:0})}<br><span style="font-size:10px;font-weight:400;color:var(--text3);">${Math.round(val*13000).toLocaleString('ru')} сум</span>`
+        ? `${Math.round(val*13000).toLocaleString('ru')} сум`
         : '—';
 
       if (su.items && su.items.length) {
@@ -426,7 +426,7 @@ async function openEdit(id) {
                   <div style="font-size:10px;color:var(--text3);margin-top:2px;">${i.category}</div>
                 </td>
                 <td style="padding:10px;"><span style="font-size:10px;font-weight:700;color:${COND_CLR[i.condition]||'#34C759'};">${i.condition}</span></td>
-                <td style="padding:10px;text-align:right;font-weight:600;">${i.purchase_price?'$'+parseFloat(i.purchase_price).toLocaleString('en',{maximumFractionDigits:0}):'—'}</td>
+                <td style="padding:10px;text-align:right;font-weight:600;">${i.purchase_price?Math.round(i.purchase_price*13000).toLocaleString('ru')+' сум':'—'}</td>
               </tr>`).join('')}
             </tbody>
           </table>`;

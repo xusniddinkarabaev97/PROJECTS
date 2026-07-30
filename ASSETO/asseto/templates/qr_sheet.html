@@ -44,10 +44,6 @@ h1{font-size:16px;margin-bottom:4px;}
   {% for item in items %}
   <div class="qr-card">
     <img src="/api/qr/{{ item.inv_num }}" alt="{{ item.inv_num }}">
-    <div class="qr-inv">{{ item.inv_num }}</div>
-    <div class="qr-cat">{{ item.category }}</div>
-    {% if item.model %}<div class="qr-info">{{ item.model }}</div>{% endif %}
-    <div class="qr-room">{{ item.room }} · Место {{ item.place }}</div>
   </div>
   {% endfor %}
 </div>

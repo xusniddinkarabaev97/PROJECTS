@@ -625,20 +625,10 @@ document.addEventListener('keydown', e => { if(e.key==='Escape') closeLb(); });
 
 /* ─── PRINT ─── */
 function buildPrintHtml(itemsList) {
-  const showEmp    = document.getElementById('opt-emp').checked;
-  const showRoom   = document.getElementById('opt-room').checked;
-  const showSerial = document.getElementById('opt-serial').checked;
   return itemsList.map(i => `
     <div class="print-label">
       <div class="pl-qr">
         <img src="/api/qr/${encodeURIComponent(i.inv_num)}" alt="QR ${i.inv_num}">
-      </div>
-      <div class="pl-inv">${i.inv_num}</div>
-      <div class="pl-info-wrap">
-        <div class="pl-name">${i.model||i.category}</div>
-        ${showRoom  ? `<div class="pl-detail"><b>Каб:</b> <span>${i.room}${i.place?` · ${i.place}`:''}</span></div>` : ''}
-        ${showEmp && i.employee && i.employee!=='—' ? `<div class="pl-detail"><b>Сотр:</b> <span>${i.employee}</span></div>` : ''}
-        ${showSerial && i.serial_num && i.serial_num!=='—' ? `<div class="pl-detail"><b>S/N:</b> <span>${i.serial_num}</span></div>` : ''}
       </div>
     </div>`).join('');
 }

@@ -32,12 +32,21 @@ def _db_error(e, context=""):
     return jsonify({"error": "Внутренняя ошибка сервера. Попробуйте позже."}), 500
 
 
-def next_inv(cat):
-    p = PREFIXES.get(cat, "ДРГ")
+INV_PREFIX = "ASSETO"
+
+
+def next_inv(cat=None):
+    """Единая сквозная нумерация для новых поступлений (ASSETO-00001, ...),
+    без привязки к категории. Старые номера по префиксам категорий (НТБ-001 и т.п.)
+    не трогаем — они уже нанесены на QR-стикеры."""
     with get_db() as db:
-        rows = db.execute("SELECT inv_num FROM items WHERE inv_num LIKE ?", (f"{p}-%",)).fetchall()
-    nums = [int(r["inv_num"].split("-")[1]) for r in rows if r["inv_num"].split("-")[1].isdigit()]
-    return f"{p}-{(max(nums)+1 if nums else 1):03d}"
+        rows = db.execute("SELECT inv_num FROM items WHERE inv_num LIKE ?", (f"{INV_PREFIX}-%",)).fetchall()
+        nums = [int(r["inv_num"].split("-")[1]) for r in rows if r["inv_num"].split("-")[1].isdigit()]
+        if nums:
+            nxt = max(nums) + 1
+        else:
+            nxt = db.execute("SELECT COUNT(*) FROM items").fetchone()[0] + 1
+    return f"{INV_PREFIX}-{nxt:05d}"
 
 
 def qr_png(url):
@@ -83,10 +92,13 @@ def get_items():
     if not ROLES.get(u["role"], {}).get("can_view_all"):
         q += " AND (employee_id=? OR employee=?)"; params += [u["id"], u["name"]]
     else:
+        # Начальник департамента видит только технику своего отдела
+        if u["role"] == "department_head":
+            q += " AND employee IN (SELECT name FROM users WHERE department=?)"; params.append(u.get("department") or "")
         for k, col in [("room", "room"), ("status", "status"), ("category", "category"), ("employee", "employee")]:
             v = request.args.get(k, "")
             if v: q += f" AND {col}=?"; params.append(v)
-    q += " ORDER BY place,category"
+    q += " ORDER BY place,CASE WHEN category='Монитор' THEN 0 ELSE 1 END,category"
     with get_db() as db:
         rows = db.execute(q, params).fetchall()
     return jsonify([dict(r) for r in rows])
@@ -487,7 +499,7 @@ def quick_assign_item(item_id):
         user = db.execute("SELECT id, name FROM users WHERE id=?", (user_id,)).fetchone()
         if not user: return jsonify({"error": "Пользователь не найден"}), 404
         db.execute(
-            "UPDATE items SET employee_id=?, employee=?, status='Занято', updated_at=CURRENT_TIMESTAMP WHERE id=?",
+            "UPDATE items SET employee_id=?, employee=?, status='Занято' WHERE id=?",
             (user["id"], user["name"], item_id)
         )
         db.commit()
@@ -502,9 +514,61 @@ def quick_unassign_item(item_id):
         return jsonify({"error": "Нет доступа"}), 403
     with get_db() as db:
         db.execute(
-            "UPDATE items SET employee_id=NULL, employee=NULL, status='Свободно', updated_at=CURRENT_TIMESTAMP WHERE id=?",
+            "UPDATE items SET employee_id=NULL, employee=NULL, status='Свободно' WHERE id=?",
             (item_id,)
         )
+        db.commit()
+    return jsonify({"ok": True})
+
+
+@bp.route("/api/items/<int:iid>/attach", methods=["POST"])
+@login_required
+def attach_item(iid):
+    """Прикрепить другой актив к данному как часть одного комплекта (напр. телефон + докстанция)."""
+    u = request.current_user
+    if not (ROLES.get(u["role"], {}).get("can_issue") or ROLES.get(u["role"], {}).get("can_edit")):
+        return jsonify({"error": "Нет доступа"}), 403
+    d = request.get_json() or {}
+    try:
+        child_id = int(d.get("child_id"))
+    except (TypeError, ValueError):
+        return jsonify({"error": "child_id required"}), 400
+    if child_id == iid:
+        return jsonify({"error": "Нельзя прикрепить актив к самому себе"}), 400
+    with get_db() as db:
+        parent = db.execute("SELECT id, inv_num, model, bundle_parent_id FROM items WHERE id=?", (iid,)).fetchone()
+        child = db.execute("SELECT id, inv_num, model, bundle_parent_id FROM items WHERE id=?", (child_id,)).fetchone()
+        if not parent or not child:
+            return jsonify({"error": "Актив не найден"}), 404
+        if parent["bundle_parent_id"]:
+            return jsonify({"error": "Этот актив сам прикреплён к другому комплекту — сначала открепите его"}), 409
+        if child["bundle_parent_id"]:
+            return jsonify({"error": "Этот актив уже прикреплён к другому комплекту"}), 409
+        has_children = db.execute("SELECT COUNT(*) FROM items WHERE bundle_parent_id=?", (child_id,)).fetchone()[0]
+        if has_children:
+            return jsonify({"error": "У этого актива уже есть прикреплённая техника — вложенность не поддерживается"}), 409
+        db.execute("UPDATE items SET bundle_parent_id=? WHERE id=?", (iid, child_id))
+        log_h(db, iid, "Прикреплён актив", new_val=child["inv_num"], uid=u["id"], uname=u["name"])
+        log_h(db, child_id, "Прикреплён к комплекту", new_val=parent["inv_num"], uid=u["id"], uname=u["name"])
+        db.commit()
+    return jsonify({"ok": True})
+
+
+@bp.route("/api/items/<int:iid>/detach", methods=["POST"])
+@login_required
+def detach_item(iid):
+    """Открепить актив от комплекта."""
+    u = request.current_user
+    if not (ROLES.get(u["role"], {}).get("can_issue") or ROLES.get(u["role"], {}).get("can_edit")):
+        return jsonify({"error": "Нет доступа"}), 403
+    with get_db() as db:
+        item = db.execute("SELECT id, inv_num, bundle_parent_id FROM items WHERE id=?", (iid,)).fetchone()
+        if not item:
+            return jsonify({"error": "Актив не найден"}), 404
+        if not item["bundle_parent_id"]:
+            return jsonify({"error": "Актив не прикреплён к комплекту"}), 400
+        db.execute("UPDATE items SET bundle_parent_id=NULL WHERE id=?", (iid,))
+        log_h(db, iid, "Откреплён от комплекта", uid=u["id"], uname=u["name"])
         db.commit()
     return jsonify({"ok": True})
 
@@ -603,7 +667,7 @@ def get_free_items_api():
             SELECT id, inv_num, category, model, condition, purchase_price, room
             FROM items
             WHERE status IN ('Свободно','На складе','Free','В наличии','Свободна')
-            ORDER BY category, model
+            ORDER BY CASE WHEN category='Монитор' THEN 0 ELSE 1 END, category, model
         """).fetchall()
     return jsonify([dict(i) for i in items])
 
@@ -716,6 +780,7 @@ def audit_items():
 # ══════════════════════════════════════════════════════════════════════════════
 
 @bp.route("/api/inventory/sessions")
+@login_required
 def list_inv_sessions():
     with get_db() as db:
         rows = db.execute(
@@ -725,7 +790,7 @@ def list_inv_sessions():
 
 
 @bp.route("/api/inventory/sessions", methods=["POST"])
-@roles_required("superadmin", "aho")
+@roles_required("superadmin", "aho", "accountant")
 def create_inv_session():
     u = request.current_user
     d = request.json or {}
@@ -765,29 +830,38 @@ def get_inv_session(sid):
             """SELECT c.*,i.inv_num,i.category,i.model,i.room,i.employee
                FROM inventory_checks c
                JOIN items i ON c.item_id=i.id
-               WHERE c.session_id=? ORDER BY i.room,i.category""",
+               WHERE c.session_id=? ORDER BY i.room,CASE WHEN i.category='Монитор' THEN 0 ELSE 1 END,i.category""",
             (sid,)
         ).fetchall()
     return jsonify({"session": dict(session), "checks": [dict(r) for r in checks]})
 
 
 @bp.route("/api/inventory/check/<int:cid>", methods=["POST"])
-@roles_required("superadmin", "aho", "auditor")
+@roles_required("superadmin", "aho", "auditor", "accountant")
 def submit_inv_check(cid):
-    """Сотрудник/АХО подтверждает наличие актива."""
+    """Бухгалтер/АХО подтверждает наличие и износ актива."""
     u = request.current_user
     d = request.json or {}
-    status = d.get("status", "found")  # found | not_found | damaged
-    note   = (d.get("note") or "").strip()[:500]
+    status    = d.get("status", "found")  # found | not_found | damaged
+    note      = (d.get("note") or "").strip()[:500]
+    condition = d.get("condition")  # износ, вносится бухгалтером во время скана
+    if condition and condition not in CONDITIONS:
+        condition = None
     with get_db() as db:
         check = db.execute("SELECT * FROM inventory_checks WHERE id=?", (cid,)).fetchone()
         if not check:
             return jsonify({"error": "Не найдено"}), 404
         db.execute(
             """UPDATE inventory_checks SET status=?,checked_by_id=?,checked_by_name=?,
-               note=?,checked_at=CURRENT_TIMESTAMP WHERE id=?""",
-            (status, u["id"], u["name"], note, cid)
+               note=?,condition=?,checked_at=CURRENT_TIMESTAMP WHERE id=?""",
+            (status, u["id"], u["name"], note, condition, cid)
         )
+        if condition:
+            item = db.execute("SELECT condition FROM items WHERE id=?", (check["item_id"],)).fetchone()
+            if item and item["condition"] != condition:
+                db.execute("UPDATE items SET condition=? WHERE id=?", (condition, check["item_id"]))
+                log_h(db, check["item_id"], "Износ обновлён (инвентаризация)", field="condition",
+                      old_val=item["condition"], new_val=condition, uid=u["id"], uname=u["name"])
         # Update session progress
         session_id = check["session_id"]
         checked = db.execute(
@@ -818,6 +892,24 @@ def list_issuances():
     with get_db() as db:
         rows = db.execute("SELECT * FROM issuances ORDER BY created_at DESC LIMIT 100").fetchall()
     return jsonify([dict(r) for r in rows])
+
+
+@bp.route("/admin/issuances")
+@roles_required("superadmin", "aho", "hr")
+def admin_issuances_page():
+    u = request.current_user
+    with get_db() as db:
+        rows = db.execute("SELECT * FROM issuances ORDER BY created_at DESC LIMIT 200").fetchall()
+    issuances = []
+    for r in rows:
+        iss = dict(r)
+        try:
+            iss["item_count"] = len(json.loads(iss.get("items_json") or "[]"))
+        except Exception:
+            iss["item_count"] = 0
+        issuances.append(iss)
+    return render_template("admin_issuances.html", issuances=issuances, user=u, current_user=u,
+        role_info=ROLES.get(u["role"], {}), roles=ROLES)
 
 
 @bp.route("/api/issuances", methods=["POST"])
@@ -909,6 +1001,25 @@ def inventory_session_page(sid):
         session = db.execute("SELECT * FROM inventory_sessions WHERE id=?", (sid,)).fetchone()
     if not session: abort(404)
     return render_template("inventory_session.html", session=dict(session), user=u, current_user=u,
+        role_info=ROLES.get(u["role"], {}), roles=ROLES, conditions=CONDITIONS)
+
+
+@bp.route("/inventory/<int:sid>/report")
+@roles_required("superadmin", "aho", "accountant", "auditor")
+def inventory_report_page(sid):
+    u = request.current_user
+    with get_db() as db:
+        session = db.execute("SELECT * FROM inventory_sessions WHERE id=?", (sid,)).fetchone()
+        if not session: abort(404)
+        checks = db.execute(
+            """SELECT c.*,i.inv_num,i.category,i.model,i.room,i.employee
+               FROM inventory_checks c
+               JOIN items i ON c.item_id=i.id
+               WHERE c.session_id=? ORDER BY i.room,CASE WHEN i.category='Монитор' THEN 0 ELSE 1 END,i.category""",
+            (sid,)
+        ).fetchall()
+    return render_template("inventory_report.html", session=dict(session),
+        checks=[dict(r) for r in checks], user=u, current_user=u,
         role_info=ROLES.get(u["role"], {}), roles=ROLES)
 
 
@@ -921,6 +1032,16 @@ def print_label_page(inv_num):
     return render_template("print_label.html", item=dict(item), host=bhost())
 
 
+def parse_writeoff_notes(notes):
+    """Parse write-off metadata (act #, reason, etc.) embedded in items.notes."""
+    wo_info = {"act_num": "—", "reason": "—", "authorized_by": "—", "date": "—", "executor": "—"}
+    m = re.search(r'\[СПИСАНИЕ (\d{4}-\d{2}-\d{2})\] Акт: (.+?), Причина: (.+?), Утв\.: (.+?), Исполнитель: (.+?)$', notes or "", re.MULTILINE)
+    if m:
+        wo_info = {"date": m.group(1), "act_num": m.group(2), "reason": m.group(3),
+                   "authorized_by": m.group(4), "executor": m.group(5)}
+    return wo_info
+
+
 @bp.route("/asset/<path:inv_num>/writeoff-act")
 @roles_required("superadmin", "aho", "director", "accountant", "auditor")
 def writeoff_act_page(inv_num):
@@ -929,13 +1050,7 @@ def writeoff_act_page(inv_num):
         item = db.execute("SELECT * FROM items WHERE inv_num=?", (inv_num,)).fetchone()
     if not item: abort(404)
     item = dict(item)
-    # Parse write-off metadata from notes
-    wo_info = {"act_num": "—", "reason": "—", "authorized_by": "—", "date": "—", "executor": "—"}
-    notes = item.get("notes") or ""
-    m = re.search(r'\[СПИСАНИЕ (\d{4}-\d{2}-\d{2})\] Акт: (.+?), Причина: (.+?), Утв\.: (.+?), Исполнитель: (.+?)$', notes, re.MULTILINE)
-    if m:
-        wo_info = {"date": m.group(1), "act_num": m.group(2), "reason": m.group(3),
-                   "authorized_by": m.group(4), "executor": m.group(5)}
+    wo_info = parse_writeoff_notes(item.get("notes"))
     return render_template("writeoff_act.html", item=item, wo=wo_info, user=request.current_user, host=bhost())
 
 
@@ -967,7 +1082,7 @@ def qr_print_page():
                    u.department
             FROM items i
             LEFT JOIN users u ON u.name = i.employee AND i.employee != '—'
-            ORDER BY i.room, i.category, i.inv_num
+            ORDER BY i.room, CASE WHEN i.category='Монитор' THEN 0 ELSE 1 END, i.category, i.inv_num
         """).fetchall()
         rooms  = [r[0] for r in db.execute("SELECT DISTINCT room FROM items WHERE room IS NOT NULL ORDER BY room").fetchall()]
         cats   = [r[0] for r in db.execute("SELECT DISTINCT category FROM items ORDER BY category").fetchall()]

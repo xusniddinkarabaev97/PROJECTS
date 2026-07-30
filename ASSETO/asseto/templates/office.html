@@ -195,6 +195,7 @@
 
 <script>
 const EMPLOYEES = {{ employees | tojson | safe }};
+const CAN_EDIT_OFFICE = {{ 'true' if current_user.role in ('superadmin','aho','hr','director','deputy') else 'false' }};
 
 let currentFilter = '';
 let currentMy = '';
@@ -334,10 +335,10 @@ async function openDoc(id) {
   
   // Buttons
   document.getElementById('btn-save').classList.add('hidden');
-  document.getElementById('btn-register').classList.toggle('hidden', doc.status!=='draft');
-  document.getElementById('btn-assign').classList.toggle('hidden', doc.status==='completed'||doc.status==='archived');
+  document.getElementById('btn-register').classList.toggle('hidden', !CAN_EDIT_OFFICE || doc.status!=='draft');
+  document.getElementById('btn-assign').classList.toggle('hidden', !CAN_EDIT_OFFICE || doc.status==='completed'||doc.status==='archived');
   document.getElementById('btn-complete').classList.toggle('hidden', doc.status!=='in_progress');
-  document.getElementById('btn-archive').classList.toggle('hidden', doc.status!=='completed');
+  document.getElementById('btn-archive').classList.toggle('hidden', !CAN_EDIT_OFFICE || doc.status!=='completed');
 
   const files = data.files.map(f => `
     <div class="ofc-file-item">
