@@ -21,6 +21,19 @@ _load_env()
 # ── Import config (creates Flask app) ────────────────────────────────────
 from modules.config import app
 
+# ── WSGI middleware for sub-path proxy ───────────────────────────────────
+class ScriptNameMiddleware:
+    def __init__(self, app):
+        self.app = app
+    def __call__(self, environ, start_response):
+        prefix = environ.get("HTTP_X_FORWARDED_PREFIX", "")
+        if prefix:
+            environ["SCRIPT_NAME"] = prefix
+        return self.app(environ, start_response)
+
+app.wsgi_app = ScriptNameMiddleware(app.wsgi_app)
+
+
 # ── Register all blueprints ──────────────────────────────────────────────
 from modules.auth         import bp as auth_bp
 from modules.api_items    import bp as items_bp
