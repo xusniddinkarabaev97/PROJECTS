@@ -339,11 +339,11 @@ def analytics():
             SELECT category,
                    COUNT(*) as total,
                    SUM(CASE WHEN condition='Требует ремонта' THEN 1 ELSE 0 END) as repair,
-                   SUM(CASE WHEN check_date < date('now','-180 days') OR check_date IS NULL THEN 1 ELSE 0 END) as overdue
+                   SUM(CASE WHEN CAST(check_date AS DATE) < CURRENT_DATE + INTERVAL '-180 days' OR check_date IS NULL THEN 1 ELSE 0 END) as overdue
             FROM items
             GROUP BY category
-            HAVING SUM(CASE WHEN condition='Требует ремонта' THEN 1 ELSE 0 END) > 0 OR SUM(CASE WHEN check_date < date('now','-180 days') OR check_date IS NULL THEN 1 ELSE 0 END) > 0
-            ORDER BY (SUM(CASE WHEN condition='Требует ремонта' THEN 1 ELSE 0 END) + SUM(CASE WHEN check_date < date('now','-180 days') OR check_date IS NULL THEN 1 ELSE 0 END)) DESC
+            HAVING SUM(CASE WHEN condition='Требует ремонта' THEN 1 ELSE 0 END) > 0 OR SUM(CASE WHEN CAST(check_date AS DATE) < CURRENT_DATE + INTERVAL '-180 days' OR check_date IS NULL THEN 1 ELSE 0 END) > 0
+            ORDER BY (SUM(CASE WHEN condition='Требует ремонта' THEN 1 ELSE 0 END) + SUM(CASE WHEN CAST(check_date AS DATE) < CURRENT_DATE + INTERVAL '-180 days' OR check_date IS NULL THEN 1 ELSE 0 END)) DESC
             LIMIT 10
         """).fetchall()
         

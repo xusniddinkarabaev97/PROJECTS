@@ -694,7 +694,7 @@ def get_alerts():
                 "items": []
             })
         unverif = db.execute(
-            "SELECT COUNT(*) FROM items WHERE (check_date IS NULL OR check_date < date('now','-180 days')) "
+            "SELECT COUNT(*) FROM items WHERE (check_date IS NULL OR CAST(check_date AS DATE) < CURRENT_DATE + INTERVAL '-180 days') "
             "AND condition != 'Списано'"
         ).fetchone()[0]
         if unverif > 0:
