@@ -34,7 +34,11 @@ IntegrityError   = _db.IntegrityError
 
 app = Flask(__name__, template_folder=os.path.join(BASE_DIR, 'templates'),
          static_folder=os.path.join(BASE_DIR, 'static'))
-app.config['TEMPLATES_AUTO_RELOAD'] = True
+app.config["TEMPLATES_AUTO_RELOAD"] = True
+
+# ProxyFix: respect X-Forwarded-Prefix header for sub-path proxying
+from werkzeug.middleware.proxy_fix import ProxyFix
+app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
 
 
 # ── Security Config ─────────────────────────────────────────────────────────────
