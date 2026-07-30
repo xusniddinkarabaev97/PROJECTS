@@ -26,9 +26,11 @@ class ScriptNameMiddleware:
     def __init__(self, app):
         self.app = app
     def __call__(self, environ, start_response):
+        print(f"[MW] SCRIPT_NAME before: {environ.get("SCRIPT_NAME", "(empty)")}", flush=True)
         prefix = environ.get("HTTP_X_FORWARDED_PREFIX", "")
         if prefix:
             environ["SCRIPT_NAME"] = prefix
+        print(f"[MW] SCRIPT_NAME after: {environ["SCRIPT_NAME"]}", flush=True)
         return self.app(environ, start_response)
 
 app.wsgi_app = ScriptNameMiddleware(app.wsgi_app)
