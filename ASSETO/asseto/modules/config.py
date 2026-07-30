@@ -36,6 +36,14 @@ app = Flask(__name__, template_folder=os.path.join(BASE_DIR, 'templates'),
          static_folder=os.path.join(BASE_DIR, 'static'))
 app.config['TEMPLATES_AUTO_RELOAD'] = True
 
+# ── Sub-path proxy support ──────────────────────────────────────────────
+@app.before_request
+def _set_script_name():
+    from flask import request
+    prefix = request.headers.get('X-Forwarded-Prefix', '')
+    if prefix:
+        request.environ['SCRIPT_NAME'] = prefix
+
 # ── Security Config ─────────────────────────────────────────────────────────────
 _secret = os.environ.get('SECRET_KEY', '')
 if not _secret or _secret == 'CHANGE_ME_USE_RANDOM_64_CHAR_STRING_IN_PRODUCTION':
