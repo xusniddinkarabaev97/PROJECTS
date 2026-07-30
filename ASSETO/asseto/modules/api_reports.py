@@ -101,7 +101,7 @@ def dashboard():
         res["toxic_assets"] = [dict(r) for r in db.execute("""
             SELECT i.id,i.inv_num,i.model,i.category, COUNT(h.id) as repair_count
             FROM items i LEFT JOIN history h ON h.item_id=i.id AND h.action='Ремонт'
-            WHERE i.status!='Списано' GROUP BY i.id HAVING repair_count>=3 LIMIT 10""").fetchall()]
+            WHERE i.status!='Списано' GROUP BY i.id HAVING COUNT(h.id)>=3 LIMIT 10""").fetchall()]
         res["eol_assets"] = [dict(r) for r in db.execute("""
             SELECT id,inv_num,model,category,purchase_date FROM items
             WHERE purchase_date IS NOT NULL AND purchase_date < date('now','-3 years')
@@ -365,7 +365,7 @@ def analytics():
             WHERE m.status = 'resolved'
             GROUP BY i.id
             HAVING COUNT(m.id) >= 3
-            ORDER BY repair_count DESC
+            ORDER BY COUNT(m.id) DESC
             LIMIT 5
         """).fetchall()
 
