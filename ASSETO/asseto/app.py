@@ -21,15 +21,6 @@ _load_env()
 # ── Import config (creates Flask app) ────────────────────────────────────
 from modules.config import app
 
-# ── WSGI middleware: set SCRIPT_NAME before Flask processes request ──────
-_original_wsgi = app.wsgi_app
-def _wsgi_middleware(environ, start_response):
-    prefix = environ.get('HTTP_X_FORWARDED_PREFIX', '')
-    if prefix:
-        environ['SCRIPT_NAME'] = prefix
-    return _original_wsgi(environ, start_response)
-app.wsgi_app = _wsgi_middleware
-
 # ── Register all blueprints ──────────────────────────────────────────────
 from modules.auth         import bp as auth_bp
 from modules.api_items    import bp as items_bp
