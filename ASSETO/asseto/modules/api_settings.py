@@ -601,7 +601,7 @@ def get_notifications():
             if repair > 0:
                 notifs.append({"type":"repair","count":repair,"label":f"{repair} заявок на ремонт"})
             overdue = db.execute(
-                "SELECT COUNT(*) FROM items WHERE check_date < date('now','-180 days') OR check_date IS NULL"
+                "SELECT COUNT(*) FROM items WHERE CAST(check_date AS DATE) < CURRENT_DATE + INTERVAL '-180 days' OR check_date IS NULL"
             ).fetchone()[0]
             if overdue > 0:
                 notifs.append({"type":"audit","count":overdue,"label":f"{overdue} активов без проверки 180+ дней"})
