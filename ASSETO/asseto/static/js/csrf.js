@@ -1,10 +1,12 @@
 /* ASSETO — CSRF protection + sub-path proxy support. */
+var __ASSETO_BASE = (function() {
+  var p = window.location.pathname;
+  if (p.startsWith('/asseto/') || p === '/asseto') return '/asseto';
+  return '';
+})();
+
 (function () {
-  const BASE = (function() {
-    var p = window.location.pathname;
-    if (p.startsWith('/asseto/') || p === '/asseto') return '/asseto';
-    return '';
-  })();
+  var BASE = __ASSETO_BASE;
 
   function getCsrf() {
     const c = document.cookie.split(';').map(s => s.trim()).find(s => s.startsWith('csrf_token='));
@@ -36,19 +38,13 @@
 
 // Patch window.location redirects for sub-path proxy
 (function() {
+  var BASE = __ASSETO_BASE;
   if (!BASE) return;
   var _loc = window.location;
   var _assign = _loc.assign.bind(_loc);
   var _replace = _loc.replace.bind(_loc);
-  Object.defineProperty(window, 'location', {
-    get: function() { return _loc; },
-    set: function(url) {
-      if (typeof url === 'string' && url[0] === '/' && !url.startsWith(BASE + '/')) {
-        url = BASE + url;
-      }
-      _assign(url);
-    }
-  });
+  delete window.location;
+  window.location = _loc;
   _loc.assign = function(url) {
     if (typeof url === 'string' && url[0] === '/' && !url.startsWith(BASE + '/')) {
       url = BASE + url;
