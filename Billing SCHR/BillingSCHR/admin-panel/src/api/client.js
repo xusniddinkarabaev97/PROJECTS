@@ -1,4 +1,5 @@
-const API_BASE = "/api";
+const BASE = window.location.pathname.startsWith('/billing-schr') ? '/billing-schr' : '';
+const API_BASE = BASE + "/api";
 
 async function request(url, options = {}) {
   const token = localStorage.getItem("billing-schr-token");
