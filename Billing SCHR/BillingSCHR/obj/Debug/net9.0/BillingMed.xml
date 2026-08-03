@@ -1,0 +1,533 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>BillingMed</name>
+    </assembly>
+    <members>
+        <member name="T:BillingMed.Controllers.ClickController">
+             <summary>
+             Интеграция с платёжной системой Click.
+             Биллинг выступает брокером между Click и EMIS: валидирует пациента,
+             получает сумму к оплате из EMIS, подтверждает платёж.
+             </summary>
+             <remarks>
+             **Бизнес-процесс (Happy Path):**
+             1. Click → `/prepare`: валидация пациента и суммы через EMIS
+             2. Click показывает окно оплаты, списывает средства
+             3. Click → `/complete`: подтверждение оплаты, уведомление EMIS
+            
+             **Коды ошибок Click:**
+             - `0` — успех
+             - `-2` — неверная подпись / сумма не совпадает
+             - `-4` — услуга уже оплачена (из EMIS: ALREADY_PAID)
+             - `-5` — пациент/транзакция не найден
+             - `-9` — EMIS недоступен / внутренняя ошибка
+             </remarks>
+        </member>
+        <member name="M:BillingMed.Controllers.ClickController.Prepare(BillingMed.DTOs.ClickPrepareRequest)">
+             <summary>
+             Шаг 1: Prepare — валидация пациента и сверка суммы.
+             </summary>
+             <remarks>
+             Click присылает `patient_id` (из QR-кода) в поле `param1`.
+             Биллинг делает запрос в EMIS (`POST /api/v1/billing/check`),
+             получает ФИО пациента и сумму к оплате (`invoiceId`).
+            
+             **Пример запроса (Click → Биллинг):**
+             ```json
+             {
+               "click_trans_id": 20240520001,
+               "service_id": 2005,
+               "merchant_trans_id": "MED-12345",
+               "amount": 1500.00,
+               "action": 0,
+               "sign_time": "2024-05-20T10:30:00Z",
+               "sign_string": "a1b2c3d4e5f6...",
+               "param1": "987654321"
+             }
+             ```
+            
+             **Пример ответа (успех):**
+             ```json
+             {
+               "click_trans_id": 20240520001,
+               "merchant_trans_id": "MED-12345",
+               "merchant_prepare_id": "abc123def456",
+               "merchant_confirm_id": "INV-2024-001",
+               "error": 0,
+               "error_note": "Success"
+             }
+             ```
+            
+             **Пример ответа (пациент не найден):**
+             ```json
+             {
+               "click_trans_id": 20240520001,
+               "merchant_trans_id": "MED-12345",
+               "error": -5,
+               "error_note": "Patient not found"
+             }
+             ```
+             </remarks>
+             <param name="request">Параметры из Click (включая patient_id в param1).</param>
+             <returns>merchant_prepare_id и merchant_confirm_id (invoiceId из EMIS).</returns>
+             <response code="200">Результат валидации (error=0 — успех).</response>
+        </member>
+        <member name="M:BillingMed.Controllers.ClickController.Complete(BillingMed.DTOs.ClickCompleteRequest)">
+             <summary>
+             Шаг 2: Complete — подтверждение оплаты и уведомление EMIS.
+             </summary>
+             <remarks>
+             Если `error` = 0 — платёж успешен. Биллинг отправляет подтверждение в EMIS
+             (`POST /api/v1/billing/pay`), передавая `paymentId` (Click), `amount`, `timestamp`.
+            
+             Если `error` ≠ 0 — платёж отменён/провален. Статус в БД меняется на `CANCELLED`.
+            
+             **Идемпотентность:** повторный Complete с тем же `click_trans_id`
+             возвращает `error=0` без повторного вызова EMIS.
+            
+             **Пример запроса (успешная оплата):**
+             ```json
+             {
+               "click_trans_id": 20240520001,
+               "service_id": 2005,
+               "merchant_trans_id": "MED-12345",
+               "merchant_prepare_id": "abc123def456",
+               "merchant_confirm_id": "INV-2024-001",
+               "amount": 1500.00,
+               "action": 1,
+               "sign_time": "2024-05-20T10:31:00Z",
+               "sign_string": "f6e5d4c3b2a1...",
+               "error": 0
+             }
+             ```
+            
+             **Пример ответа:**
+             ```json
+             {
+               "click_trans_id": 20240520001,
+               "merchant_trans_id": "MED-12345",
+               "merchant_confirm_id": "INV-2024-001",
+               "error": 0,
+               "error_note": "Success"
+             }
+             ```
+             </remarks>
+             <param name="request">Параметры завершения платежа от Click.</param>
+             <returns>Статус завершения (error=0 — успех).</returns>
+             <response code="200">Результат завершения платежа.</response>
+        </member>
+        <member name="T:BillingMed.Controllers.ClickPaymentsController">
+            <summary>
+            Просмотр истории Click-платежей для административной панели.
+            </summary>
+            <remarks>
+            Позволяет отслеживать статусы платежей:
+            - `PREPARE` — платёж зарегистрирован (после prepare)
+            - `COMPLETE` — платёж успешно завершён, EMIS уведомлён
+            - `FAILED` — платёж провален (EMIS вернул ошибку, несовпадение суммы)
+            - `CANCELLED` — платёж отменён (Click: error ≠ 0)
+            </remarks>
+        </member>
+        <member name="M:BillingMed.Controllers.ClickPaymentsController.GetClickPayments(System.String,System.Int32,System.Int32)">
+            <summary>
+            Получить список Click-платежей с пагинацией и фильтром по статусу.
+            </summary>
+            <param name="status">Фильтр: PREPARE, COMPLETE, FAILED, CANCELLED.</param>
+            <param name="page">Номер страницы (по умолчанию 1).</param>
+            <param name="pageSize">Размер страницы (по умолчанию 20).</param>
+            <returns>Список платежей с общим количеством.</returns>
+        </member>
+        <member name="M:BillingMed.Controllers.ClickPaymentsController.GetClickPayment(System.Int32)">
+            <summary>
+            Получить конкретный платёж Click по ID.
+            </summary>
+            <param name="id">ID записи в БД.</param>
+            <returns>Детали платежа: статус, invoiceId, receiptNumber из EMIS.</returns>
+        </member>
+        <member name="T:BillingMed.DTOs.ClickPrepareRequest">
+            <summary>
+            Click Prepare Request — запрос от Click на валидацию перед оплатой.
+            </summary>
+        </member>
+        <member name="P:BillingMed.DTOs.ClickPrepareRequest.ClickTransId">
+            <summary>Уникальный ID транзакции Click (int64).</summary>
+        </member>
+        <member name="P:BillingMed.DTOs.ClickPrepareRequest.ServiceId">
+            <summary>ID услуги Click.</summary>
+        </member>
+        <member name="P:BillingMed.DTOs.ClickPrepareRequest.MerchantTransId">
+            <summary>ID транзакции мерчанта.</summary>
+        </member>
+        <member name="P:BillingMed.DTOs.ClickPrepareRequest.MerchantPrepareId">
+            <summary>ID prepare (опционально).</summary>
+        </member>
+        <member name="P:BillingMed.DTOs.ClickPrepareRequest.Amount">
+            <summary>Сумма (тиын/сум).</summary>
+        </member>
+        <member name="P:BillingMed.DTOs.ClickPrepareRequest.Action">
+            <summary>0 = prepare, 1 = complete.</summary>
+        </member>
+        <member name="P:BillingMed.DTOs.ClickPrepareRequest.SignTime">
+            <summary>Время подписи.</summary>
+        </member>
+        <member name="P:BillingMed.DTOs.ClickPrepareRequest.SignString">
+            <summary>MD5-подпись.</summary>
+        </member>
+        <member name="P:BillingMed.DTOs.ClickPrepareRequest.Error">
+            <summary>Код ошибки (0 = нет ошибки).</summary>
+        </member>
+        <member name="P:BillingMed.DTOs.ClickPrepareRequest.ErrorNote">
+            <summary>Описание ошибки.</summary>
+        </member>
+        <member name="P:BillingMed.DTOs.ClickPrepareRequest.PatientId">
+            <summary>Доп. параметр: patient_id из QR-кода.</summary>
+        </member>
+        <member name="T:BillingMed.DTOs.ClickPrepareResponse">
+            <summary>
+            Click Prepare Response — ответ Биллинга на Prepare.
+            </summary>
+        </member>
+        <member name="P:BillingMed.DTOs.ClickPrepareResponse.ClickTransId">
+            <summary>echo click_trans_id.</summary>
+        </member>
+        <member name="P:BillingMed.DTOs.ClickPrepareResponse.MerchantTransId">
+            <summary>echo merchant_trans_id.</summary>
+        </member>
+        <member name="P:BillingMed.DTOs.ClickPrepareResponse.MerchantPrepareId">
+            <summary>Сгенерированный ID (15 символов).</summary>
+        </member>
+        <member name="P:BillingMed.DTOs.ClickPrepareResponse.MerchantConfirmId">
+            <summary>invoiceId из EMIS.</summary>
+        </member>
+        <member name="P:BillingMed.DTOs.ClickPrepareResponse.Error">
+            <summary>0 = успех, отрицательное = ошибка.</summary>
+        </member>
+        <member name="P:BillingMed.DTOs.ClickPrepareResponse.ErrorNote">
+            <summary>Описание ошибки (если error ≠ 0).</summary>
+        </member>
+        <member name="T:BillingMed.DTOs.ClickCompleteRequest">
+            <summary>
+            Click Complete Request — запрос от Click на завершение платежа.
+            </summary>
+        </member>
+        <member name="P:BillingMed.DTOs.ClickCompleteRequest.ClickTransId">
+            <summary>Уникальный ID транзакции Click.</summary>
+        </member>
+        <member name="P:BillingMed.DTOs.ClickCompleteRequest.ServiceId">
+            <summary>ID услуги Click.</summary>
+        </member>
+        <member name="P:BillingMed.DTOs.ClickCompleteRequest.MerchantTransId">
+            <summary>ID транзакции мерчанта.</summary>
+        </member>
+        <member name="P:BillingMed.DTOs.ClickCompleteRequest.MerchantPrepareId">
+            <summary>ID, выданный на шаге Prepare.</summary>
+        </member>
+        <member name="P:BillingMed.DTOs.ClickCompleteRequest.MerchantConfirmId">
+            <summary>invoiceId из EMIS (merchant_confirm_id с Prepare).</summary>
+        </member>
+        <member name="P:BillingMed.DTOs.ClickCompleteRequest.Amount">
+            <summary>Сумма списания.</summary>
+        </member>
+        <member name="P:BillingMed.DTOs.ClickCompleteRequest.Action">
+            <summary>1 = complete.</summary>
+        </member>
+        <member name="P:BillingMed.DTOs.ClickCompleteRequest.SignTime">
+            <summary>Время подписи.</summary>
+        </member>
+        <member name="P:BillingMed.DTOs.ClickCompleteRequest.SignString">
+            <summary>MD5-подпись.</summary>
+        </member>
+        <member name="P:BillingMed.DTOs.ClickCompleteRequest.Error">
+            <summary>0 = платёж успешен, -1 и др. = отмена/ошибка.</summary>
+        </member>
+        <member name="P:BillingMed.DTOs.ClickCompleteRequest.ErrorNote">
+            <summary>Описание ошибки.</summary>
+        </member>
+        <member name="T:BillingMed.DTOs.ClickCompleteResponse">
+            <summary>
+            Click Complete Response — ответ Биллинга на Complete.
+            </summary>
+        </member>
+        <member name="P:BillingMed.DTOs.ClickCompleteResponse.ClickTransId">
+            <summary>echo click_trans_id.</summary>
+        </member>
+        <member name="P:BillingMed.DTOs.ClickCompleteResponse.MerchantTransId">
+            <summary>echo merchant_trans_id.</summary>
+        </member>
+        <member name="P:BillingMed.DTOs.ClickCompleteResponse.MerchantConfirmId">
+            <summary>echo merchant_confirm_id.</summary>
+        </member>
+        <member name="P:BillingMed.DTOs.ClickCompleteResponse.Error">
+            <summary>0 = успех, отрицательное = ошибка.</summary>
+        </member>
+        <member name="P:BillingMed.DTOs.ClickCompleteResponse.ErrorNote">
+            <summary>Описание ошибки (если error ≠ 0).</summary>
+        </member>
+        <member name="T:BillingMed.DTOs.EmisCheckRequest">
+            <summary>
+            Запрос в EMIS: проверка задолженности пациента перед приёмом.
+            EMIS должен вернуть ФИО, сумму и invoiceId.
+            </summary>
+        </member>
+        <member name="P:BillingMed.DTOs.EmisCheckRequest.RequestId">
+            <summary>Уникальный UUID запроса (идемпотентность).</summary>
+        </member>
+        <member name="P:BillingMed.DTOs.EmisCheckRequest.PatientId">
+            <summary>ID пациента в EMIS (из QR-кода).</summary>
+        </member>
+        <member name="P:BillingMed.DTOs.EmisCheckRequest.ServiceCode">
+            <summary>Код услуги (опционально, если известен из QR).</summary>
+        </member>
+        <member name="T:BillingMed.DTOs.EmisCheckResponse">
+            <summary>
+            Ответ EMIS на проверку задолженности.
+            </summary>
+        </member>
+        <member name="P:BillingMed.DTOs.EmisCheckResponse.RequestId">
+            <summary>UUID запроса (echo).</summary>
+        </member>
+        <member name="P:BillingMed.DTOs.EmisCheckResponse.Status">
+            <summary>FOUND | NOT_FOUND | ALREADY_PAID</summary>
+        </member>
+        <member name="P:BillingMed.DTOs.EmisCheckResponse.Message">
+            <summary>Сообщение об ошибке (если статус не FOUND).</summary>
+        </member>
+        <member name="P:BillingMed.DTOs.EmisCheckResponse.Patient">
+            <summary>Данные пациента (если FOUND).</summary>
+        </member>
+        <member name="P:BillingMed.DTOs.EmisCheckResponse.Billing">
+            <summary>Платёжные данные (если FOUND).</summary>
+        </member>
+        <member name="T:BillingMed.DTOs.EmisPatientInfo">
+            <summary>
+            Информация о пациенте из EMIS.
+            </summary>
+        </member>
+        <member name="P:BillingMed.DTOs.EmisPatientInfo.Id">
+            <summary>ID пациента в EMIS.</summary>
+        </member>
+        <member name="P:BillingMed.DTOs.EmisPatientInfo.Rank">
+            <summary>Воинское звание (майор, полковник...).</summary>
+        </member>
+        <member name="P:BillingMed.DTOs.EmisPatientInfo.FullName">
+            <summary>ФИО одной строкой.</summary>
+        </member>
+        <member name="T:BillingMed.DTOs.EmisBillingInfo">
+            <summary>
+            Платёжная информация из EMIS.
+            </summary>
+        </member>
+        <member name="P:BillingMed.DTOs.EmisBillingInfo.InvoiceId">
+            <summary>ID счёта в EMIS.</summary>
+        </member>
+        <member name="P:BillingMed.DTOs.EmisBillingInfo.TotalAmount">
+            <summary>Сумма к оплате (decimal, например 1500.00).</summary>
+        </member>
+        <member name="P:BillingMed.DTOs.EmisBillingInfo.Currency">
+            <summary>Валюта (UZS).</summary>
+        </member>
+        <member name="P:BillingMed.DTOs.EmisBillingInfo.Purpose">
+            <summary>Назначение платежа.</summary>
+        </member>
+        <member name="T:BillingMed.DTOs.EmisPayRequest">
+            <summary>
+            Запрос в EMIS: подтверждение успешной оплаты.
+            </summary>
+        </member>
+        <member name="P:BillingMed.DTOs.EmisPayRequest.RequestId">
+            <summary>Уникальный UUID запроса (идемпотентность).</summary>
+        </member>
+        <member name="P:BillingMed.DTOs.EmisPayRequest.InvoiceId">
+            <summary>ID счёта из EMIS (получен на шаге check).</summary>
+        </member>
+        <member name="P:BillingMed.DTOs.EmisPayRequest.PatientId">
+            <summary>ID пациента.</summary>
+        </member>
+        <member name="P:BillingMed.DTOs.EmisPayRequest.Transaction">
+            <summary>Детали платёжной транзакции.</summary>
+        </member>
+        <member name="T:BillingMed.DTOs.EmisPayTransactionInfo">
+            <summary>
+            Данные платёжной транзакции, передаваемые в EMIS.
+            </summary>
+        </member>
+        <member name="P:BillingMed.DTOs.EmisPayTransactionInfo.PaymentId">
+            <summary>ID транзакции в Click (click_trans_id).</summary>
+        </member>
+        <member name="P:BillingMed.DTOs.EmisPayTransactionInfo.PaymentMethod">
+            <summary>Метод оплаты: CLICK.</summary>
+        </member>
+        <member name="P:BillingMed.DTOs.EmisPayTransactionInfo.Amount">
+            <summary>Сумма списания.</summary>
+        </member>
+        <member name="P:BillingMed.DTOs.EmisPayTransactionInfo.Timestamp">
+            <summary>Время списания (UTC).</summary>
+        </member>
+        <member name="P:BillingMed.DTOs.EmisPayTransactionInfo.PanMask">
+            <summary>Маскированный номер карты.</summary>
+        </member>
+        <member name="T:BillingMed.DTOs.EmisPayResponse">
+            <summary>
+            Ответ EMIS на подтверждение оплаты.
+            </summary>
+        </member>
+        <member name="P:BillingMed.DTOs.EmisPayResponse.RequestId">
+            <summary>UUID запроса (echo).</summary>
+        </member>
+        <member name="P:BillingMed.DTOs.EmisPayResponse.Status">
+            <summary>SUCCESS | FAILED.</summary>
+        </member>
+        <member name="P:BillingMed.DTOs.EmisPayResponse.ReceiptNumber">
+            <summary>Номер чека в EMIS.</summary>
+        </member>
+        <member name="P:BillingMed.DTOs.EmisPayResponse.Message">
+            <summary>Сообщение об ошибке (если FAILED).</summary>
+        </member>
+        <member name="T:BillingMed.Models.ClickPayment">
+            <summary>
+            Запись о платёжной транзакции для идемпотентности Click
+            </summary>
+        </member>
+        <member name="P:BillingMed.Models.ClickPayment.ClickTransId">
+            <summary>Уникальный ID транзакции Click</summary>
+        </member>
+        <member name="P:BillingMed.Models.ClickPayment.MerchantTransId">
+            <summary>Наш внутренний ID транзакции</summary>
+        </member>
+        <member name="P:BillingMed.Models.ClickPayment.EmisInvoiceId">
+            <summary>ID счета из EMIS (invoiceId)</summary>
+        </member>
+        <member name="P:BillingMed.Models.ClickPayment.PatientId">
+            <summary>ID пациента из EMIS</summary>
+        </member>
+        <member name="P:BillingMed.Models.ClickPayment.Amount">
+            <summary>Сумма в тиынах/сумах</summary>
+        </member>
+        <member name="P:BillingMed.Models.ClickPayment.Status">
+            <summary>Статус: PREPARE, COMPLETE, FAILED, CANCELLED</summary>
+        </member>
+        <member name="P:BillingMed.Models.ClickPayment.EmisReceiptNumber">
+            <summary>Номер чека из EMIS</summary>
+        </member>
+        <member name="P:BillingMed.Models.ClickPayment.PanMask">
+            <summary>PAN-маска карты</summary>
+        </member>
+        <member name="T:BillingMed.Models.Department">
+            <summary>
+            Отделение госпиталя (хирургия, терапия, кардиология и т.д.)
+            </summary>
+        </member>
+        <member name="P:BillingMed.Models.Department.DepartmentType">
+            <summary>Тип отделения: хирургическое, терапевтическое, диагностическое и т.д.</summary>
+        </member>
+        <member name="P:BillingMed.Models.Department.Location">
+            <summary>Этаж / корпус</summary>
+        </member>
+        <member name="P:BillingMed.Models.Department.HeadDoctor">
+            <summary>Заведующий отделением</summary>
+        </member>
+        <member name="P:BillingMed.Models.Department.BedCount">
+            <summary>Количество коек</summary>
+        </member>
+        <member name="T:BillingMed.Models.Patient">
+            <summary>
+            Пациент госпиталя (военнослужащий или гражданский)
+            </summary>
+        </member>
+        <member name="P:BillingMed.Models.Patient.MilitaryRank">
+            <summary>Воинское звание (рядовой, сержант, лейтенант, etc.)</summary>
+        </member>
+        <member name="P:BillingMed.Models.Patient.MilitaryUnit">
+            <summary>Войсковая часть</summary>
+        </member>
+        <member name="P:BillingMed.Models.Patient.PersonalNumber">
+            <summary>Личный номер / ID военнослужащего</summary>
+        </member>
+        <member name="P:BillingMed.Models.Patient.BirthDate">
+            <summary>Дата рождения</summary>
+        </member>
+        <member name="P:BillingMed.Models.Patient.BloodType">
+            <summary>Группа крови</summary>
+        </member>
+        <member name="T:BillingMed.Models.Plan">
+            <summary>
+            Тарифный план на медицинские услуги
+            </summary>
+        </member>
+        <member name="P:BillingMed.Models.Plan.Category">
+            <summary>Категория услуг: консультация, операция, анализы, процедуры</summary>
+        </member>
+        <member name="P:BillingMed.Models.Plan.BasePrice">
+            <summary>Базовая стоимость</summary>
+        </member>
+        <member name="T:BillingMed.Models.SharePercent">
+            <summary>
+            Доля распределения дохода между участниками
+            </summary>
+        </member>
+        <member name="T:BillingMed.Models.Transaction">
+            <summary>
+            Транзакция — оплата медицинских услуг
+            </summary>
+        </member>
+        <member name="P:BillingMed.Models.Transaction.DepartmentId">
+            <summary>Отделение, оказавшее услугу</summary>
+        </member>
+        <member name="P:BillingMed.Models.Transaction.Diagnosis">
+            <summary>Диагноз (код МКБ-10 или описание)</summary>
+        </member>
+        <member name="P:BillingMed.Models.Transaction.TreatmentDescription">
+            <summary>Назначенное лечение / процедура</summary>
+        </member>
+        <member name="P:BillingMed.Models.Transaction.DoctorName">
+            <summary>Лечащий врач</summary>
+        </member>
+        <member name="P:BillingMed.Models.Transaction.PaymentMethod">
+            <summary>Способ оплаты: cash, card, click, payme, insurance, budget</summary>
+        </member>
+        <member name="P:BillingMed.Models.Transaction.Status">
+            <summary>Тип: medical, pharmacy, laboratory, procedure</summary>
+        </member>
+        <member name="T:BillingMed.Models.TransactionShare">
+            <summary>
+            Распределённая доля по конкретной транзакции
+            </summary>
+        </member>
+        <member name="M:BillingMed.Services.ClickService.PrepareAsync(BillingMed.DTOs.ClickPrepareRequest)">
+            <summary>
+            Шаг 1: Prepare — Click запрашивает валидацию пациента и сумму
+            </summary>
+        </member>
+        <member name="M:BillingMed.Services.ClickService.CompleteAsync(BillingMed.DTOs.ClickCompleteRequest)">
+            <summary>
+            Шаг 2: Complete — Click сообщает о результате оплаты
+            </summary>
+        </member>
+        <member name="T:BillingMed.Services.IClickService">
+            <summary>
+            Сервис обработки платежей Click
+            </summary>
+        </member>
+        <member name="M:BillingMed.Services.IClickService.PrepareAsync(BillingMed.DTOs.ClickPrepareRequest)">
+            <summary>Обработка Prepare-запроса от Click</summary>
+        </member>
+        <member name="M:BillingMed.Services.IClickService.CompleteAsync(BillingMed.DTOs.ClickCompleteRequest)">
+            <summary>Обработка Complete-запроса от Click</summary>
+        </member>
+        <member name="M:BillingMed.Services.IClickService.VerifySignature(BillingMed.DTOs.ClickPrepareRequest)">
+            <summary>Проверка подписи Click</summary>
+        </member>
+        <member name="T:BillingMed.Services.IEmisService">
+            <summary>
+            Сервис взаимодействия с EMIS (Medical Information System)
+            </summary>
+        </member>
+        <member name="M:BillingMed.Services.IEmisService.CheckPatientAsync(BillingMed.DTOs.EmisCheckRequest)">
+            <summary>Проверка задолженности пациента (Метод 1)</summary>
+        </member>
+        <member name="M:BillingMed.Services.IEmisService.ConfirmPaymentAsync(BillingMed.DTOs.EmisPayRequest)">
+            <summary>Подтверждение оплаты (Метод 2)</summary>
+        </member>
+    </members>
+</doc>

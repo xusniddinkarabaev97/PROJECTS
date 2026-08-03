@@ -1,0 +1,15 @@
+FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
+WORKDIR /src
+COPY ["Billing SCHR/BillingSCHR/ODULink.csproj", "BillingSCHR/"]
+RUN dotnet restore "BillingSCHR/ODULink.csproj"
+COPY ["Billing SCHR/BillingSCHR/", "BillingSCHR/"]
+RUN dotnet publish "BillingSCHR/ODULink.csproj" -c Release -o /app
+
+FROM mcr.microsoft.com/dotnet/aspnet:9.0
+WORKDIR /app
+COPY --from=build /app .
+# Copy admin panel static files
+COPY ["Billing SCHR/BillingSCHR/admin-panel/dist/", "wwwroot/admin/"]
+EXPOSE 8080
+ENV ASPNETCORE_URLS=http://+:8080
+ENTRYPOINT ["dotnet", "ODULink.dll"]

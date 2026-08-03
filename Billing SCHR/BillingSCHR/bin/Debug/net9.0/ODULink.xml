@@ -1,0 +1,506 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>ODULink</name>
+    </assembly>
+    <members>
+        <member name="T:ODULink.Controllers.ClickController">
+             <summary>
+             Интеграция с платёжной системой Click.
+             Биллинг выступает брокером между Click и EMIS: валидирует пациента,
+             получает сумму к оплате из EMIS, подтверждает платёж.
+             </summary>
+             <remarks>
+             **Бизнес-процесс (Happy Path):**
+             1. Click → `/prepare`: валидация пациента и суммы через EMIS
+             2. Click показывает окно оплаты, списывает средства
+             3. Click → `/complete`: подтверждение оплаты, уведомление EMIS
+            
+             **Коды ошибок Click:**
+             - `0` — успех
+             - `-2` — неверная подпись / сумма не совпадает
+             - `-4` — услуга уже оплачена (из EMIS: ALREADY_PAID)
+             - `-5` — пациент/транзакция не найден
+             - `-9` — EMIS недоступен / внутренняя ошибка
+             </remarks>
+        </member>
+        <member name="M:ODULink.Controllers.ClickController.Prepare(ODULink.DTOs.ClickPrepareRequest)">
+             <summary>
+             Шаг 1: Prepare — валидация пациента и сверка суммы.
+             </summary>
+             <remarks>
+             Click присылает `patient_id` (из QR-кода) в поле `param1`.
+             Биллинг делает запрос в EMIS (`POST /api/v1/billing/check`),
+             получает ФИО пациента и сумму к оплате (`invoiceId`).
+            
+             **Пример запроса (Click → Биллинг):**
+             ```json
+             {
+               "click_trans_id": 20240520001,
+               "service_id": 2005,
+               "merchant_trans_id": "MED-12345",
+               "amount": 1500.00,
+               "action": 0,
+               "sign_time": "2024-05-20T10:30:00Z",
+               "sign_string": "a1b2c3d4e5f6...",
+               "param1": "987654321"
+             }
+             ```
+            
+             **Пример ответа (успех):**
+             ```json
+             {
+               "click_trans_id": 20240520001,
+               "merchant_trans_id": "MED-12345",
+               "merchant_prepare_id": "abc123def456",
+               "merchant_confirm_id": "INV-2024-001",
+               "error": 0,
+               "error_note": "Success"
+             }
+             ```
+            
+             **Пример ответа (пациент не найден):**
+             ```json
+             {
+               "click_trans_id": 20240520001,
+               "merchant_trans_id": "MED-12345",
+               "error": -5,
+               "error_note": "Patient not found"
+             }
+             ```
+             </remarks>
+             <param name="request">Параметры из Click (включая patient_id в param1).</param>
+             <returns>merchant_prepare_id и merchant_confirm_id (invoiceId из EMIS).</returns>
+             <response code="200">Результат валидации (error=0 — успех).</response>
+        </member>
+        <member name="M:ODULink.Controllers.ClickController.Complete(ODULink.DTOs.ClickCompleteRequest)">
+             <summary>
+             Шаг 2: Complete — подтверждение оплаты и уведомление EMIS.
+             </summary>
+             <remarks>
+             Если `error` = 0 — платёж успешен. Биллинг отправляет подтверждение в EMIS
+             (`POST /api/v1/billing/pay`), передавая `paymentId` (Click), `amount`, `timestamp`.
+            
+             Если `error` ≠ 0 — платёж отменён/провален. Статус в БД меняется на `CANCELLED`.
+            
+             **Идемпотентность:** повторный Complete с тем же `click_trans_id`
+             возвращает `error=0` без повторного вызова EMIS.
+            
+             **Пример запроса (успешная оплата):**
+             ```json
+             {
+               "click_trans_id": 20240520001,
+               "service_id": 2005,
+               "merchant_trans_id": "MED-12345",
+               "merchant_prepare_id": "abc123def456",
+               "merchant_confirm_id": "INV-2024-001",
+               "amount": 1500.00,
+               "action": 1,
+               "sign_time": "2024-05-20T10:31:00Z",
+               "sign_string": "f6e5d4c3b2a1...",
+               "error": 0
+             }
+             ```
+            
+             **Пример ответа:**
+             ```json
+             {
+               "click_trans_id": 20240520001,
+               "merchant_trans_id": "MED-12345",
+               "merchant_confirm_id": "INV-2024-001",
+               "error": 0,
+               "error_note": "Success"
+             }
+             ```
+             </remarks>
+             <param name="request">Параметры завершения платежа от Click.</param>
+             <returns>Статус завершения (error=0 — успех).</returns>
+             <response code="200">Результат завершения платежа.</response>
+        </member>
+        <member name="T:ODULink.Controllers.ClickPaymentsController">
+            <summary>
+            Просмотр истории Click-платежей для административной панели.
+            </summary>
+            <remarks>
+            Позволяет отслеживать статусы платежей:
+            - `PREPARE` — платёж зарегистрирован (после prepare)
+            - `COMPLETE` — платёж успешно завершён, EMIS уведомлён
+            - `FAILED` — платёж провален (EMIS вернул ошибку, несовпадение суммы)
+            - `CANCELLED` — платёж отменён (Click: error ≠ 0)
+            </remarks>
+        </member>
+        <member name="M:ODULink.Controllers.ClickPaymentsController.GetClickPayments(System.String,System.Int32,System.Int32)">
+            <summary>
+            Получить список Click-платежей с пагинацией и фильтром по статусу.
+            </summary>
+            <param name="status">Фильтр: PREPARE, COMPLETE, FAILED, CANCELLED.</param>
+            <param name="page">Номер страницы (по умолчанию 1).</param>
+            <param name="pageSize">Размер страницы (по умолчанию 20).</param>
+            <returns>Список платежей с общим количеством.</returns>
+        </member>
+        <member name="M:ODULink.Controllers.ClickPaymentsController.GetClickPayment(System.Int32)">
+            <summary>
+            Получить конкретный платёж Click по ID.
+            </summary>
+            <param name="id">ID записи в БД.</param>
+            <returns>Детали платежа: статус, invoiceId, receiptNumber из EMIS.</returns>
+        </member>
+        <member name="T:ODULink.DTOs.ClickPrepareRequest">
+            <summary>
+            Click Prepare Request — запрос от Click на валидацию перед оплатой.
+            Спецификация: https://docs.click.uz/ SHOP API
+            </summary>
+        </member>
+        <member name="P:ODULink.DTOs.ClickPrepareRequest.ClickTransId">
+            <summary>Уникальный ID транзакции Click (int64).</summary>
+        </member>
+        <member name="P:ODULink.DTOs.ClickPrepareRequest.ServiceId">
+            <summary>ID услуги Click.</summary>
+        </member>
+        <member name="P:ODULink.DTOs.ClickPrepareRequest.MerchantTransId">
+            <summary>ID транзакции мерчанта.</summary>
+        </member>
+        <member name="P:ODULink.DTOs.ClickPrepareRequest.Amount">
+            <summary>Сумма в тиынах (копейках) — int.</summary>
+        </member>
+        <member name="P:ODULink.DTOs.ClickPrepareRequest.Action">
+            <summary>0 = prepare, 1 = complete.</summary>
+        </member>
+        <member name="P:ODULink.DTOs.ClickPrepareRequest.SignTime">
+            <summary>Время подписи (формат: "YYYY-MM-DD HH:mm:ss").</summary>
+        </member>
+        <member name="P:ODULink.DTOs.ClickPrepareRequest.SignString">
+            <summary>MD5-подпись.</summary>
+        </member>
+        <member name="P:ODULink.DTOs.ClickPrepareRequest.Error">
+            <summary>Код ошибки (0 = нет ошибки).</summary>
+        </member>
+        <member name="P:ODULink.DTOs.ClickPrepareRequest.ErrorNote">
+            <summary>Описание ошибки.</summary>
+        </member>
+        <member name="P:ODULink.DTOs.ClickPrepareRequest.PatientId">
+            <summary>Доп. параметр 1: patient_id из QR-кода.</summary>
+        </member>
+        <member name="P:ODULink.DTOs.ClickPrepareRequest.Param2">
+            <summary>Доп. параметр 2.</summary>
+        </member>
+        <member name="P:ODULink.DTOs.ClickPrepareRequest.Param3">
+            <summary>Доп. параметр 3.</summary>
+        </member>
+        <member name="T:ODULink.DTOs.ClickPrepareResponse">
+            <summary>
+            Click Prepare Response — ответ Биллинга на Prepare.
+            merchant_prepare_id и merchant_confirm_id — int (спецификация Click).
+            </summary>
+        </member>
+        <member name="P:ODULink.DTOs.ClickPrepareResponse.MerchantPrepareId">
+            <summary>Внутренний ID транзакции (int — требование Click).</summary>
+        </member>
+        <member name="P:ODULink.DTOs.ClickPrepareResponse.MerchantConfirmId">
+            <summary>ID для подтверждения (int — требование Click).</summary>
+        </member>
+        <member name="P:ODULink.DTOs.ClickPrepareResponse.Error">
+            <summary>0 = успех, отрицательное = ошибка.</summary>
+        </member>
+        <member name="P:ODULink.DTOs.ClickPrepareResponse.ErrorNote">
+            <summary>Описание ошибки (если error != 0).</summary>
+        </member>
+        <member name="T:ODULink.DTOs.ClickCompleteRequest">
+            <summary>
+            Click Complete Request — запрос от Click на завершение платежа.
+            </summary>
+        </member>
+        <member name="P:ODULink.DTOs.ClickCompleteRequest.MerchantPrepareId">
+            <summary>ID, выданный на шаге Prepare (int).</summary>
+        </member>
+        <member name="P:ODULink.DTOs.ClickCompleteRequest.MerchantConfirmId">
+            <summary>ID подтверждения с Prepare (int).</summary>
+        </member>
+        <member name="P:ODULink.DTOs.ClickCompleteRequest.Amount">
+            <summary>Сумма списания в тиынах.</summary>
+        </member>
+        <member name="P:ODULink.DTOs.ClickCompleteRequest.Action">
+            <summary>1 = complete.</summary>
+        </member>
+        <member name="P:ODULink.DTOs.ClickCompleteRequest.Error">
+            <summary>0 = платёж успешен, -1 и др. = отмена/ошибка.</summary>
+        </member>
+        <member name="T:ODULink.DTOs.ClickCompleteResponse">
+            <summary>
+            Click Complete Response — ответ Биллинга на Complete.
+            </summary>
+        </member>
+        <member name="P:ODULink.DTOs.ClickCompleteResponse.MerchantConfirmId">
+            <summary>ID подтверждения (int).</summary>
+        </member>
+        <member name="P:ODULink.DTOs.ClickCompleteResponse.Error">
+            <summary>0 = успех, отрицательное = ошибка.</summary>
+        </member>
+        <member name="T:ODULink.DTOs.EmisCheckRequest">
+            <summary>
+            Запрос в EMIS: проверка задолженности пациента перед приёмом.
+            EMIS должен вернуть ФИО, сумму и invoiceId.
+            </summary>
+        </member>
+        <member name="P:ODULink.DTOs.EmisCheckRequest.RequestId">
+            <summary>Уникальный UUID запроса (идемпотентность).</summary>
+        </member>
+        <member name="P:ODULink.DTOs.EmisCheckRequest.PatientId">
+            <summary>ID пациента в EMIS (из QR-кода).</summary>
+        </member>
+        <member name="P:ODULink.DTOs.EmisCheckRequest.ServiceCode">
+            <summary>Код услуги (опционально, если известен из QR).</summary>
+        </member>
+        <member name="T:ODULink.DTOs.EmisCheckResponse">
+            <summary>
+            Ответ EMIS на проверку задолженности.
+            </summary>
+        </member>
+        <member name="P:ODULink.DTOs.EmisCheckResponse.RequestId">
+            <summary>UUID запроса (echo).</summary>
+        </member>
+        <member name="P:ODULink.DTOs.EmisCheckResponse.Status">
+            <summary>FOUND | NOT_FOUND | ALREADY_PAID</summary>
+        </member>
+        <member name="P:ODULink.DTOs.EmisCheckResponse.Message">
+            <summary>Сообщение об ошибке (если статус не FOUND).</summary>
+        </member>
+        <member name="P:ODULink.DTOs.EmisCheckResponse.Patient">
+            <summary>Данные пациента (если FOUND).</summary>
+        </member>
+        <member name="P:ODULink.DTOs.EmisCheckResponse.Billing">
+            <summary>Платёжные данные (если FOUND).</summary>
+        </member>
+        <member name="T:ODULink.DTOs.EmisPatientInfo">
+            <summary>
+            Информация о пациенте из EMIS.
+            </summary>
+        </member>
+        <member name="P:ODULink.DTOs.EmisPatientInfo.Id">
+            <summary>ID пациента в EMIS.</summary>
+        </member>
+        <member name="P:ODULink.DTOs.EmisPatientInfo.Rank">
+            <summary>Воинское звание (майор, полковник...).</summary>
+        </member>
+        <member name="P:ODULink.DTOs.EmisPatientInfo.FullName">
+            <summary>ФИО одной строкой.</summary>
+        </member>
+        <member name="T:ODULink.DTOs.EmisBillingInfo">
+            <summary>
+            Платёжная информация из EMIS.
+            </summary>
+        </member>
+        <member name="P:ODULink.DTOs.EmisBillingInfo.InvoiceId">
+            <summary>ID счёта в EMIS.</summary>
+        </member>
+        <member name="P:ODULink.DTOs.EmisBillingInfo.TotalAmount">
+            <summary>Сумма к оплате (decimal, например 1500.00).</summary>
+        </member>
+        <member name="P:ODULink.DTOs.EmisBillingInfo.Currency">
+            <summary>Валюта (UZS).</summary>
+        </member>
+        <member name="P:ODULink.DTOs.EmisBillingInfo.Purpose">
+            <summary>Назначение платежа.</summary>
+        </member>
+        <member name="T:ODULink.DTOs.EmisPayRequest">
+            <summary>
+            Запрос в EMIS: подтверждение успешной оплаты.
+            </summary>
+        </member>
+        <member name="P:ODULink.DTOs.EmisPayRequest.RequestId">
+            <summary>Уникальный UUID запроса (идемпотентность).</summary>
+        </member>
+        <member name="P:ODULink.DTOs.EmisPayRequest.InvoiceId">
+            <summary>ID счёта из EMIS (получен на шаге check).</summary>
+        </member>
+        <member name="P:ODULink.DTOs.EmisPayRequest.PatientId">
+            <summary>ID пациента.</summary>
+        </member>
+        <member name="P:ODULink.DTOs.EmisPayRequest.Transaction">
+            <summary>Детали платёжной транзакции.</summary>
+        </member>
+        <member name="T:ODULink.DTOs.EmisPayTransactionInfo">
+            <summary>
+            Данные платёжной транзакции, передаваемые в EMIS.
+            </summary>
+        </member>
+        <member name="P:ODULink.DTOs.EmisPayTransactionInfo.PaymentId">
+            <summary>ID транзакции в Click (click_trans_id).</summary>
+        </member>
+        <member name="P:ODULink.DTOs.EmisPayTransactionInfo.PaymentMethod">
+            <summary>Метод оплаты: CLICK.</summary>
+        </member>
+        <member name="P:ODULink.DTOs.EmisPayTransactionInfo.Amount">
+            <summary>Сумма списания.</summary>
+        </member>
+        <member name="P:ODULink.DTOs.EmisPayTransactionInfo.Timestamp">
+            <summary>Время списания (UTC).</summary>
+        </member>
+        <member name="P:ODULink.DTOs.EmisPayTransactionInfo.PanMask">
+            <summary>Маскированный номер карты.</summary>
+        </member>
+        <member name="T:ODULink.DTOs.EmisPayResponse">
+            <summary>
+            Ответ EMIS на подтверждение оплаты.
+            </summary>
+        </member>
+        <member name="P:ODULink.DTOs.EmisPayResponse.RequestId">
+            <summary>UUID запроса (echo).</summary>
+        </member>
+        <member name="P:ODULink.DTOs.EmisPayResponse.Status">
+            <summary>SUCCESS | FAILED.</summary>
+        </member>
+        <member name="P:ODULink.DTOs.EmisPayResponse.ReceiptNumber">
+            <summary>Номер чека в EMIS.</summary>
+        </member>
+        <member name="P:ODULink.DTOs.EmisPayResponse.Message">
+            <summary>Сообщение об ошибке (если FAILED).</summary>
+        </member>
+        <member name="T:ODULink.Models.AuditLog">
+            <summary>
+            Append-only audit log for tracking user actions
+            </summary>
+        </member>
+        <member name="T:ODULink.Models.ClickPayment">
+            <summary>
+            Запись о платёжной транзакции для идемпотентности Click
+            </summary>
+        </member>
+        <member name="P:ODULink.Models.ClickPayment.ClickTransId">
+            <summary>Уникальный ID транзакции Click</summary>
+        </member>
+        <member name="P:ODULink.Models.ClickPayment.MerchantTransId">
+            <summary>Наш внутренний ID транзакции</summary>
+        </member>
+        <member name="P:ODULink.Models.ClickPayment.EmisInvoiceId">
+            <summary>ID счета из EMIS (invoiceId)</summary>
+        </member>
+        <member name="P:ODULink.Models.ClickPayment.PatientId">
+            <summary>ID пациента из EMIS</summary>
+        </member>
+        <member name="P:ODULink.Models.ClickPayment.Amount">
+            <summary>Сумма в тиынах/сумах</summary>
+        </member>
+        <member name="P:ODULink.Models.ClickPayment.Status">
+            <summary>Статус: PREPARE, COMPLETE, FAILED, CANCELLED</summary>
+        </member>
+        <member name="P:ODULink.Models.ClickPayment.EmisReceiptNumber">
+            <summary>Номер чека из EMIS</summary>
+        </member>
+        <member name="P:ODULink.Models.ClickPayment.PanMask">
+            <summary>PAN-маска карты</summary>
+        </member>
+        <member name="P:ODULink.Models.Company.Role">
+            <summary>Valid roles: Cashier, SeniorCashier, Accountant, Admin, ChiefDoctor</summary>
+        </member>
+        <member name="T:ODULink.Models.Department">
+            <summary>
+            Отделение госпиталя (хирургия, терапия, кардиология и т.д.)
+            </summary>
+        </member>
+        <member name="P:ODULink.Models.Department.DepartmentType">
+            <summary>Тип отделения: хирургическое, терапевтическое, диагностическое и т.д.</summary>
+        </member>
+        <member name="P:ODULink.Models.Department.Location">
+            <summary>Этаж / корпус</summary>
+        </member>
+        <member name="P:ODULink.Models.Department.HeadDoctor">
+            <summary>Заведующий отделением</summary>
+        </member>
+        <member name="P:ODULink.Models.Department.BedCount">
+            <summary>Количество коек</summary>
+        </member>
+        <member name="T:ODULink.Models.Patient">
+            <summary>
+            Пациент госпиталя (военнослужащий или гражданский)
+            </summary>
+        </member>
+        <member name="P:ODULink.Models.Patient.MilitaryRank">
+            <summary>Воинское звание (рядовой, сержант, лейтенант, etc.)</summary>
+        </member>
+        <member name="P:ODULink.Models.Patient.MilitaryUnit">
+            <summary>Войсковая часть</summary>
+        </member>
+        <member name="P:ODULink.Models.Patient.PersonalNumber">
+            <summary>Личный номер / ID военнослужащего</summary>
+        </member>
+        <member name="P:ODULink.Models.Patient.BirthDate">
+            <summary>Дата рождения</summary>
+        </member>
+        <member name="P:ODULink.Models.Patient.BloodType">
+            <summary>Группа крови</summary>
+        </member>
+        <member name="T:ODULink.Models.Plan">
+            <summary>
+            Тарифный план на медицинские услуги
+            </summary>
+        </member>
+        <member name="P:ODULink.Models.Plan.Category">
+            <summary>Категория услуг: консультация, операция, анализы, процедуры</summary>
+        </member>
+        <member name="P:ODULink.Models.Plan.BasePrice">
+            <summary>Базовая стоимость</summary>
+        </member>
+        <member name="T:ODULink.Models.SharePercent">
+            <summary>
+            Доля распределения дохода между участниками
+            </summary>
+        </member>
+        <member name="T:ODULink.Models.Transaction">
+            <summary>
+            Транзакция — оплата медицинских услуг
+            </summary>
+        </member>
+        <member name="P:ODULink.Models.Transaction.DepartmentId">
+            <summary>Отделение, оказавшее услугу</summary>
+        </member>
+        <member name="P:ODULink.Models.Transaction.Diagnosis">
+            <summary>Диагноз (код МКБ-10 или описание)</summary>
+        </member>
+        <member name="P:ODULink.Models.Transaction.TreatmentDescription">
+            <summary>Назначенное лечение / процедура</summary>
+        </member>
+        <member name="P:ODULink.Models.Transaction.DoctorName">
+            <summary>Лечащий врач</summary>
+        </member>
+        <member name="P:ODULink.Models.Transaction.PaymentMethod">
+            <summary>Способ оплаты: cash, card, click, payme, insurance, budget</summary>
+        </member>
+        <member name="P:ODULink.Models.Transaction.Status">
+            <summary>Тип: medical, pharmacy, laboratory, procedure</summary>
+        </member>
+        <member name="T:ODULink.Models.TransactionShare">
+            <summary>
+            Распределённая доля по конкретной транзакции
+            </summary>
+        </member>
+        <member name="M:ODULink.Services.ClickService.PrepareAsync(ODULink.DTOs.ClickPrepareRequest)">
+            <summary>
+            Шаг 1: Prepare — Click запрашивает валидацию пациента и сумму.
+            Спецификация: https://docs.click.uz/ SHOP API
+            </summary>
+        </member>
+        <member name="M:ODULink.Services.ClickService.CompleteAsync(ODULink.DTOs.ClickCompleteRequest)">
+            <summary>
+            Шаг 2: Complete — Click сообщает о результате оплаты.
+            </summary>
+        </member>
+        <member name="M:ODULink.Services.ClickService.VerifySignature(ODULink.DTOs.ClickPrepareRequest)">
+            <summary>
+            Проверка MD5-подписи для Prepare.
+            Формула: MD5(click_trans_id + service_id + secret_key + merchant_trans_id + amount + action + sign_time)
+            </summary>
+        </member>
+        <member name="M:ODULink.Services.ClickService.VerifySignature(ODULink.DTOs.ClickCompleteRequest)">
+            <summary>
+            Проверка MD5-подписи для Complete.
+            Формула: MD5(click_trans_id + service_id + secret_key + merchant_trans_id + merchant_prepare_id + amount + action + sign_time)
+            </summary>
+        </member>
+        <member name="T:ODULink.Services.TransactionGeneratorService">
+            <summary>
+            Фоновый сервис генерации случайных транзакций каждые 15 минут
+            </summary>
+        </member>
+    </members>
+</doc>
