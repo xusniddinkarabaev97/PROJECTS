@@ -14,6 +14,12 @@ nul
 tmp/
 temp/
 
+# .NET build
+bin/
+obj/
+*.dll
+*.pdb
+
 # Archives & binaries
 *.rar
 *.exe
