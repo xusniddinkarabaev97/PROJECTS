@@ -154,11 +154,17 @@ if (app.Environment.IsDevelopment())
     });
 }
 
+app.UseDefaultFiles();
+app.UseStaticFiles();
+
+
 app.UseHttpsRedirection();
 
 app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
+app.MapFallbackToFile("admin/index.html");
 
 app.Run();
