@@ -32,12 +32,12 @@ namespace ODULink.Controllers
 
             if (company == null)
             {
-                return Unauthorized("Invalid credentials.");
+                return Unauthorized(new { message = "Invalid credentials." });
             }
 
             if (string.IsNullOrEmpty(company.JwtAuthToken) || company.JwtAuthToken != loginDto.Password)
             {
-                return Unauthorized("Invalid credentials.");
+                return Unauthorized(new { message = "Invalid credentials." });
             }
 
             var tokenDto = _tokenService.GenerateTokens(company);
@@ -57,7 +57,7 @@ namespace ODULink.Controllers
         {
             if (string.IsNullOrEmpty(tokenDto.RefreshToken))
             {
-                return BadRequest("Refresh token is required.");
+                return BadRequest(new { message = "Refresh token is required." });
             }
 
             try
@@ -67,7 +67,7 @@ namespace ODULink.Controllers
             }
             catch (SecurityTokenException ex)
             {
-                return Unauthorized(ex.Message);
+                return Unauthorized(new { message = ex.Message });
             }
         }
 

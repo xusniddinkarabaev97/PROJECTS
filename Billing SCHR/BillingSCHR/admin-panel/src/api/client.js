@@ -66,8 +66,14 @@ export const api = {
     }).then(async (r) => {
       if (r.ok) return r.json();
       const text = await r.text();
-      try { const json = JSON.parse(text); throw new Error(json.message || "Login failed"); }
-      catch (e) { if (e.message && e.message !== "Login failed") throw e; throw new Error(text || "Login failed"); }
+      try {
+        const json = JSON.parse(text);
+        throw new Error(json.message || json.title || "Login failed");
+      } catch (e) {
+        // If JSON.parse failed (non-JSON response), use the raw text as error
+        if (e instanceof SyntaxError) throw new Error(text || "Login failed");
+        throw e;
+      }
     }),
 
   // Departments

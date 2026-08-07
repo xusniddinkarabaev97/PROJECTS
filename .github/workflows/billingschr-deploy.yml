@@ -1,0 +1,137 @@
+name: BillingSCHR Build & Deploy
+
+on:
+  push:
+    branches: [main, master]
+    paths:
+      - "Billing SCHR/**"
+      - ".github/workflows/billingschr-deploy.yml"
+  workflow_dispatch:
+
+env:
+  IMAGE_NAME: ghcr.io/${{ github.repository_owner }}/billingschr-api
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # ── Checkout ────────────────────────────────────────────────────
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # ── Docker Buildx ───────────────────────────────────────────────
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # ── Login to GHCR ───────────────────────────────────────────────
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # ── Docker metadata ─────────────────────────────────────────────
+      - name: Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.IMAGE_NAME }}
+          tags: |
+            type=sha,format=short
+            type=ref,event=branch
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      # ── Build & Push ────────────────────────────────────────────────
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: Dockerfile.billingschr
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # ── Deploy to server ────────────────────────────────────────────
+      - name: Deploy to server
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.BILLINGSCHR_SSH_HOST }}
+          username: ${{ secrets.BILLINGSCHR_SSH_USER }}
+          key: ${{ secrets.BILLINGSCHR_SSH_KEY }}
+          port: ${{ secrets.BILLINGSCHR_SSH_PORT || 22 }}
+          script: |
+            set -e
+
+            IMAGE="${{ env.IMAGE_NAME }}:${{ github.sha }}"
+            APP_DIR="/opt/billingschr"
+
+            echo "=== Pulling image: $IMAGE ==="
+            docker pull "$IMAGE"
+
+            echo "=== Writing docker-compose.yml ==="
+            cat > "$APP_DIR/docker-compose.yml" <<'COMPOSE'
+            services:
+              api:
+                image: IMAGE_PLACEHOLDER
+                container_name: billingschr-api
+                restart: always
+                ports:
+                  - "8080:8080"
+                environment:
+                  - ASPNETCORE_ENVIRONMENT=Production
+                  - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=BillingSCHRDb;Username=billingschr;Password=billingschr_dev_2024!
+                depends_on:
+                  postgres:
+                    condition: service_healthy
+                volumes:
+                  - billingschr_logs:/app/logs
+
+              postgres:
+                image: postgres:16-alpine
+                container_name: billingschr-db
+                restart: always
+                environment:
+                  POSTGRES_DB: BillingSCHRDb
+                  POSTGRES_USER: billingschr
+                  POSTGRES_PASSWORD: billingschr_dev_2024!
+                volumes:
+                  - pgdata:/var/lib/postgresql/data
+                healthcheck:
+                  test: ["CMD-SHELL", "pg_isready -U billingschr -d BillingSCHRDb"]
+                  interval: 5s
+                  timeout: 5s
+                  retries: 5
+
+            volumes:
+              pgdata:
+              billingschr_logs:
+            COMPOSE
+
+            sed -i "s|IMAGE_PLACEHOLDER|$IMAGE|g" "$APP_DIR/docker-compose.yml"
+
+            echo "=== Deploying with docker compose ==="
+            cd "$APP_DIR"
+            docker compose down --remove-orphans || true
+            docker compose up -d --wait
+
+            echo "=== Pruning old images ==="
+            docker image prune -af --filter "until=24h" || true
+
+            echo "=== Deploy done! ==="
+            docker compose ps
+
+      # ── Health check ─────────────────────────────────────────────────
+      - name: Health check
+        run: |
+          sleep 10
+          for i in 1 2 3; do
+            echo "Attempt $i..."
+            curl -fsS "http://${{ secrets.BILLINGSCHR_SSH_HOST }}:8080/swagger/index.html" && exit 0
+            sleep 5
+          done
+          echo "Health check failed after 3 attempts"
+          exit 1
