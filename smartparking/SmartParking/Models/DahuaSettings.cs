@@ -40,6 +40,10 @@ namespace SmartParking.Models
         /// <summary>Enable automatic barrier control</summary>
         public bool BarrierControlEnabled { get; set; } = true;
 
+        /// <summary>Callback URL for payment status notification</summary>
+        [MaxLength(500)]
+        public string? PaymentCallbackUrl { get; set; }
+
         public int CompanyId { get; set; }
         public Company? Company { get; set; }
 

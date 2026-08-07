@@ -1,3 +1,5 @@
+using System.Text;
+using System.Text.Json;
 using SmartParking.Data;
 using SmartParking.Enums;
 using SmartParking.Models;
@@ -15,11 +17,14 @@ namespace SmartParking.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly IConfiguration _config;
+        private readonly IHttpClientFactory _http;
 
         public ClickParkingController(ApplicationDbContext context, IConfiguration config)
+            IHttpClientFactory http,
         {
             _context = context;
             _config = config;
+            _http = http;
         }
 
         [HttpPost("prepare")]
@@ -71,7 +76,6 @@ namespace SmartParking.Controllers
 
             string fiscalReceiptId = null;
             string fiscalStatus = null;
-            bool barrierOpened = false;
 
             if (request.Error == 0)
             {
@@ -81,13 +85,18 @@ namespace SmartParking.Controllers
                 fiscalStatus = "registered";
                 txn.PaymentMethod = $"click|fiscal:{fiscalReceiptId}";
 
-                // Auto-open barrier
-                var session = await _context.ParkingSessions.FirstOrDefaultAsync(s => s.TransactionId == txn.Id);
-                if (session != null)
+                // Send payment status back to Dahua
+                try
                 {
-                    session.ExitBarrierOpened = true;
-                    session.ExitTime = DateTime.UtcNow;
-                    barrierOpened = true;
+                    var dahuaSettings = await _context.DahuaSettings.FirstOrDefaultAsync();
+                    if (dahuaSettings?.PaymentCallbackUrl != null)
+                    {
+                        var dahuaReq = JsonSerializer.Serialize(new { transactionId = txn.Id, plateNumber = txn.PaymentMethod != null ? "" : "", status = "paid", fiscalReceiptId });
+                        var client = _http.CreateClient();
+                        await client.PostAsync(dahuaSettings.PaymentCallbackUrl, new StringContent(dahuaReq, Encoding.UTF8, "application/json"));
+                    }
+                }
+                catch { }
                 }
             }
             else
@@ -104,7 +113,7 @@ namespace SmartParking.Controllers
                 MerchantConfirmId = txn.Id,
                 FiscalReceiptId = fiscalReceiptId,
                 FiscalStatus = fiscalStatus,
-                BarrierOpened = barrierOpened,
+                DahuaNotified = true,
                 Error = 0,
                 ErrorNote = "Success"
             });
@@ -141,7 +150,7 @@ namespace SmartParking.Controllers
         public int MerchantConfirmId { get; set; }
         public string? FiscalReceiptId { get; set; }
         public string? FiscalStatus { get; set; }
-        public bool BarrierOpened { get; set; }
+        public bool DahuaNotified { get; set; }
         public int Error { get; set; }
         public string ErrorNote { get; set; } = "";
     }
