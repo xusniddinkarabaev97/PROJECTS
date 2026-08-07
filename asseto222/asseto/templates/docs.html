@@ -1,0 +1,1041 @@
+{% extends "base.html" %}
+{% block title %}База знаний — ASSETO{% endblock %}
+
+{% block head %}
+<style>
+.docs-layout {
+  display: flex;
+  height: calc(100dvh - 52px);
+  overflow: hidden;
+  background: var(--bg);
+}
+
+/* ── Sidebar ── */
+.docs-sb {
+  width: 300px;
+  flex-shrink: 0;
+  background: var(--sidebar-bg);
+  border-right: 1px solid var(--glass-border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.docs-sb-head {
+  padding: 24px 20px 16px;
+}
+.docs-sb-title {
+  font-size: 22px;
+  font-weight: 900;
+  letter-spacing: -0.6px;
+  margin-bottom: 14px;
+}
+.docs-sb-search {
+  position: relative;
+}
+.docs-sb-search input {
+  width: 100%;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  padding: 10px 12px 10px 36px;
+  color: var(--text);
+  font-size: 14px;
+  font-family: var(--sans);
+  outline: none;
+  transition: border-color .2s, background .2s;
+  box-sizing: border-box;
+}
+.docs-sb-search input:focus {
+  border-color: var(--accent);
+  background: rgba(0,122,255,.06);
+}
+.docs-sb-search svg {
+  position: absolute;
+  left: 11px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text3);
+  pointer-events: none;
+}
+.docs-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px 12px 20px;
+  scrollbar-width: thin;
+}
+.docs-cat-label {
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  color: var(--text3);
+  padding: 12px 8px 6px;
+}
+.docs-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 10px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background .12s;
+  margin-bottom: 2px;
+}
+.docs-item:hover { background: rgba(255,255,255,.06); }
+.docs-item.active { background: rgba(0,122,255,.12); }
+.docs-item.active .docs-item-title { color: var(--accent); font-weight: 700; }
+.docs-item-ico {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 15px;
+}
+.docs-item-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  line-height: 1.3;
+}
+.docs-item-sub {
+  font-size: 11px;
+  color: var(--text3);
+  margin-top: 1px;
+}
+
+/* ── Main Content ── */
+.docs-main {
+  flex: 1;
+  overflow-y: auto;
+  min-width: 0;
+}
+.docs-home {
+  padding: 60px 40px;
+  max-width: 900px;
+}
+.docs-home-title {
+  font-size: 38px;
+  font-weight: 900;
+  letter-spacing: -1px;
+  margin-bottom: 12px;
+  background: linear-gradient(135deg, var(--text), var(--accent));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.docs-home-sub {
+  font-size: 17px;
+  color: var(--text2);
+  margin-bottom: 40px;
+  line-height: 1.5;
+}
+.docs-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
+}
+.docs-home-card {
+  background: var(--surface);
+  border: .5px solid var(--separator2);
+  border-radius: 20px;
+  padding: 24px;
+  cursor: pointer;
+  transition: all .25s var(--ease-spring);
+  position: relative;
+  overflow: hidden;
+}
+.docs-home-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity .2s;
+}
+.docs-home-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 16px 40px rgba(0,0,0,.25);
+  border-color: var(--accent);
+}
+.docs-home-card:hover::before { opacity: 1; }
+.dhc-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+  font-size: 22px;
+}
+.dhc-tag {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  padding: 3px 9px;
+  border-radius: 20px;
+  background: var(--surface2);
+}
+.dhc-title { font-size: 16px; font-weight: 800; margin-bottom: 8px; }
+.dhc-desc { font-size: 13px; color: var(--text2); line-height: 1.5; }
+.dhc-arrow {
+  margin-top: 16px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--accent);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* ── Article View ── */
+.docs-article {
+  display: none;
+  padding: 48px 48px 80px;
+  max-width: 820px;
+}
+.docs-article.show { display: block; }
+.article-breadcrumb {
+  font-size: 13px;
+  color: var(--text3);
+  margin-bottom: 24px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.article-breadcrumb a {
+  color: var(--accent);
+  text-decoration: none;
+  font-weight: 600;
+}
+.article-header {
+  margin-bottom: 32px;
+}
+.article-tag {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  padding: 4px 12px;
+  border-radius: 20px;
+  margin-bottom: 14px;
+}
+.article-title {
+  font-size: 32px;
+  font-weight: 900;
+  letter-spacing: -0.8px;
+  line-height: 1.15;
+  margin-bottom: 12px;
+}
+.article-meta {
+  font-size: 13px;
+  color: var(--text3);
+}
+.article-body {
+  font-size: 15px;
+  line-height: 1.75;
+  color: var(--text2);
+}
+.article-body h2 {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--text);
+  margin: 32px 0 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--separator2);
+}
+.article-body h3 {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+  margin: 24px 0 8px;
+}
+.article-body p { margin-bottom: 14px; }
+.article-body ul, .article-body ol {
+  padding-left: 20px;
+  margin-bottom: 14px;
+}
+.article-body li { margin-bottom: 6px; }
+.article-body strong { color: var(--text); font-weight: 700; }
+.article-body code {
+  background: var(--surface2);
+  border-radius: 6px;
+  padding: 2px 7px;
+  font-size: 13px;
+  font-family: monospace;
+  color: var(--accent);
+}
+.step-block {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 20px;
+  padding: 16px 20px;
+  background: var(--surface);
+  border: .5px solid var(--separator2);
+  border-radius: 14px;
+}
+.step-num {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+.step-content { flex: 1; }
+.step-content strong { color: var(--text); font-size: 14px; display: block; margin-bottom: 4px; }
+.step-content span { font-size: 13px; color: var(--text2); }
+.tip-box {
+  background: rgba(0,122,255,.08);
+  border: 1px solid rgba(0,122,255,.2);
+  border-left: 4px solid var(--accent);
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin: 16px 0;
+  font-size: 14px;
+  color: var(--text);
+}
+.warn-box {
+  background: rgba(255,149,0,.08);
+  border: 1px solid rgba(255,149,0,.2);
+  border-left: 4px solid #FF9500;
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin: 16px 0;
+  font-size: 14px;
+  color: var(--text);
+}
+.role-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 20px;
+  margin: 2px;
+}
+.article-nav {
+  display: flex;
+  gap: 12px;
+  margin-top: 40px;
+  padding-top: 24px;
+  border-top: 1px solid var(--separator2);
+}
+.article-nav-btn {
+  flex: 1;
+  padding: 14px 18px;
+  background: var(--surface);
+  border: .5px solid var(--separator2);
+  border-radius: 14px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+  text-align: left;
+  transition: all .15s;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.article-nav-btn:hover { border-color: var(--accent); color: var(--accent); background: rgba(0,122,255,.05); }
+.article-action-btns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 24px;
+}
+.act-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 10px 18px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  border: none;
+  transition: all .15s;
+  text-decoration: none;
+}
+.act-btn-primary { background: var(--accent); color: #fff; }
+.act-btn-primary:hover { background: #0066e0; }
+.act-btn-secondary { background: var(--surface2); color: var(--text); border: .5px solid var(--separator2); }
+.act-btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+
+/* Mobile */
+@media(max-width: 768px) {
+  .docs-sb { width: 100%; position: fixed; z-index: 200; height: 100dvh; top: 52px; transform: translateX(-100%); transition: transform .3s; }
+  .docs-sb.mob-open { transform: translateX(0); }
+  .docs-main { width: 100%; }
+  .docs-home, .docs-article { padding: 24px 20px 60px; }
+  .docs-home-title { font-size: 26px; }
+  .article-title { font-size: 24px; }
+  .docs-mob-toggle { display: flex !important; }
+}
+.docs-mob-toggle {
+  display: none;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--separator2);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  color: var(--accent);
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="docs-layout">
+
+  <!-- ── Sidebar ── -->
+  <aside class="docs-sb" id="docs-sb">
+    <div class="docs-sb-head">
+      <div class="docs-sb-title">База знаний</div>
+      <div class="docs-sb-search">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" id="docs-search" placeholder="Поиск по статьям…" oninput="searchDocs(this.value)">
+      </div>
+    </div>
+
+    <div class="docs-list" id="docs-list">
+      <div class="docs-cat-label">Основы</div>
+
+      <div class="docs-item" onclick="openArticle('start')" id="li-start">
+        <div class="docs-item-ico" style="background:rgba(0,122,255,.12);">🚀</div>
+        <div><div class="docs-item-title">Начало работы</div><div class="docs-item-sub">Первые шаги в ASSETO</div></div>
+      </div>
+      <div class="docs-item" onclick="openArticle('roles')" id="li-roles">
+        <div class="docs-item-ico" style="background:rgba(88,86,214,.12);">🛡️</div>
+        <div><div class="docs-item-title">Роли и права доступа</div><div class="docs-item-sub">Кто что может делать</div></div>
+      </div>
+
+      <div class="docs-cat-label">АХО / IT</div>
+
+      <div class="docs-item" onclick="openArticle('assets')" id="li-assets">
+        <div class="docs-item-ico" style="background:rgba(52,199,89,.12);">💻</div>
+        <div><div class="docs-item-title">Учёт оборудования</div><div class="docs-item-sub">Добавление, редактирование</div></div>
+      </div>
+      <div class="docs-item" onclick="openArticle('qr')" id="li-qr">
+        <div class="docs-item-ico" style="background:rgba(48,176,199,.12);">📱</div>
+        <div><div class="docs-item-title">QR-коды и этикетки</div><div class="docs-item-sub">Сканирование и печать</div></div>
+      </div>
+      <div class="docs-item" onclick="openArticle('inventory')" id="li-inventory">
+        <div class="docs-item-ico" style="background:rgba(255,149,0,.12);">📋</div>
+        <div><div class="docs-item-title">Инвентаризация</div><div class="docs-item-sub">Сессии и сверка</div></div>
+      </div>
+
+      <div class="docs-cat-label">HR</div>
+
+      <div class="docs-item" onclick="openArticle('onboarding')" id="li-onboarding">
+        <div class="docs-item-ico" style="background:rgba(52,199,89,.12);">👤</div>
+        <div><div class="docs-item-title">Онбординг сотрудника</div><div class="docs-item-sub">Приём и выдача техники</div></div>
+      </div>
+      <div class="docs-item" onclick="openArticle('offboarding')" id="li-offboarding">
+        <div class="docs-item-ico" style="background:rgba(255,59,48,.12);">🚪</div>
+        <div><div class="docs-item-title">Оффбординг (увольнение)</div><div class="docs-item-sub">Возврат ценностей</div></div>
+      </div>
+
+      <div class="docs-cat-label">Документооборот</div>
+
+      <div class="docs-item" onclick="openArticle('docs')" id="li-docs">
+        <div class="docs-item-ico" style="background:rgba(255,149,0,.12);">📄</div>
+        <div><div class="docs-item-title">Документы и согласование</div><div class="docs-item-sub">Цепочки подписей</div></div>
+      </div>
+      <div class="docs-item" onclick="openArticle('repair')" id="li-repair">
+        <div class="docs-item-ico" style="background:rgba(255,69,58,.12);">🔧</div>
+        <div><div class="docs-item-title">Ремонты и списание</div><div class="docs-item-sub">Ремфонд, утилизация</div></div>
+      </div>
+
+      <div class="docs-cat-label">Аналитика</div>
+
+      <div class="docs-item" onclick="openArticle('analytics')" id="li-analytics">
+        <div class="docs-item-ico" style="background:rgba(88,86,214,.12);">📊</div>
+        <div><div class="docs-item-title">Отчёты и экспорт</div><div class="docs-item-sub">Excel, 1С, аналитика</div></div>
+      </div>
+      <div class="docs-item" onclick="openArticle('notifications')" id="li-notifications">
+        <div class="docs-item-ico" style="background:rgba(0,122,255,.12);">🔔</div>
+        <div><div class="docs-item-title">Уведомления</div><div class="docs-item-sub">Telegram, Email, Push</div></div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ── Main ── -->
+  <main class="docs-main" id="docs-main">
+    <div class="docs-mob-toggle" onclick="document.getElementById('docs-sb').classList.toggle('mob-open')">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      Разделы базы знаний
+    </div>
+
+    <!-- HOME -->
+    <div class="docs-home" id="docs-home">
+      <div class="docs-home-title">Центр поддержки ASSETO</div>
+      <p class="docs-home-sub">Всё, что нужно для работы с системой учёта оборудования. Найдите нужный раздел или используйте поиск.</p>
+      <div class="docs-cards-grid">
+
+        <div class="docs-home-card" onclick="openArticle('start')">
+          <span class="dhc-tag" style="color:var(--accent);">База</span>
+          <div class="dhc-icon" style="background:rgba(0,122,255,.12);">🚀</div>
+          <div class="dhc-title">Начало работы</div>
+          <div class="dhc-desc">Настройте профиль, подключите уведомления и проведите первую инвентаризацию за 15 минут.</div>
+          <div class="dhc-arrow">Читать <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg></div>
+        </div>
+
+        <div class="docs-home-card" onclick="openArticle('assets')">
+          <span class="dhc-tag" style="color:#34C759;">АХО / IT</span>
+          <div class="dhc-icon" style="background:rgba(52,199,89,.12);">💻</div>
+          <div class="dhc-title">Учёт оборудования</div>
+          <div class="dhc-desc">Добавление техники, инвентарные номера, QR-коды, импорт из Excel и передача между сотрудниками.</div>
+          <div class="dhc-arrow">Читать <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg></div>
+        </div>
+
+        <div class="docs-home-card" onclick="openArticle('onboarding')">
+          <span class="dhc-tag" style="color:#FF9500;">HR</span>
+          <div class="dhc-icon" style="background:rgba(255,149,0,.12);">👤</div>
+          <div class="dhc-title">Онбординг</div>
+          <div class="dhc-desc">Оформление нового сотрудника: запрос оборудования через HR → АХО → Директор → Бухгалтер.</div>
+          <div class="dhc-arrow">Читать <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg></div>
+        </div>
+
+        <div class="docs-home-card" onclick="openArticle('offboarding')">
+          <span class="dhc-tag" style="color:#FF3B30;">HR</span>
+          <div class="dhc-icon" style="background:rgba(255,59,48,.12);">🚪</div>
+          <div class="dhc-title">Оффбординг (увольнение)</div>
+          <div class="dhc-desc">Пошаговый возврат техники при увольнении, фотофиксация состояния, электронная подпись.</div>
+          <div class="dhc-arrow">Читать <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg></div>
+        </div>
+
+        <div class="docs-home-card" onclick="openArticle('docs')">
+          <span class="dhc-tag" style="color:#FF9500;">Документы</span>
+          <div class="dhc-icon" style="background:rgba(255,149,0,.12);">📄</div>
+          <div class="dhc-title">Документооборот</div>
+          <div class="dhc-desc">Цепочки согласования, электронные подписи, статусы документов и уведомления участникам.</div>
+          <div class="dhc-arrow">Читать <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg></div>
+        </div>
+
+        <div class="docs-home-card" onclick="openArticle('roles')">
+          <span class="dhc-tag" style="color:#5856D6;">Security</span>
+          <div class="dhc-icon" style="background:rgba(88,86,214,.12);">🛡️</div>
+          <div class="dhc-title">Права доступа</div>
+          <div class="dhc-desc">Роли: Superadmin, АХО, HR, Director, Accountant, Auditor, Employee — матрица прав и возможностей.</div>
+          <div class="dhc-arrow">Читать <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg></div>
+        </div>
+
+      </div>
+
+      <div style="margin-top:48px;padding:28px;background:linear-gradient(135deg,rgba(0,122,255,.08),rgba(88,86,214,.08));border:1px solid rgba(0,122,255,.15);border-radius:20px;display:flex;align-items:center;gap:20px;flex-wrap:wrap;">
+        <div style="font-size:32px;">💡</div>
+        <div style="flex:1;">
+          <div style="font-size:16px;font-weight:800;margin-bottom:4px;">Не нашли ответ?</div>
+          <div style="font-size:14px;color:var(--text2);">Обратитесь к системному администратору или используйте кнопку «Настройки» для связи с IT-отделом.</div>
+        </div>
+        <a href="/settings" class="act-btn act-btn-primary">Настройки →</a>
+      </div>
+    </div>
+
+    <!-- ARTICLES -->
+    <div class="docs-article" id="art-start">
+      <div class="article-breadcrumb">
+        <a href="#" onclick="showHome();return false;">База знаний</a>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+        Начало работы
+      </div>
+      <div class="article-header">
+        <span class="article-tag" style="background:rgba(0,122,255,.12);color:var(--accent);">База</span>
+        <div class="article-title">Начало работы с ASSETO</div>
+        <div class="article-meta">Время чтения: ~5 минут · Обновлено: 2026</div>
+      </div>
+      <div class="article-body">
+        <p>ASSETO — система учёта и управления материальными ценностями компании. Все активы, сотрудники, документы и процессы в едином месте.</p>
+
+        <h2>Первый вход в систему</h2>
+        <div class="step-block"><div class="step-num">1</div><div class="step-content"><strong>Получите учётные данные</strong><span>Администратор системы создаёт аккаунт и отправляет вам email с временным паролем.</span></div></div>
+        <div class="step-block"><div class="step-num">2</div><div class="step-content"><strong>Войдите на /login</strong><span>Введите email и пароль. При первом входе система попросит сменить временный пароль.</span></div></div>
+        <div class="step-block"><div class="step-num">3</div><div class="step-content"><strong>Настройте профиль</strong><span>Перейдите в Настройки → профиль. Укажите отдел, подключите Telegram для уведомлений.</span></div></div>
+        <div class="step-block"><div class="step-num">4</div><div class="step-content"><strong>Выберите тему</strong><span>Тёмная / светлая тема переключается в правом верхнем углу или через ⌘K → Сменить тему.</span></div></div>
+
+        <h2>Навигация</h2>
+        <p>Основное меню — в боковой панели слева. Быстрый доступ к любому разделу — через <code>⌘K</code> (Command Palette).</p>
+        <ul>
+          <li><strong>Дашборд</strong> — главная страница с персонализированными данными по вашей роли</li>
+          <li><strong>Документы</strong> — документооборот и согласования</li>
+          <li><strong>Инвентаризация</strong> — плановые проверки наличия техники</li>
+          <li><strong>Аналитика</strong> — отчёты и графики</li>
+          <li><strong>Настройки</strong> — профиль, уведомления, безопасность</li>
+        </ul>
+
+        <h2>Подключение Telegram</h2>
+        <div class="step-block"><div class="step-num">1</div><div class="step-content"><strong>Найдите ваш Telegram chat_id</strong><span>Напишите боту <code>@userinfobot</code> в Telegram — он пришлёт ваш числовой ID.</span></div></div>
+        <div class="step-block"><div class="step-num">2</div><div class="step-content"><strong>Введите ID в Настройках</strong><span>Настройки → Telegram Уведомления → введите chat_id → нажмите «Подключить».</span></div></div>
+        <div class="step-block"><div class="step-num">3</div><div class="step-content"><strong>Готово!</strong><span>Теперь вы будете получать уведомления о документах, выдачах и важных событиях прямо в Telegram.</span></div></div>
+
+        <div class="tip-box">💡 <strong>Совет:</strong> Включите Email-уведомления в Настройках (только для Superadmin) — так сотрудники без Telegram тоже будут в курсе событий.</div>
+
+        <div class="article-action-btns">
+          <a href="/dashboard" class="act-btn act-btn-primary">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+            Перейти на дашборд
+          </a>
+          <a href="/settings" class="act-btn act-btn-secondary">Настройки профиля</a>
+        </div>
+      </div>
+      <div class="article-nav">
+        <button class="article-nav-btn" onclick="openArticle('roles')">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+          Следующая: Роли и права
+        </button>
+      </div>
+    </div>
+
+    <div class="docs-article" id="art-roles">
+      <div class="article-breadcrumb"><a href="#" onclick="showHome();return false;">База знаний</a><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>Роли и права</div>
+      <div class="article-header">
+        <span class="article-tag" style="background:rgba(88,86,214,.12);color:#5856D6;">Security</span>
+        <div class="article-title">Роли и права доступа</div>
+        <div class="article-meta">Время чтения: ~4 минуты</div>
+      </div>
+      <div class="article-body">
+        <p>В ASSETO — 9 ролей. Каждая роль видит только свою часть системы и может выполнять строго определённые действия.</p>
+        <h2>Матрица ролей</h2>
+        <div style="overflow-x:auto;margin-bottom:20px;">
+          <table style="width:100%;border-collapse:collapse;font-size:13px;">
+            <thead><tr style="border-bottom:1px solid var(--separator2);">
+              <th style="text-align:left;padding:8px 12px;color:var(--text3);font-size:11px;text-transform:uppercase;">Роль</th>
+              <th style="padding:8px;color:var(--text3);font-size:11px;">Просмотр всех</th>
+              <th style="padding:8px;color:var(--text3);font-size:11px;">Редактирование</th>
+              <th style="padding:8px;color:var(--text3);font-size:11px;">Выдача</th>
+              <th style="padding:8px;color:var(--text3);font-size:11px;">Согласование</th>
+              <th style="padding:8px;color:var(--text3);font-size:11px;">Экспорт</th>
+            </tr></thead>
+            <tbody>
+              <tr style="border-bottom:.5px solid var(--separator2);">
+                <td style="padding:10px 12px;"><span class="role-pill" style="background:rgba(88,86,214,.12);color:#5856D6;">Superadmin</span></td>
+                <td style="text-align:center;padding:8px;">✅</td><td style="text-align:center;padding:8px;">✅</td><td style="text-align:center;padding:8px;">✅</td><td style="text-align:center;padding:8px;">✅</td><td style="text-align:center;padding:8px;">✅</td>
+              </tr>
+              <tr style="border-bottom:.5px solid var(--separator2);">
+                <td style="padding:10px 12px;"><span class="role-pill" style="background:rgba(0,122,255,.12);color:#007AFF;">АХО / IT</span></td>
+                <td style="text-align:center;padding:8px;">✅</td><td style="text-align:center;padding:8px;">✅</td><td style="text-align:center;padding:8px;">✅</td><td style="text-align:center;padding:8px;">✅</td><td style="text-align:center;padding:8px;">✅</td>
+              </tr>
+              <tr style="border-bottom:.5px solid var(--separator2);">
+                <td style="padding:10px 12px;"><span class="role-pill" style="background:rgba(52,199,89,.12);color:#34C759;">HR</span></td>
+                <td style="text-align:center;padding:8px;">✅</td><td style="text-align:center;padding:8px;">❌</td><td style="text-align:center;padding:8px;">✅</td><td style="text-align:center;padding:8px;">❌</td><td style="text-align:center;padding:8px;">❌</td>
+              </tr>
+              <tr style="border-bottom:.5px solid var(--separator2);">
+                <td style="padding:10px 12px;"><span class="role-pill" style="background:rgba(255,59,48,.12);color:#FF3B30;">Директор</span></td>
+                <td style="text-align:center;padding:8px;">✅</td><td style="text-align:center;padding:8px;">✅</td><td style="text-align:center;padding:8px;">✅</td><td style="text-align:center;padding:8px;">✅</td><td style="text-align:center;padding:8px;">✅</td>
+              </tr>
+              <tr style="border-bottom:.5px solid var(--separator2);">
+                <td style="padding:10px 12px;"><span class="role-pill" style="background:rgba(255,149,0,.12);color:#FF9500;">Зам. Директора</span></td>
+                <td style="text-align:center;padding:8px;">✅</td><td style="text-align:center;padding:8px;">❌</td><td style="text-align:center;padding:8px;">❌</td><td style="text-align:center;padding:8px;">✅</td><td style="text-align:center;padding:8px;">✅</td>
+              </tr>
+              <tr style="border-bottom:.5px solid var(--separator2);">
+                <td style="padding:10px 12px;"><span class="role-pill" style="background:rgba(48,176,199,.12);color:#30B0C7;">Бухгалтер</span></td>
+                <td style="text-align:center;padding:8px;">✅</td><td style="text-align:center;padding:8px;">❌</td><td style="text-align:center;padding:8px;">❌</td><td style="text-align:center;padding:8px;">✅</td><td style="text-align:center;padding:8px;">✅</td>
+              </tr>
+              <tr style="border-bottom:.5px solid var(--separator2);">
+                <td style="padding:10px 12px;"><span class="role-pill" style="background:rgba(90,200,250,.12);color:#5AC8FA;">Аудитор</span></td>
+                <td style="text-align:center;padding:8px;">✅</td><td style="text-align:center;padding:8px;">❌</td><td style="text-align:center;padding:8px;">❌</td><td style="text-align:center;padding:8px;">❌</td><td style="text-align:center;padding:8px;">✅</td>
+              </tr>
+              <tr style="border-bottom:.5px solid var(--separator2);">
+                <td style="padding:10px 12px;"><span class="role-pill" style="background:rgba(142,142,147,.12);color:#8E8E93;">Сотрудник</span></td>
+                <td style="text-align:center;padding:8px;">❌</td><td style="text-align:center;padding:8px;">❌</td><td style="text-align:center;padding:8px;">❌</td><td style="text-align:center;padding:8px;">❌</td><td style="text-align:center;padding:8px;">❌</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="warn-box">⚠️ Сотрудник видит только <strong>свою технику</strong>. Он не может просматривать чужие активы, документы других пользователей или любые административные данные.</div>
+        <h2>Управление ролями</h2>
+        <p>Только <strong>Superadmin</strong> и <strong>Директор</strong> могут изменять роли пользователей. Для этого перейдите в раздел «Пользователи» в боковом меню.</p>
+        <div class="tip-box">💡 Правило безопасности: нельзя назначить роль <em>выше или равную</em> своей. Только Superadmin может создать другого Superadmin.</div>
+        <div class="article-action-btns">
+          <a href="/admin/users" class="act-btn act-btn-primary">Управление пользователями</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="docs-article" id="art-assets">
+      <div class="article-breadcrumb"><a href="#" onclick="showHome();return false;">База знаний</a><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>Учёт оборудования</div>
+      <div class="article-header">
+        <span class="article-tag" style="background:rgba(52,199,89,.12);color:#34C759;">АХО / IT</span>
+        <div class="article-title">Учёт оборудования</div>
+        <div class="article-meta">Время чтения: ~6 минут</div>
+      </div>
+      <div class="article-body">
+        <h2>Добавление новой техники</h2>
+        <div class="step-block"><div class="step-num">1</div><div class="step-content"><strong>Нажмите «+ Добавить предмет»</strong><span>Кнопка в правом верхнем углу дашборда (доступна для АХО и Superadmin).</span></div></div>
+        <div class="step-block"><div class="step-num">2</div><div class="step-content"><strong>Шаг 1 — Место</strong><span>Укажите здание/корпус, номер кабинета и сотрудника (или оставьте пустым если свободно).</span></div></div>
+        <div class="step-block"><div class="step-num">3</div><div class="step-content"><strong>Шаг 2 — Техника</strong><span>Выберите категорию, введите модель и серийный номер. Система автоматически присвоит инвентарный номер.</span></div></div>
+        <div class="step-block"><div class="step-num">4</div><div class="step-content"><strong>Шаг 3 — Детали</strong><span>Укажите состояние, добавьте примечания при необходимости. Нажмите «Создать».</span></div></div>
+
+        <h2>Инвентарные номера</h2>
+        <p>ASSETO автоматически генерирует инвентарные номера по шаблону: <code>КАТ-ГГГГ-NNNN</code></p>
+        <ul>
+          <li><code>НТБ-2026-0001</code> — Ноутбук</li>
+          <li><code>МОН-2026-0001</code> — Монитор</li>
+          <li><code>ПРН-2026-0001</code> — Принтер</li>
+          <li><code>КРС-2026-0001</code> — Кресло</li>
+        </ul>
+
+        <h2>Импорт из Excel</h2>
+        <p>Для массового добавления техники используйте импорт. Нажмите кнопку <strong>«Импорт»</strong> в тулбаре и загрузите .xlsx файл.</p>
+        <div class="tip-box">📊 Формат Excel: столбцы — <code>Место, Кабинет, Категория, Модель, Серийный №, Сотрудник, Состояние</code>. Система пропустит строки с ошибками и покажет сводку.</div>
+
+        <h2>Передача оборудования</h2>
+        <p>Чтобы передать технику другому сотруднику, откройте актив и нажмите <strong>«Передать»</strong>. Система создаст документ о передаче и уведомит обоих сотрудников.</p>
+
+        <h2>Состояния оборудования</h2>
+        <ul>
+          <li>🟢 <strong>Хорошее</strong> — техника в рабочем состоянии</li>
+          <li>🟡 <strong>Потёрто</strong> — косметические повреждения, работает</li>
+          <li>🔴 <strong>Требует ремонта</strong> — неисправна, нужна заявка в ремфонд</li>
+          <li>⚫ <strong>Списано</strong> — выведена из эксплуатации</li>
+          <li>❌ <strong>Утеряно</strong> — не найдена при инвентаризации</li>
+        </ul>
+
+        <div class="article-action-btns">
+          <a href="/dashboard" class="act-btn act-btn-primary">Открыть склад</a>
+          <button onclick="openArticle('qr')" class="act-btn act-btn-secondary">QR-коды →</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="docs-article" id="art-qr">
+      <div class="article-breadcrumb"><a href="#" onclick="showHome();return false;">База знаний</a><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>QR-коды</div>
+      <div class="article-header">
+        <span class="article-tag" style="background:rgba(48,176,199,.12);color:#30B0C7;">АХО / IT</span>
+        <div class="article-title">QR-коды и этикетки</div>
+        <div class="article-meta">Время чтения: ~3 минуты</div>
+      </div>
+      <div class="article-body">
+        <h2>Как работают QR-коды</h2>
+        <p>Каждый актив в ASSETO имеет уникальный QR-код, который ведёт на страницу актива. Это позволяет мгновенно получить информацию о технике, не заходя в систему вручную.</p>
+
+        <h2>Печать QR-этикеток</h2>
+        <div class="step-block"><div class="step-num">1</div><div class="step-content"><strong>Меню QR ▾ в тулбаре</strong><span>Выберите «Все QR-этикетки» для печати всей техники или «Печать выбранных» для отмеченных галочкой активов.</span></div></div>
+        <div class="step-block"><div class="step-num">2</div><div class="step-content"><strong>Страница /qr-print откроется</strong><span>Настройте размер этикетки, количество в ряд и нажмите «Распечатать».</span></div></div>
+        <div class="step-block"><div class="step-num">3</div><div class="step-content"><strong>Наклейте на технику</strong><span>Рекомендуемый размер этикетки: 50×30 мм. Наклейте в видном месте (нижний угол, задняя крышка).</span></div></div>
+
+        <h2>QR-коды сотрудников</h2>
+        <p>Каждый сотрудник также получает персональный QR-код. Через него можно быстро закрепить технику за конкретным человеком, отсканировав оба QR.</p>
+
+        <h2>Сканирование через мобильный</h2>
+        <p>Нажмите кнопку <strong>«Сканировать»</strong> в верхней панели навигации (или в nav на мобиле). Поднесите камеру к QR-коду — система автоматически откроет страницу актива.</p>
+
+        <div class="warn-box">📱 Для сканирования нужно разрешить браузеру доступ к камере. При первом использовании появится запрос разрешения.</div>
+
+        <div class="article-action-btns">
+          <a href="/qr-print" class="act-btn act-btn-primary">Перейти к QR-этикеткам</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="docs-article" id="art-inventory">
+      <div class="article-breadcrumb"><a href="#" onclick="showHome();return false;">База знаний</a><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>Инвентаризация</div>
+      <div class="article-header">
+        <span class="article-tag" style="background:rgba(255,149,0,.12);color:#FF9500;">АХО</span>
+        <div class="article-title">Плановая инвентаризация</div>
+        <div class="article-meta">Время чтения: ~4 минуты</div>
+      </div>
+      <div class="article-body">
+        <h2>Создание сессии</h2>
+        <div class="step-block"><div class="step-num">1</div><div class="step-content"><strong>Перейдите в «Инвентаризация»</strong><span>Раздел доступен АХО, Superadmin и Аудитору.</span></div></div>
+        <div class="step-block"><div class="step-num">2</div><div class="step-content"><strong>Нажмите «+ Новая сессия»</strong><span>Дайте название (например: «Q1 2026 — Главный офис»), укажите отдел.</span></div></div>
+        <div class="step-block"><div class="step-num">3</div><div class="step-content"><strong>Сканируйте технику</strong><span>Используйте QR-сканер или ручной ввод инвентарного номера. Отмечайте состояние каждого актива.</span></div></div>
+        <div class="step-block"><div class="step-num">4</div><div class="step-content"><strong>Завершите сессию</strong><span>Нажмите «Завершить» — система сформирует отчёт: найдено / пропало / повреждено.</span></div></div>
+
+        <h2>Diff-отчёт (что пропало)</h2>
+        <p>После завершения сессии откройте её и нажмите <strong>«Diff-отчёт»</strong>. Система покажет все активы, которые числились в базе, но не были найдены при инвентаризации.</p>
+
+        <div class="tip-box">📋 Рекомендуется проводить инвентаризацию раз в квартал для основного оборудования и раз в год для мебели.</div>
+
+        <div class="article-action-btns">
+          <a href="/inventory" class="act-btn act-btn-primary">Перейти к инвентаризации</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="docs-article" id="art-onboarding">
+      <div class="article-breadcrumb"><a href="#" onclick="showHome();return false;">База знаний</a><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>Онбординг</div>
+      <div class="article-header">
+        <span class="article-tag" style="background:rgba(52,199,89,.12);color:#34C759;">HR</span>
+        <div class="article-title">Онбординг нового сотрудника</div>
+        <div class="article-meta">Время чтения: ~5 минут</div>
+      </div>
+      <div class="article-body">
+        <p>Процесс выдачи оборудования новому сотруднику проходит через четырёхступенчатое согласование.</p>
+        <h2>Схема процесса</h2>
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:24px;padding:16px;background:var(--surface);border-radius:14px;border:.5px solid var(--separator2);">
+          <span class="role-pill" style="background:rgba(52,199,89,.12);color:#34C759;">HR создаёт заявку</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text3)" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+          <span class="role-pill" style="background:rgba(0,122,255,.12);color:#007AFF;">АХО проверяет наличие</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text3)" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+          <span class="role-pill" style="background:rgba(255,59,48,.12);color:#FF3B30;">Директор утверждает</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text3)" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+          <span class="role-pill" style="background:rgba(48,176,199,.12);color:#30B0C7;">Бухгалтер учитывает</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text3)" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+          <span class="role-pill" style="background:rgba(52,199,89,.12);color:#34C759;">АХО выдаёт технику</span>
+        </div>
+
+        <h2>Шаг 1: HR создаёт заявку</h2>
+        <div class="step-block"><div class="step-num">1</div><div class="step-content"><strong>Перейдите на дашборд HR</strong><span>Раздел «Новая заявка на оборудование» внизу дашборда.</span></div></div>
+        <div class="step-block"><div class="step-num">2</div><div class="step-content"><strong>Выберите сотрудника</strong><span>Из выпадающего списка выберите нового сотрудника. Если его ещё нет — попросите администратора создать аккаунт.</span></div></div>
+        <div class="step-block"><div class="step-num">3</div><div class="step-content"><strong>Используйте шаблон или добавьте технику вручную</strong><span>Нажмите на готовый шаблон («Пакет разработчика», «Пакет менеджера») или добавьте позиции кнопкой «+ Добавить позицию».</span></div></div>
+        <div class="step-block"><div class="step-num">4</div><div class="step-content"><strong>Укажите дату приёма и нажмите «Отправить»</strong><span>Заявка уйдёт в АХО. АХО, Директор и Бухгалтер получат уведомление.</span></div></div>
+
+        <h2>Шаги 2–4: Согласование</h2>
+        <p>Каждый участник видит документ в разделе <strong>«Документы»</strong> → Ожидают подписи. После согласования статус автоматически переходит к следующему.</p>
+
+        <h2>Шаг 5: АХО выдаёт оборудование</h2>
+        <p>После финального согласования Бухгалтером, на дашборде АХО появляется утверждённый документ с кнопкой <strong>«Выдать оборудование»</strong>. АХО выдаёт технику и закрывает процесс.</p>
+
+        <div class="article-action-btns">
+          <a href="/dashboard" class="act-btn act-btn-primary">Перейти на дашборд HR</a>
+          <a href="/documents" class="act-btn act-btn-secondary">Документы</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="docs-article" id="art-offboarding">
+      <div class="article-breadcrumb"><a href="#" onclick="showHome();return false;">База знаний</a><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>Оффбординг</div>
+      <div class="article-header">
+        <span class="article-tag" style="background:rgba(255,59,48,.12);color:#FF3B30;">HR</span>
+        <div class="article-title">Оффбординг — увольнение сотрудника</div>
+        <div class="article-meta">Время чтения: ~5 минут</div>
+      </div>
+      <div class="article-body">
+        <p>При увольнении сотрудника ASSETO автоматически собирает список его техники и запускает процесс возврата.</p>
+        <h2>Запуск процесса</h2>
+        <div class="step-block"><div class="step-num">1</div><div class="step-content"><strong>HR → «Увольнения» → «+ Новое»</strong><span>Выберите сотрудника. Система автоматически покажет весь список закреплённой за ним техники.</span></div></div>
+        <div class="step-block"><div class="step-num">2</div><div class="step-content"><strong>АХО проверяет и принимает технику</strong><span>АХО осматривает каждый актив, указывает состояние (Хорошее / Повреждено / Утеряно) и подписывает акт.</span></div></div>
+        <div class="step-block"><div class="step-num">3</div><div class="step-content"><strong>Сотрудник подписывает через ссылку</strong><span>На email сотрудника приходит ссылка с формой для подписи. Он может подписать с телефона без входа в систему.</span></div></div>
+        <div class="step-block"><div class="step-num">4</div><div class="step-content"><strong>HR завершает процесс</strong><span>HR финализирует увольнение. Техника автоматически переходит в статус «Свободно».</span></div></div>
+
+        <h2>Фотофиксация</h2>
+        <p>При запросе возврата АХО может запросить фотографии каждого актива. Сотрудник загружает их через ту же ссылку на телефоне.</p>
+
+        <div class="warn-box">⚠️ Если сотрудник не может вернуть технику (утеряна / повреждена) — АХО отмечает это в акте. Бухгалтер получит уведомление для списания или взыскания ущерба.</div>
+
+        <div class="article-action-btns">
+          <a href="/admin/dismissals" class="act-btn act-btn-primary">Раздел «Увольнения»</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="docs-article" id="art-docs">
+      <div class="article-breadcrumb"><a href="#" onclick="showHome();return false;">База знаний</a><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>Документооборот</div>
+      <div class="article-header">
+        <span class="article-tag" style="background:rgba(255,149,0,.12);color:#FF9500;">Документы</span>
+        <div class="article-title">Документооборот и согласование</div>
+        <div class="article-meta">Время чтения: ~4 минуты</div>
+      </div>
+      <div class="article-body">
+        <h2>Типы документов</h2>
+        <ul>
+          <li><strong>Выдача</strong> — передача техники сотруднику</li>
+          <li><strong>Возврат</strong> — возврат техники при переводе или увольнении</li>
+          <li><strong>Списание</strong> — вывод из эксплуатации (АХО → Директор → Бухгалтер)</li>
+          <li><strong>Закупка</strong> — запрос на новую технику (АХО → Зам.Директора → Директор → Бухгалтер)</li>
+          <li><strong>Ремонт</strong> — направление в сервис (АХО → Директор)</li>
+          <li><strong>Онбординг</strong> — выдача при приёме (HR → АХО → Директор → Бухгалтер)</li>
+        </ul>
+
+        <h2>Как согласовать документ</h2>
+        <div class="step-block"><div class="step-num">1</div><div class="step-content"><strong>Получите уведомление</strong><span>В Telegram, email или в виде красного бейджа на «Документы» в сайдбаре.</span></div></div>
+        <div class="step-block"><div class="step-num">2</div><div class="step-content"><strong>Откройте документ</strong><span>Перейдите в «Документы» и выберите документ из раздела «Ожидают подписи».</span></div></div>
+        <div class="step-block"><div class="step-num">3</div><div class="step-content"><strong>Изучите содержимое</strong><span>Прочитайте описание, просмотрите цепочку согласования и историю комментариев.</span></div></div>
+        <div class="step-block"><div class="step-num">4</div><div class="step-content"><strong>Подпишите или отклоните</strong><span>Нажмите «✅ Согласовать» (поставьте электронную подпись) или «❌ Отклонить» (укажите причину).</span></div></div>
+
+        <h2>Статусы документов</h2>
+        <ul>
+          <li>🟡 <strong>Ожидает</strong> — на рассмотрении у очередного участника</li>
+          <li>✅ <strong>Утверждён</strong> — все подписали</li>
+          <li>❌ <strong>Отклонён</strong> — один из участников отклонил</li>
+          <li>🖨️ <strong>Закрыт</strong> — бухгалтер распечатал и принял к учёту</li>
+        </ul>
+
+        <h2>Дедлайны</h2>
+        <p>Документы с установленным дедлайном подсвечиваются в списке цветом: 🟢 есть время → 🟠 2 дня → 🔴 сегодня / просрочен.</p>
+
+        <div class="article-action-btns">
+          <a href="/documents" class="act-btn act-btn-primary">Перейти к документам</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="docs-article" id="art-repair">
+      <div class="article-breadcrumb"><a href="#" onclick="showHome();return false;">База знаний</a><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>Ремонты</div>
+      <div class="article-header">
+        <span class="article-tag" style="background:rgba(255,69,58,.12);color:#FF453A;">Ремонт</span>
+        <div class="article-title">Ремонты и списание</div>
+        <div class="article-meta">Время чтения: ~3 минуты</div>
+      </div>
+      <div class="article-body">
+        <h2>Заявка на ремонт</h2>
+        <p>Подать заявку может любой сотрудник для своей техники, или АХО — для любого актива.</p>
+        <div class="step-block"><div class="step-num">1</div><div class="step-content"><strong>Откройте актив или раздел «Ремонты»</strong><span>На странице актива нажмите «Сообщить о проблеме». Опишите неисправность.</span></div></div>
+        <div class="step-block"><div class="step-num">2</div><div class="step-content"><strong>АХО получает заявку</strong><span>Заявка появляется в разделе «Ремонты» с приоритетом. SLA: High — 1 день, Medium — 3 дня, Low — 7 дней.</span></div></div>
+        <div class="step-block"><div class="step-num">3</div><div class="step-content"><strong>АХО закрывает или эскалирует</strong><span>При ремонте своими силами — закрывают с описанием. При отправке в сервис — меняют статус на «В сервисе».</span></div></div>
+
+        <h2>Просрочка SLA</h2>
+        <p>На дашборде АХО/Superadmin появляется блок с просроченными заявками (красный). Это сигнал к немедленному реагированию.</p>
+
+        <h2>Списание</h2>
+        <p>Техника, которую восстановить невозможно, подлежит списанию. Создайте документ типа <strong>«Списание»</strong>. Цепочка: АХО → Директор → Бухгалтер. После финального согласования — актив переводится в статус «Списано».</p>
+
+        <div class="article-action-btns">
+          <a href="/maintenance" class="act-btn act-btn-primary">Раздел «Ремонты»</a>
+          <a href="/documents" class="act-btn act-btn-secondary">Создать акт списания</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="docs-article" id="art-analytics">
+      <div class="article-breadcrumb"><a href="#" onclick="showHome();return false;">База знаний</a><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>Аналитика</div>
+      <div class="article-header">
+        <span class="article-tag" style="background:rgba(88,86,214,.12);color:#5856D6;">Аналитика</span>
+        <div class="article-title">Отчёты, экспорт и аналитика</div>
+        <div class="article-meta">Время чтения: ~3 минуты</div>
+      </div>
+      <div class="article-body">
+        <h2>Встроенная аналитика</h2>
+        <p>Раздел «Аналитика» доступен АХО, Аудитору, Директору и Superadmin. Показывает:</p>
+        <ul>
+          <li>Распределение техники по категориям и кабинетам</li>
+          <li>«Токсичные» активы — ломаются чаще 3 раз за год</li>
+          <li>Активы с истекающим сроком службы (старше 3 лет)</li>
+          <li>Динамику расходов по отделам</li>
+        </ul>
+
+        <h2>МОЛ-отчёт (бухгалтер)</h2>
+        <p>Дашборд бухгалтера показывает матрицу МОЛ — кто за какое оборудование отвечает, с балансовой и остаточной стоимостью (линейная амортизация).</p>
+
+        <h2>Экспорт в Excel</h2>
+        <p>Нажмите кнопку <strong>«Экспорт»</strong> на главной странице (доступна АХО, Аудитору, Superadmin). Скачается полный отчёт в формате .xlsx с листами:</p>
+        <ul>
+          <li>Активы (весь список с параметрами)</li>
+          <li>История изменений</li>
+          <li>Увольнения</li>
+          <li>Выдачи</li>
+        </ul>
+
+        <div class="tip-box">📊 Для сдачи данных в бухгалтерию/1С используйте полный экспорт. Формат совместим с Microsoft Excel 2016+.</div>
+
+        <div class="article-action-btns">
+          <a href="/analytics" class="act-btn act-btn-primary">Открыть аналитику</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="docs-article" id="art-notifications">
+      <div class="article-breadcrumb"><a href="#" onclick="showHome();return false;">База знаний</a><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>Уведомления</div>
+      <div class="article-header">
+        <span class="article-tag" style="background:rgba(0,122,255,.12);color:var(--accent);">Система</span>
+        <div class="article-title">Уведомления — Telegram и Email</div>
+        <div class="article-meta">Время чтения: ~2 минуты</div>
+      </div>
+      <div class="article-body">
+        <h2>Типы уведомлений</h2>
+        <ul>
+          <li>📄 Новый документ на вашу подпись</li>
+          <li>✅ Документ согласован / ❌ отклонён</li>
+          <li>📦 Оборудование готово к выдаче (АХО)</li>
+          <li>🔔 SLA-просрочки по ремонтам</li>
+          <li>👤 Новая заявка на онбординг</li>
+        </ul>
+
+        <h2>Telegram</h2>
+        <p>Настройки → «Telegram Уведомления». Получите chat_id через <code>@userinfobot</code> и введите в поле.</p>
+
+        <h2>Email (SMTP)</h2>
+        <p>Настраивается только Superadmin'ом в Настройки → «Email уведомления (SMTP)». Поддерживаются Gmail, Yandex Mail, Mail.ru, корпоративные SMTP.</p>
+        <div class="tip-box">📧 Gmail: используйте App Password (Пароль приложения), а не обычный пароль. Двухфакторная аутентификация должна быть включена.</div>
+
+        <div class="article-action-btns">
+          <a href="/settings" class="act-btn act-btn-primary">Настройки уведомлений</a>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+var _currentArticle = null;
+
+var _ARTICLES = {
+  start:'li-start', roles:'li-roles', assets:'li-assets', qr:'li-qr',
+  inventory:'li-inventory', onboarding:'li-onboarding', offboarding:'li-offboarding',
+  docs:'li-docs', repair:'li-repair', analytics:'li-analytics', notifications:'li-notifications'
+};
+
+function openArticle(id) {
+  // Hide home, show article
+  document.getElementById('docs-home').style.display = 'none';
+  document.querySelectorAll('.docs-article').forEach(el => el.classList.remove('show'));
+  const art = document.getElementById('art-' + id);
+  if (art) art.classList.add('show');
+
+  // Highlight sidebar item
+  document.querySelectorAll('.docs-item').forEach(el => el.classList.remove('active'));
+  const li = document.getElementById(_ARTICLES[id]);
+  if (li) li.classList.add('active');
+
+  // Scroll to top
+  document.getElementById('docs-main').scrollTo({top: 0, behavior: 'smooth'});
+
+  // Close mobile sidebar
+  document.getElementById('docs-sb').classList.remove('mob-open');
+
+  _currentArticle = id;
+  // Update URL hash without reload
+  history.replaceState(null, '', '#' + id);
+}
+
+function showHome() {
+  document.getElementById('docs-home').style.display = '';
+  document.querySelectorAll('.docs-article').forEach(el => el.classList.remove('show'));
+  document.querySelectorAll('.docs-item').forEach(el => el.classList.remove('active'));
+  _currentArticle = null;
+  history.replaceState(null, '', window.location.pathname);
+  document.getElementById('docs-main').scrollTo({top: 0, behavior: 'smooth'});
+}
+
+function searchDocs(q) {
+  q = q.toLowerCase().trim();
+  const items = document.querySelectorAll('.docs-item');
+  const labels = document.querySelectorAll('.docs-cat-label');
+  if (!q) {
+    items.forEach(el => el.style.display = '');
+    labels.forEach(el => el.style.display = '');
+    return;
+  }
+  items.forEach(el => {
+    const title = el.querySelector('.docs-item-title')?.textContent.toLowerCase() || '';
+    const sub = el.querySelector('.docs-item-sub')?.textContent.toLowerCase() || '';
+    el.style.display = (title.includes(q) || sub.includes(q)) ? '' : 'none';
+  });
+  labels.forEach(el => el.style.display = 'none');
+}
+
+// Open from URL hash
+(function() {
+  const hash = window.location.hash.replace('#', '');
+  if (hash && _ARTICLES[hash]) openArticle(hash);
+})();
+</script>
+{% endblock %}

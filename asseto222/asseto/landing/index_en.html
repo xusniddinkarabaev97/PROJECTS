@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ASSETO — Smart Company Asset Tracking</title>
+  <meta name="description" content="ASSETO — платформа нового поколения для учёта оборудования. QR codes, документооборот, аналитика. Замените Excel за 15 minут.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<!-- ═══ PRELOADER ═══ -->
+<div id="preloader">
+  <img src="img/logo.png" alt="ASSETO Logo" class="preloader-logo">
+  <div class="preloader-spinner"></div>
+</div>
+<!-- ═══ CANVAS BACKGROUND ═══ -->
+<canvas id="hero-canvas"></canvas>
+
+<!-- ═══ NAV ═══ -->
+<nav id="navbar">
+  <div class="nav-inner">
+    <a href="#" class="nav-logo">
+      <img src="img/logo.png" alt="ASSETO Logo" style="height: 36px; object-fit: contain;">
+      <span>ASSETO</span>
+    </a>
+    <div class="nav-links">
+      <a href="#features">Features</a>
+      <a href="#how">How it works</a>
+      <a href="#pricing">Pricing</a>
+      <a href="#contact">Contact</a>
+    </div>
+    
+    <div class="lang-switcher" style="display:flex; gap:12px; margin-left:24px; font-size:13px; font-weight:800;">
+      <a href="index.html" style="color: var(--text2); text-decoration:none; transition:0.2s;">RU</a>
+      <a href="index_en.html" style="color: var(--accent); text-decoration:none; transition:0.2s;">EN</a>
+      <a href="index_uz.html" style="color: var(--text2); text-decoration:none; transition:0.2s;">UZ</a>
+    </div>
+    
+    <div class="nav-cta">
+      <a href="#pricing" class="btn-nav">Start for free →</a>
+    </div>
+    <button class="nav-burger" onclick="toggleMenu()">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+  <div class="nav-mobile" id="nav-mobile">
+    <div class="lang-switcher-mobile" style="display:flex; justify-content:center; gap:16px; padding:12px; font-size:16px; font-weight:800; border-bottom:1px solid var(--border);">
+      <a href="index.html" style="color: var(--text2); text-decoration:none;">RU</a>
+      <a href="index_en.html" style="color: var(--accent); text-decoration:none;">EN</a>
+      <a href="index_uz.html" style="color: var(--text2); text-decoration:none;">UZ</a>
+    </div>
+    <a href="#features" onclick="toggleMenu()">Features</a>
+    <a href="#how" onclick="toggleMenu()">How it works</a>
+    <a href="#pricing" onclick="toggleMenu()">Pricing</a>
+    <a href="#contact" onclick="toggleMenu()">Contact</a>
+    <a href="#pricing" class="btn-mobile-cta" onclick="toggleMenu()">Start for free</a>
+  </div>
+</nav>
+
+<!-- ═══ HERO ═══ -->
+<section id="hero">
+  <div class="hero-content">
+    <div class="hero-badge reveal">
+      <span class="badge-dot"></span>
+      Next generation asset tracking
+    </div>
+    <h1 class="hero-title reveal">
+      Company equipment tracking.<br>
+      <span class="gradient-text">Smart. Fast.</span><br>
+      Simple.
+    </h1>
+    <p class="hero-sub reveal">
+      ASSETO replaces Excel spreadsheets and paper acts. All company equipment,
+      document flow, and analytics — in one place. Launch in 15 minutes.
+    </p>
+    <div class="hero-actions reveal">
+      <a href="#pricing" class="btn-primary">
+        Try for free
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+      </a>
+      <a href="#how" class="btn-ghost">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
+        Watch demo
+      </a>
+    </div>
+    <div class="hero-stats reveal">
+      <div class="stat">
+        <span class="stat-num" data-target="330">0</span><span class="stat-unit">K+</span>
+        <span class="stat-label">companies on the market</span>
+      </div>
+      <div class="stat-divider"></div>
+      <div class="stat">
+        <span class="stat-num" data-target="15">0</span><span class="stat-unit">min</span>
+        <span class="stat-label">to first result</span>
+      </div>
+      <div class="stat-divider"></div>
+      <div class="stat">
+        <span class="stat-num" data-target="9">0</span><span class="stat-unit"> roles</span>
+        <span class="stat-label">from employee to CEO</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- FLOATING MOCKUP -->
+  <div class="hero-mockup reveal">
+    <div class="mockup-glow"></div>
+    <div class="browser-frame">
+      <div class="browser-bar">
+        <div class="browser-dots">
+          <span style="background:#FF5F57"></span>
+          <span style="background:#FFBD2E"></span>
+          <span style="background:#28CA41"></span>
+        </div>
+        <div class="browser-url">asseto.uz/dashboard</div>
+      </div>
+      <div class="browser-screen">
+        <!-- Fake Dashboard -->
+        <div class="dash-sidebar">
+          <div class="ds-logo">T</div>
+          <div class="ds-item active"></div>
+          <div class="ds-item"></div>
+          <div class="ds-item"></div>
+          <div class="ds-item"></div>
+          <div class="ds-item"></div>
+        </div>
+        <div class="dash-main" style="position: relative;">
+          <div class="dash-header">
+            <div>
+              <div class="dh-title">Warehouse & Tracking</div>
+              <div class="dh-sub">Ops / IT · Equipment Management</div>
+            </div>
+            <div class="dh-btn">+ Add</div>
+          </div>
+          <div class="dash-cards">
+            <div class="dc"><div class="dc-num blue">247</div><div class="dc-label">Total equipment</div></div>
+            <div class="dc"><div class="dc-num green">189</div><div class="dc-label">With employees</div></div>
+            <div class="dc"><div class="dc-num orange">12</div><div class="dc-label">Under repair</div></div>
+          </div>
+          <div class="dash-table">
+            <div class="dt-row header">
+              <span>Inv. No.</span><span>Category</span><span>Employee</span><span>Status</span>
+            </div>
+            <div class="dt-row"><span class="inv">НТБ-001</span><span>Laptop</span><span>Alisher I.</span><span class="badge-g">In use</span></div>
+            <div class="dt-row"><span class="inv">МОН-045</span><span>Monitor</span><span>Dilnoza K.</span><span class="badge-g">In use</span></div>
+            <div class="dt-row"><span class="inv">ПРН-012</span><span>Printer</span><span>—</span><span class="badge-b">Free</span></div>
+            <div class="dt-row"><span class="inv">НТБ-033</span><span>Laptop</span><span>Bakhrom T.</span><span class="badge-o">Repair</span></div>
+          </div>
+          
+          <!-- SCAN UI ANIMATION -->
+          <div class="scan-overlay">
+            <div class="scan-modal">
+              <div class="sm-qr">
+                <div class="sm-laser"></div>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 3h7v7H3zM14 3h7v7h-7zM3 14h7v7H3zM14 14h3v3h-3zM18 18h3v3h-3zM14 18h2v2h-2zM18 14h2v2h-2z"/></svg>
+              </div>
+              <div class="sm-text">Scanning QR...</div>
+              <div class="sm-success">
+                <div class="sms-icon">✓</div>
+                <div class="sms-text">Laptop issued</div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+    <!-- Floating notifications -->
+    <div class="float-notif notif-1">
+      <span class="fn-ico">📄</span>
+      <div>
+        <div class="fn-title">Document approved</div>
+        <div class="fn-sub">Director signed the act</div>
+      </div>
+    </div>
+    <div class="float-notif notif-2">
+      <span class="fn-ico">📦</span>
+      <div>
+        <div class="fn-title">Equipment issued</div>
+        <div class="fn-sub">laptop NTB-089</div>
+      </div>
+    </div>
+    <div class="float-notif notif-3">
+      <span class="fn-ico">🔔</span>
+      <div>
+        <div class="fn-title">Alisher returned equipment</div>
+        <div class="fn-sub">Signature received</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ TRUSTED BY ═══ -->
+<section class="trusted">
+  <div class="container">
+    <p class="trusted-label">Trusted in Uzbekistan</p>
+    <div class="trusted-logos">
+      <div class="tl">Uzinfocom</div>
+      <div class="tl">Whirl</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ PROBLEM ═══ -->
+<section id="problem" class="section">
+  <div class="container">
+    <div class="section-label reveal">Problem</div>
+    <h2 class="section-title reveal">Your company is losing <span class="gradient-text">money right now</span></h2>
+    <p class="section-sub reveal">Every company faces the same problems</p>
+
+    <div class="problem-grid">
+      <div class="problem-card reveal">
+        <div class="pc-icon" style="background:rgba(255,59,48,.1);color:#FF3B30;">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
+        </div>
+        <h3>Excel chaos</h3>
+        <p>Spreadsheets are outdated, everyone has their own version, formulas are broken. Nobody knows what's up-to-date.</p>
+        <div class="pc-stat">💸 40+ hours/year on manual updates</div>
+      </div>
+      <div class="problem-card reveal">
+        <div class="pc-icon" style="background:rgba(255,149,0,.1);color:#FF9500;">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        </div>
+        <h3>Paper acts</h3>
+        <p>Documents get lost, signatures are forged, approval takes weeks. Accounting is terrified.</p>
+        <div class="pc-stat">📋 3-5 days per transfer act</div>
+      </div>
+      <div class="problem-card reveal">
+        <div class="pc-icon" style="background:rgba(88,86,214,.1);color:#5856D6;">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        </div>
+        <h3>Offboarding = chaos</h3>
+        <p>An employee leaves — did they return all equipment? Nobody knows. Thousands of dollars leave with them.</p>
+        <div class="pc-stat">🚪 3-5% of assets lost during offboarding</div>
+      </div>
+      <div class="problem-card reveal">
+        <div class="pc-icon" style="background:rgba(52,199,89,.1);color:#34C759;">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+        </div>
+        <h3>Inventory = pain</h3>
+        <p>Once a year — a week of suffering. Walking through offices, checking papers. Errors are still found.</p>
+        <div class="pc-stat">📊 5-7 days of team downtime annually</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ COMPARISON ═══ -->
+<section id="comparison" class="section section-dark">
+  <div class="container">
+    <div class="section-label reveal">Comparison</div>
+    <h2 class="section-title reveal">Stop tracking <span class="gradient-text">blindly</span></h2>
+    <p class="section-sub reveal">See the difference between the outdated approach and a modern solution.</p>
+
+    <div class="comp-grid reveal">
+      <div class="comp-side comp-bad">
+        <div class="comp-header"><span class="ch-icon">❌</span> <span>Chaos in Excel</span></div>
+        <div class="comp-content">
+          <div class="fake-excel">
+            <div class="fe-row header"><span>ID</span><span>Item</span><span>User</span><span>Status</span></div>
+            <div class="fe-row"><span class="red">#441</span><span>MacBook</span><span class="red">?</span><span class="red">Lost</span></div>
+            <div class="fe-row"><span>#442</span><span>Monitor</span><span>John</span><span>Broken</span></div>
+            <div class="fe-row"><span class="red">ERROR</span><span class="red">#REF!</span><span class="red">#REF!</span><span class="red">#N/A</span></div>
+          </div>
+          <ul class="comp-list">
+            <li>Данные теряются или дублируются</li>
+            <li>Никто не знает, у кого техника сейчас</li>
+            <li>Paper acts подписываются неделями</li>
+          </ul>
+        </div>
+      </div>
+      
+      <div class="comp-vs">VS</div>
+
+      <div class="comp-side comp-good">
+        <div class="comp-header"><span class="ch-icon">✅</span> <span>Order in ASSETO</span></div>
+        <div class="comp-content">
+          <div class="fake-asseto">
+            <div class="ft-header">
+              <div class="ft-dot"></div><div class="ft-line"></div>
+            </div>
+            <div class="ft-row"><span class="ft-badge green">Выдано</span> <span>Alisher I.</span> <span>12:05</span></div>
+            <div class="ft-row"><span class="ft-badge blue">Подписано</span> <span>Директор</span> <span>12:06</span></div>
+          </div>
+          <ul class="comp-list">
+            <li>Вся история оборудования в одном клике</li>
+            <li>Моментальные подписи (ЭЦП / Telegram)</li>
+            <li>Автоматический расчет амортизации</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ FEATURES ═══ -->
+<section id="features" class="section section-dark">
+  <div class="container">
+    <div class="section-label reveal">Features</div>
+    <h2 class="section-title reveal">Всё что нужно —<br><span class="gradient-text">в одной платформе</span></h2>
+
+    <div class="features-grid">
+
+      <div class="feature-big reveal">
+        <div class="fb-content">
+          <div class="fb-tag">Core</div>
+          <h3>Учёт и QR codes</h3>
+          <p>Add equipment за 3 шага. Каждый актив получает уникальный QR-код. Наклейте этикетку — и любой сотрудник найдёт информацию за секунду.</p>
+          <ul class="fb-list">
+            <li>Автоматическая нумерация (НТБ-2026-0001)</li>
+            <li>Сканирование через камеру телефона</li>
+            <li>Импорт из Excel (если уже есть данные)</li>
+            <li>История каждого актива</li>
+          </ul>
+        </div>
+        <div class="fb-visual qr-visual">
+          <div class="qr-demo">
+            <div class="qr-code">
+              <svg viewBox="0 0 100 100" width="80" height="80">
+                <rect x="10" y="10" width="30" height="30" fill="white" rx="2"/>
+                <rect x="15" y="15" width="20" height="20" fill="#0A0A0F" rx="1"/>
+                <rect x="60" y="10" width="30" height="30" fill="white" rx="2"/>
+                <rect x="65" y="15" width="20" height="20" fill="#0A0A0F" rx="1"/>
+                <rect x="10" y="60" width="30" height="30" fill="white" rx="2"/>
+                <rect x="15" y="65" width="20" height="20" fill="#0A0A0F" rx="1"/>
+                <rect x="45" y="10" width="5" height="5" fill="white"/>
+                <rect x="45" y="20" width="5" height="10" fill="white"/>
+                <rect x="60" y="45" width="15" height="5" fill="white"/>
+                <rect x="45" y="45" width="10" height="15" fill="white"/>
+                <rect x="75" y="55" width="15" height="5" fill="white"/>
+                <rect x="60" y="60" width="10" height="10" fill="white"/>
+                <rect x="75" y="65" width="15" height="25" fill="white"/>
+                <rect x="10" y="45" width="5" height="10" fill="white"/>
+                <rect x="20" y="45" width="15" height="5" fill="white"/>
+                <rect x="35" y="50" width="5" height="5" fill="white"/>
+              </svg>
+            </div>
+            <div class="qr-info">
+              <div class="qi-tag">НТБ-2026-0089</div>
+              <div class="qi-model">Dell Latitude 5530</div>
+              <div class="qi-emp">👤 Алишер Иванов</div>
+              <div class="qi-status">🟢 В использовании</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="feature-card reveal">
+        <div class="fc-icon" style="--clr:#FF9500;">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        </div>
+        <h3>Документооборот</h3>
+        <p>Цепочки подписей: АХО → Директор → Бухгалтер. Electronic signatures прямо в браузере. Уведомления автоматически.</p>
+        <div class="fc-chain">
+          <span class="chain-step">АХО</span>
+          <span class="chain-arrow">→</span>
+          <span class="chain-step">Директор</span>
+          <span class="chain-arrow">→</span>
+          <span class="chain-step">Бухгалтер</span>
+        </div>
+      </div>
+
+      <div class="feature-card reveal">
+        <div class="fc-icon" style="--clr:#34C759;">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        </div>
+        <h3>HR: Онбординг</h3>
+        <p>Новый сотрудник — автоматический запрос на оборудование. Весь процесс до выдачи техники через систему.</p>
+        <div class="fc-tag">HR → АХО → Директор → Выдача</div>
+      </div>
+
+      <div class="feature-card reveal">
+        <div class="fc-icon" style="--clr:#5856D6;">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+        </div>
+        <h3>Analytics & accountability</h3>
+        <p>Кто за что отвечает — моментально. Балансовая стоимость, амортизация, "токсичные" активы.</p>
+        <div class="fc-chart">
+          <div class="bar" style="height:60%;background:#5856D6"></div>
+          <div class="bar" style="height:85%;background:#007AFF"></div>
+          <div class="bar" style="height:45%;background:#34C759"></div>
+          <div class="bar" style="height:70%;background:#FF9500"></div>
+          <div class="bar" style="height:55%;background:#FF3B30"></div>
+        </div>
+      </div>
+
+      <div class="feature-card reveal">
+        <div class="fc-icon" style="--clr:#007AFF;">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+        </div>
+        <h3>Telegram notifications</h3>
+        <p>Все события — прямо в Telegram. Документ на подписи, техника выдана, просроченный ремонт.</p>
+        <div class="tg-preview">
+          <div class="tg-msg">📄 Документ ожидает вашей подписи</div>
+          <div class="tg-msg">📦 Laptop НТБ-089 выдан</div>
+          <div class="tg-msg">⚠️ Repair НТБ-033 просрочен</div>
+        </div>
+      </div>
+
+      <div class="feature-card reveal">
+        <div class="fc-icon" style="--clr:#FF3B30;">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+        </div>
+        <h3>Inventory</h3>
+        <p>Сессии инвентаризации через QR-сканер. Diff-отчёт: было / нашли / пропало. Экспорт в Excel.</p>
+        <div class="inv-stats">
+          <span class="is-found">✅ 234 найдено</span>
+          <span class="is-miss">❌ 3 пропало</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ═══ INTEGRATIONS ═══ -->
+<section id="integrations" class="section section-dark" style="padding-top: 40px;">
+  <div class="container">
+    <div class="section-label reveal" style="text-align: center;">Integrations</div>
+    <h2 class="section-title reveal" style="text-align: center;">Встроен в <span class="gradient-text">вашу экосистему</span></h2>
+    <p class="section-sub reveal" style="text-align: center; margin: 0 auto 60px;">ASSETO легко связывается с инструментами, которые вы уже используете каждый день.</p>
+
+    <div class="integ-marquee-wrapper reveal">
+      <div class="integ-marquee">
+        <!-- SET 1 -->
+        <div class="integ-card">1C: Предприятие</div>
+        <div class="integ-card" style="color: #0088cc;">Telegram Bot</div>
+        <div class="integ-card">Active Directory</div>
+        <div class="integ-card" style="color: #0052CC;">Jira Service Desk</div>
+        <div class="integ-card">Slack</div>
+        <!-- SET 2 -->
+        <div class="integ-card">1C: Предприятие</div>
+        <div class="integ-card" style="color: #0088cc;">Telegram Bot</div>
+        <div class="integ-card">Active Directory</div>
+        <div class="integ-card" style="color: #0052CC;">Jira Service Desk</div>
+        <div class="integ-card">Slack</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ HOW IT WORKS ═══ -->
+<section id="how" class="section">
+  <div class="container">
+    <div class="section-label reveal">How it works</div>
+    <h2 class="section-title reveal">Запуск за <span class="gradient-text">15 minут</span></h2>
+    <p class="section-sub reveal">Никакой установки. Никаких серверов. Просто открываете браузер.</p>
+
+    <div class="steps">
+      <div class="step reveal">
+        <div class="step-num">01</div>
+        <div class="step-line"></div>
+        <div class="step-content">
+          <h3>Регистрируйтесь</h3>
+          <p>Введите название компании и email. System создаёт ваше рабочее пространство мгновенно.</p>
+        </div>
+      </div>
+      <div class="step reveal">
+        <div class="step-num">02</div>
+        <div class="step-line"></div>
+        <div class="step-content">
+          <h3>Add equipment</h3>
+          <p>Загрузите Excel с техникой или добавьте вручную. System сгенерирует QR codes автоматически.</p>
+        </div>
+      </div>
+      <div class="step reveal">
+        <div class="step-num">03</div>
+        <div class="step-line"></div>
+        <div class="step-content">
+          <h3>Пригласите команду</h3>
+          <p>Добавьте сотрудников. Каждый видит только то, что ему нужно. 9 roles — от директора до сотрудника.</p>
+        </div>
+      </div>
+      <div class="step reveal">
+        <div class="step-num">04</div>
+        <div class="step-content">
+          <h3>Работайте</h3>
+          <p>Техника учтена. Документы подписываются за секунды. Аналитика обновляется в реальном времени.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ ROLES ═══ -->
+<section class="section section-dark roles-section">
+  <div class="container">
+    <div class="section-label reveal">Roles</div>
+    <h2 class="section-title reveal">Каждый видит <span class="gradient-text">только своё</span></h2>
+    <p class="section-sub reveal">9 roles. Строгие права. Персонализированный интерфейс.</p>
+
+    <div class="roles-marquee-wrapper reveal">
+      <div class="roles-marquee">
+        <!-- SET 1 -->
+        <div class="role-card" style="--rc:#5856D6">
+          <div class="rc-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3 6 7 1-5 5 1.5 7.5L12 18l-6.5 3.5L7 14l-5-5 7-1 3-6z"/></svg></div>
+          <div class="rc-name">Superadmin</div>
+          <div class="rc-desc">Полный доступ ко всему. Настройки, интеграции, безопасность.</div>
+        </div>
+        <div class="role-card" style="--rc:#FF3B30">
+          <div class="rc-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18"/><path d="M5 21V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16"/><path d="M9 7h6"/><path d="M9 11h6"/><path d="M9 15h6"/></svg></div>
+          <div class="rc-name">Директор</div>
+          <div class="rc-desc">Документы на подписи — первым экраном. Аналитика компании.</div>
+        </div>
+        <div class="role-card" style="--rc:#007AFF">
+          <div class="rc-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg></div>
+          <div class="rc-name">АХО / IT</div>
+          <div class="rc-desc">Полный склад. Выдача, QR, инвентаризация, ремонты.</div>
+        </div>
+        <div class="role-card" style="--rc:#34C759">
+          <div class="rc-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+          <div class="rc-name">HR</div>
+          <div class="rc-desc">Онбординг и оффбординг. Заявки на оборудование.</div>
+        </div>
+        <div class="role-card" style="--rc:#30B0C7">
+          <div class="rc-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg></div>
+          <div class="rc-name">Бухгалтер</div>
+          <div class="rc-desc">МОЛ, амортизация, документы к учёту, 1С экспорт.</div>
+        </div>
+        <div class="role-card" style="--rc:#5AC8FA">
+          <div class="rc-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></div>
+          <div class="rc-name">Аудитор</div>
+          <div class="rc-desc">Inventory, аналитика. Только просмотр.</div>
+        </div>
+        <div class="role-card" style="--rc:#8E8E93">
+          <div class="rc-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
+          <div class="rc-name">Employee</div>
+          <div class="rc-desc">Только своя техника. Запросы и жалобы на ремонт.</div>
+        </div>
+
+        <!-- SET 2 -->
+        <div class="role-card" style="--rc:#5856D6">
+          <div class="rc-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3 6 7 1-5 5 1.5 7.5L12 18l-6.5 3.5L7 14l-5-5 7-1 3-6z"/></svg></div>
+          <div class="rc-name">Superadmin</div>
+          <div class="rc-desc">Полный доступ ко всему. Настройки, интеграции, безопасность.</div>
+        </div>
+        <div class="role-card" style="--rc:#FF3B30">
+          <div class="rc-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18"/><path d="M5 21V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16"/><path d="M9 7h6"/><path d="M9 11h6"/><path d="M9 15h6"/></svg></div>
+          <div class="rc-name">Директор</div>
+          <div class="rc-desc">Документы на подписи — первым экраном. Аналитика компании.</div>
+        </div>
+        <div class="role-card" style="--rc:#007AFF">
+          <div class="rc-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg></div>
+          <div class="rc-name">АХО / IT</div>
+          <div class="rc-desc">Полный склад. Выдача, QR, инвентаризация, ремонты.</div>
+        </div>
+        <div class="role-card" style="--rc:#34C759">
+          <div class="rc-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+          <div class="rc-name">HR</div>
+          <div class="rc-desc">Онбординг и оффбординг. Заявки на оборудование.</div>
+        </div>
+        <div class="role-card" style="--rc:#30B0C7">
+          <div class="rc-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg></div>
+          <div class="rc-name">Бухгалтер</div>
+          <div class="rc-desc">МОЛ, амортизация, документы к учёту, 1С экспорт.</div>
+        </div>
+        <div class="role-card" style="--rc:#5AC8FA">
+          <div class="rc-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></div>
+          <div class="rc-name">Аудитор</div>
+          <div class="rc-desc">Inventory, аналитика. Только просмотр.</div>
+        </div>
+        <div class="role-card" style="--rc:#8E8E93">
+          <div class="rc-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
+          <div class="rc-name">Employee</div>
+          <div class="rc-desc">Только своя техника. Запросы и жалобы на ремонт.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ FAQ ═══ -->
+<section id="faq" class="section">
+  <div class="container">
+    <div class="section-label reveal" style="text-align: center;">Ответы на вопросы</div>
+    <h2 class="section-title reveal" style="text-align: center; margin-bottom: 60px;">Still have doubts?</h2>
+    
+    <div class="faq-list reveal">
+      <div class="faq-item">
+        <div class="faq-q">А наши данные не утекут? <span class="faq-icon">+</span></div>
+        <div class="faq-a"><div class="faq-a-inner">Мы используем шифрование AES-256 (банковский стандарт) и регулярные бэкапы каждые 4 часа. Никто, кроме вас, не имеет доступа к вашей базе. Также вы можете разместить ASSETO на своих серверах (On-Premise).</div></div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">Как перенести 1000 старых ноутов из Excel? <span class="faq-icon">+</span></div>
+        <div class="faq-a"><div class="faq-a-inner">У нас есть массовый импорт. Вы просто загружаете свой старый файл <code>.xlsx</code> или <code>.csv</code>, и ASSETO сам раскидывает всё по нужным категориям и сотрудникам за 1 клик.</div></div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">Сколько времени занимает внедрение? <span class="faq-icon">+</span></div>
+        <div class="faq-a"><div class="faq-a-inner">Обычно от 1 до 3 дней. Интерфейс настолько понятный, что сотрудникам даже не нужно проводить обучение. Вы просто скидываете им ссылку.</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ PRICING ═══ -->
+<section id="pricing" class="section">
+  <div class="container">
+    <div class="section-label reveal">Pricing</div>
+    <h2 class="section-title reveal">Прозрачные цены.<br><span class="gradient-text">Без сюрпризов.</span></h2>
+    <p class="section-sub reveal">14 дней бесплатно на любом тарифе. Отмена в любой момент.</p>
+
+    <div class="pricing-grid">
+      <div class="price-card reveal">
+        <div class="pc-name">Старт</div>
+        <div class="pc-price">$20<span>/мес</span></div>
+        <div class="pc-desc">Для малого бизнеса и старта</div>
+        <ul class="pc-features">
+          <li>✓ Up to 10 users</li>
+          <li>✓ Up to 200 assets</li>
+          <li>✓ QR codes</li>
+          <li>✓ Basic document flow</li>
+          <li>✓ Email support</li>
+          <li class="muted">✗ Advanced analytics</li>
+          <li class="muted">✗ Telegram notifications</li>
+        </ul>
+        <a href="#contact" class="pc-btn">Start for free</a>
+      </div>
+
+      <div class="price-card featured reveal">
+        <div class="pc-popular">Popular</div>
+        <div class="pc-name">Business</div>
+        <div class="pc-price">$60<span>/мес</span></div>
+        <div class="pc-desc">For growing companies</div>
+        <ul class="pc-features">
+          <li>✓ Up to 50 users</li>
+          <li>✓ Up to 2,000 assets</li>
+          <li>✓ QR codes & scanner</li>
+          <li>✓ Full document flow</li>
+          <li>✓ Analytics & accountability</li>
+          <li>✓ Telegram notifications</li>
+          <li>✓ Priority support</li>
+        </ul>
+        <a href="#contact" class="pc-btn pc-btn-primary">Start for free</a>
+      </div>
+
+      <div class="price-card reveal">
+        <div class="pc-name">Enterprise</div>
+        <div class="pc-price">$200<span>+/мес</span></div>
+        <div class="pc-desc">For large organizations</div>
+        <ul class="pc-features">
+          <li>✓ Unlimited</li>
+          <li>✓ Unlimited assets</li>
+          <li>✓ Personal manager</li>
+          <li>✓ Self-hosted installation</li>
+          <li>✓ Integration with 1C, UzInfoCom</li>
+          <li>✓ Custom design</li>
+          <li>✓ SLA 99.9%</li>
+        </ul>
+        <a href="#contact" class="pc-btn">Contact us</a>
+      </div>
+    </div>
+
+    <p class="pricing-note reveal">💡 Government organizations — special conditions. Contact us.</p>
+  </div>
+</section>
+
+
+<!-- ═══ CTA ═══ -->
+<section class="cta-section">
+  <div class="cta-glow"></div>
+  <div class="container">
+    <div class="cta-inner reveal">
+      <h2>Start right now.<br>14 days free.</h2>
+      <p>No credit card. No hidden fees. Cancel anytime.</p>
+      <div class="cta-actions">
+        <a href="#contact" class="btn-primary btn-large">
+          Try ASSETO for free
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+        </a>
+      </div>
+      <div class="cta-features">
+        <span>✓ 15 minutes to launch</span>
+        <span>✓ Support in Russian/English/Uzbek</span>
+        <span>✓ Data in Uzbekistan</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ CONTACT ═══ -->
+<section id="contact" class="section">
+  <div class="container">
+    <div class="contact-grid">
+      <div class="contact-info reveal">
+        <div class="section-label">Contact</div>
+        <h2>Contact us</h2>
+        <p>We will answer within an hour during business hours. If urgent — write in Telegram.</p>
+        <div class="contact-links">
+          <a href="https://t.me/asseto_uz" class="contact-link">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+            @asseto_uz в Telegram
+          </a>
+          <a href="mailto:hello@asseto.uz" class="contact-link">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+            hello@asseto.uz
+          </a>
+          <a href="tel:+998901234567" class="contact-link">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.63 3.4 2 2 0 0 1 3.6 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.6a16 16 0 0 0 6.29 6.29l1.06-1.06a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+            +998 90 123-45-67
+          </a>
+        </div>
+      </div>
+      <div class="contact-form reveal">
+        <form onsubmit="submitForm(event)">
+          <div class="form-group">
+            <label>Your name</label>
+            <input type="text" placeholder="Akmal Rashidov" required>
+          </div>
+          <div class="form-group">
+            <label>Company</label>
+            <input type="text" placeholder="Romashka LLC" required>
+          </div>
+          <div class="form-group">
+            <label>Email or Telegram</label>
+            <input type="text" placeholder="hello@company.uz или @username" required>
+          </div>
+          <div class="form-group">
+            <label>How many employees?</label>
+            <select>
+              <option>1-10</option>
+              <option>11-50</option>
+              <option selected>51-200</option>
+              <option>200+</option>
+            </select>
+          </div>
+          <button type="submit" class="btn-primary" style="width:100%;justify-content:center;">
+            Get demo access →
+          </button>
+          <p class="form-note">We will answer in Telegram or by email within an hour</p>
+        </form>
+        <div class="form-success" id="form-success">
+          <div style="font-size:48px;">🎉</div>
+          <h3>Request sent!</h3>
+          <p>We will contact you within an hour</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ FOOTER ═══ -->
+<footer>
+  <div class="container">
+    <div class="footer-top">
+      <div class="footer-brand">
+        <div class="nav-logo">
+          <img src="img/logo.png" alt="ASSETO Logo" style="height: 36px; object-fit: contain;">
+          <span>ASSETO</span>
+        </div>
+        <p>Smart tracking of material<br>assets for business</p>
+      </div>
+      <div class="footer-links">
+        <div class="fl-col">
+          <div class="fl-title">Product</div>
+          <a href="#features">Features</a>
+          <a href="#pricing">Pricing</a>
+          <a href="#how">How it works</a>
+        </div>
+        <div class="fl-col">
+          <div class="fl-title">Company</div>
+          <a href="#">About us</a>
+          <a href="#">Blog</a>
+          <a href="#contact">Contact</a>
+        </div>
+        <div class="fl-col">
+          <div class="fl-title">Support</div>
+          <a href="#">Documentation</a>
+          <a href="#">FAQ</a>
+          <a href="https://t.me/asseto_uz">Telegram</a>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 ASSETO. Uzbekistan.</span>
+      <span>Data is stored on servers in Uzbekistan</span>
+    </div>
+  </div>
+</footer>
+
+
+  <script src="js/main.js"></script>
+</body>
+</html>

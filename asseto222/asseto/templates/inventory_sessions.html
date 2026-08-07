@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block title %}ASSETO — Инвентаризация{% endblock %}
+{% block head %}
+<style>
+.inv-wrap { padding:0; max-width:1200px; }
+.inv-header { margin-bottom:24px; }
+.inv-header h1 { font-size:28px; font-weight:800; }
+.session-card { background:var(--surface); border:.5px solid var(--border); border-radius:20px; padding:20px; margin-bottom:12px; cursor:pointer; transition:all .15s; display:flex; justify-content:space-between; align-items:center; }
+.session-card:hover { border-color:var(--accent); }
+.session-title { font-size:16px; font-weight:700; }
+.session-meta { font-size:13px; color:var(--text2); }
+.session-status { font-size:12px; font-weight:700; padding:4px 12px; border-radius:var(--r-pill); }
+.status-active { background:rgba(52,199,89,.12); color:var(--ios-green); }
+.status-completed { background:rgba(142,142,147,.12); color:var(--text3); }
+</style>
+{% endblock %}
+{% block content %}
+<div class="inv-wrap">
+  <div class="inv-header">
+    <h1>📋 Инвентаризация</h1>
+    <div style="font-size:14px;color:var(--text2);">Плановые и внеплановые проверки оборудования</div>
+  </div>
+  <div style="margin-bottom:20px;">
+    <button class="btn btn-primary" onclick="createSession()">+ Новая сессия</button>
+  </div>
+  <div id="sessions-list">
+    <div style="text-align:center;padding:40px;color:var(--text3);">⏳ Загрузка...</div>
+  </div>
+</div>
+
+<div id="create-modal" class="hidden" style="position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;">
+  <div style="background:var(--bg);border-radius:24px;padding:24px;width:100%;max-width:400px;">
+    <h3 style="margin-bottom:16px;color:var(--text);">Новая сессия инвентаризации</h3>
+    <div style="margin-bottom:12px;"><label style="font-size:12px;font-weight:700;color:var(--text2);">Название</label><input id="s-name" style="width:100%;padding:10px;border-radius:12px;border:1px solid var(--border);background:var(--surface2);color:var(--text);margin-top:4px;" placeholder="Например: Квартальная 2026"></div>
+    <div style="margin-bottom:12px;"><label style="font-size:12px;font-weight:700;color:var(--text2);">Отдел (опционально)</label><input id="s-dept" style="width:100%;padding:10px;border-radius:12px;border:1px solid var(--border);background:var(--surface2);color:var(--text);margin-top:4px;" placeholder="Все отделы"></div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;">
+      <button class="btn btn-secondary" onclick="document.getElementById('create-modal').classList.add('hidden')">Отмена</button>
+      <button class="btn btn-primary" onclick="doCreate()">Создать</button>
+    </div>
+  </div>
+</div>
+
+<script>
+async function load() {
+  const resp = await fetch('/api/inventory/sessions');
+  const data = await resp.json();
+  const el = document.getElementById('sessions-list');
+  if (!data.length) { el.innerHTML = '<div style="text-align:center;padding:60px;color:var(--text3);">Нет сессий. Нажмите «+ Новая сессия»</div>'; return; }
+  el.innerHTML = data.map(s => `
+    <div class="session-card" onclick="window.location='/inventory/${s.id}'">
+      <div>
+        <div class="session-title">${s.title}</div>
+        <div class="session-meta">${s.department||'Все отделы'} · ${s.total_items||0} ед. · Проверено: ${s.checked_items||0}</div>
+      </div>
+      <span class="session-status status-${s.status}">${s.status==='active'?'Активна':'Завершена'}</span>
+    </div>
+  `).join('');
+}
+function createSession() { document.getElementById('create-modal').classList.remove('hidden'); }
+async function doCreate() {
+  const title = document.getElementById('s-name').value.trim();
+  if (!title) return alert('Введите название');
+  const dept = document.getElementById('s-dept').value.trim();
+  const r = await (await fetch('/api/inventory/sessions', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({title,department:dept})})).json();
+  if (r.ok) { document.getElementById('create-modal').classList.add('hidden'); load(); }
+}
+load();
+</script>
+{% endblock %}

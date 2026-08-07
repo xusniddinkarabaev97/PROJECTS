@@ -1,0 +1,348 @@
+{% extends "base.html" %}
+{% block title %}ASSETO — Оргструктура{% endblock %}
+
+{% block head %}
+<style>
+.org-page { padding:0; max-width:100%; }
+.org-header { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:24px; }
+.org-header h1 { font-size:28px; font-weight:800; letter-spacing:-0.02em; }
+.org-tree { display:flex; flex-direction:column; align-items:center; gap:0; padding:20px 0 60px; overflow-x:auto; }
+.org-level { display:flex; justify-content:center; gap:24px; flex-wrap:wrap; position:relative; padding:10px 0; }
+
+.org-card { 
+  background:var(--surface); border:1.5px solid var(--border); border-radius:20px; padding:16px 20px;
+  min-width:200px; max-width:260px; text-align:center; transition:all .2s; position:relative;
+}
+.org-card:hover { border-color:var(--accent); transform:translateY(-4px); box-shadow:0 12px 32px rgba(0,0,0,.1); }
+.org-card:hover .org-card-actions { opacity:1; }
+.org-card.manager { border-color:var(--accent); background:linear-gradient(135deg,var(--surface),rgba(0,122,255,.03)); }
+.org-card.self { border-color:var(--ios-green); border-width:2px; }
+.org-card-actions { position:absolute; top:-8px; right:-8px; display:flex; gap:4px; opacity:0; transition:opacity .2s; }
+.org-card-actions button { width:24px; height:24px; border-radius:50%; border:none; cursor:pointer; font-size:12px; font-weight:700; display:flex; align-items:center; justify-content:center; color:#fff; }
+.org-card-action-add { background:var(--ios-green); }
+.org-card-action-edit { background:var(--accent); }
+.org-card-action-del { background:var(--ios-red); }
+.org-card-avatar { width:48px; height:48px; border-radius:14px; margin:0 auto 10px; display:flex; align-items:center; justify-content:center; font-size:20px; font-weight:800; color:#fff; }
+.org-card-name { font-size:14px; font-weight:700; color:var(--text); margin-bottom:2px; cursor:pointer; }
+.org-card-pos { font-size:11px; color:var(--text2); margin-bottom:4px; }
+.org-card-dept { font-size:10px; color:var(--text3); background:var(--surface2); display:inline-block; padding:2px 8px; border-radius:8px; }
+.org-card-role { font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; margin-top:6px; }
+.org-card-add { border:1.5px dashed var(--border); opacity:.5; cursor:pointer; display:flex; align-items:center; justify-content:center; min-height:80px; }
+.org-card-add:hover { opacity:1; border-color:var(--accent); }
+
+
+.org-children { display:flex; justify-content:center; gap:40px; flex-wrap:wrap; padding-top:0; }
+.org-branch { display:flex; flex-direction:column; align-items:center; }
+.org-connector { display:flex; justify-content:center; position:relative; height:30px; }
+.org-list { display:none; }
+.org-list-item { display:flex; align-items:center; gap:14px; padding:14px 18px; background:var(--surface); border:.5px solid var(--border); border-radius:16px; margin-bottom:8px; transition:all .15s; position:relative; }
+.org-list-item:hover { border-color:var(--accent); }
+.org-list-item:hover .org-card-actions { opacity:1; }
+.org-list-avatar { width:44px; height:44px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:18px; font-weight:800; color:#fff; flex-shrink:0; }
+.org-list-info { flex:1; min-width:0; }
+.org-list-name { font-size:14px; font-weight:700; }
+.org-list-detail { font-size:12px; color:var(--text2); }
+.org-list-meta { text-align:right; flex-shrink:0; }
+.org-list-dept { font-size:11px; color:var(--text3); background:var(--surface2); padding:2px 8px; border-radius:8px; }
+
+.org-toggle { display:flex; gap:6px; margin-bottom:20px; }
+.org-toggle button { padding:8px 16px; border-radius:var(--r-pill); border:1px solid var(--border); background:var(--surface); color:var(--text2); font-size:13px; font-weight:600; cursor:pointer; }
+.org-toggle button.active { background:var(--accent); color:#fff; border-color:var(--accent); }
+
+/* Modal */
+.org-modal { position:fixed; inset:0; z-index:1000; background:rgba(0,0,0,.5); display:flex; align-items:center; justify-content:center; }
+.org-modal-content { background:var(--bg); border-radius:24px; width:100%; max-width:500px; padding:24px; max-height:90vh; overflow-y:auto; }
+.org-modal-content h3 { margin-bottom:20px; color:var(--text); }
+.org-fg { margin-bottom:14px; }
+.org-fg label { display:block; font-size:11px; font-weight:700; color:var(--text2); margin-bottom:4px; text-transform:uppercase; letter-spacing:.04em; }
+.org-fg input,.org-fg select { width:100%; padding:10px 14px; border-radius:12px; border:.5px solid var(--border); background:var(--surface2); color:var(--text); font-size:14px; outline:none; box-sizing:border-box; }
+.org-fg select option { background:var(--surface); }
+.org-fg-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.org-btn-row { display:flex; gap:8px; justify-content:flex-end; margin-top:20px; }
+.org-btn-del { margin-right:auto !important; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="org-page">
+  <div class="org-header">
+    <div>
+      <h1>🏢 Оргструктура</h1>
+      <div style="font-size:14px;color:var(--text2);">Конструктор: добавляйте, редактируйте, меняйте подчинение</div>
+    </div>
+    <button class="btn btn-primary" onclick="openAdd()">+ Добавить сотрудника</button>
+  </div>
+
+  <div class="org-toggle">
+    <button class="active" onclick="switchView('tree')">🌳 Дерево</button>
+    <button onclick="switchView('list')">📋 Список</button>
+  </div>
+
+  <div id="org-tree" class="org-tree"></div>
+  <div id="org-list" class="org-list"></div>
+</div>
+
+<!-- Edit/Add Modal -->
+<div class="org-modal hidden" id="edit-modal">
+  <div class="org-modal-content">
+    <h3 id="modal-title">Редактировать</h3>
+    <div id="modal-add-fields" class="hidden">
+      <div class="org-fg"><label>Имя *</label><input id="m-name" placeholder="ФИО сотрудника"></div>
+      <div class="org-fg"><label>Email *</label><input id="m-email" placeholder="email@company.uz"></div>
+      <div class="org-fg"><label>Роль</label><select id="m-role"><option value="employee">Сотрудник</option><option value="aho">АХО / IT</option><option value="hr">HR</option><option value="accountant">Бухгалтер</option><option value="deputy">Зам. Директора</option><option value="director">Ген. Директор</option><option value="auditor">Аудитор</option><option value="department_head">Начальник департамента</option><option value="superadmin">Супер-Админ</option></select></div>
+    </div>
+    <div class="org-fg"><label>Руководитель</label><select id="m-manager"><option value="">— нет —</option></select></div>
+    <div class="org-fg-row">
+      <div class="org-fg"><label>Должность</label><input id="m-position" placeholder="Главный бухгалтер"></div>
+      <div class="org-fg"><label>Телефон</label><input id="m-phone" placeholder="+998 ..."></div>
+    </div>
+    <div class="org-fg"><label>Отдел</label><input id="m-dept" placeholder="Бухгалтерия"></div>
+    <div class="org-fg hidden" id="sub-select-container">
+      <label>Выберите сотрудника</label>
+      <select id="m-sub-select"></select>
+    </div>
+    <div class="org-btn-row">
+      <button class="btn btn-secondary org-btn-del hidden" id="btn-delete" onclick="removeUser()">🗑 Удалить</button>
+      <button class="btn btn-secondary" onclick="closeModal()">Отмена</button>
+      <button class="btn btn-primary" onclick="saveUser()">Сохранить</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let orgData = [], currentId = null, isAdd = false;
+const COLORS = ['#4F46E5','#7C3AED','#DB2777','#EA580C','#2563EB','#059669','#D97706','#DC2626','#0891B2','#9333EA'];
+const currentUserId = {{ current_user.id }};
+
+async function load() {
+  try {
+    const resp = await fetch('/api/orgchart');
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    const data = await resp.json();
+    orgData = data.users;
+    buildSelect();
+    buildTree();
+    buildList();
+  } catch(e) {
+    console.error('Org load error:', e);
+    document.getElementById('org-tree').innerHTML = '<div style="text-align:center;padding:60px;color:var(--ios-red);">❌ Ошибка загрузки: ' + e.message + '<br><small>Проверьте авторизацию</small></div>';
+  }
+}
+
+function buildSelect(excludeId) {
+  const sel = document.getElementById('m-manager');
+  let list = orgData;
+  if (excludeId) list = orgData.filter(u => u.id !== excludeId);
+  sel.innerHTML = '<option value="">— нет —</option>' + list.map(u => `<option value="${u.id}">${u.name} (${u.role_label})</option>`).join('');
+}
+
+function buildTree() {
+  const container = document.getElementById('org-tree');
+  const roots = orgData.filter(u => !u.manager_id || u.manager_id === u.id);
+  let html = roots.map(r => '<div class="org-level">' + buildSubtree(r) + '</div>').join('');
+  const orphans = orgData.filter(u => u.manager_id && u.manager_id !== u.id && !orgData.find(x => x.id === u.manager_id));
+  if (orphans.length) {
+    html += '<div class="org-level" style="margin-top:30px;border-top:1px dashed var(--border);padding-top:20px;"><div style="width:100%;text-align:center;color:var(--text3);font-size:12px;margin-bottom:10px;">Без руководителя</div>';
+    html += orphans.map(u => buildCard(u)).join('');
+    html += '</div>';
+  }
+  container.innerHTML = html || '<div style="text-align:center;padding:60px;color:var(--text3);">Нет данных. Нажмите «+ Добавить сотрудника»</div>';
+}
+
+function buildSubtree(user) {
+  const children = orgData.filter(u => u.manager_id === user.id && u.id !== user.id);
+  let html = buildCard(user);
+  if (children.length) {
+    const n = children.length;
+    const totalW = Math.min(n * 260, 1000);
+    const step = n > 1 ? totalW / (n - 1) : 0;
+    html += '<div class="org-connector"><svg viewBox="0 0 ' + totalW + ' 30" width="' + totalW + '" height="30">';
+    html += '<line x1="' + (totalW/2) + '" y1="0" x2="' + (totalW/2) + '" y2="15" stroke="var(--border)" stroke-width="1.5"/>';
+    if (n > 1) {
+      html += '<line x1="' + (totalW/2 - step*(n-1)/2) + '" y1="15" x2="' + (totalW/2 + step*(n-1)/2) + '" y2="15" stroke="var(--border)" stroke-width="1.5"/>';
+    }
+    children.forEach((c, i) => {
+      const x = n > 1 ? totalW/2 - step*(n-1)/2 + step*i : totalW/2;
+      html += '<line x1="' + x + '" y1="15" x2="' + x + '" y2="30" stroke="var(--border)" stroke-width="1.5"/>';
+    });
+    html += '</svg></div>';
+    // Children side-by-side, each with their own subtree below
+    html += '<div class="org-children">';
+    html += children.map(c => '<div class="org-branch">' + buildSubtree(c) + '</div>').join('');
+    html += '</div>';
+  }
+  return html;
+}
+
+function buildCard(user) {
+  const init = (user.name||'?').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+  const bg = COLORS[user.id % COLORS.length];
+  const isMgr = orgData.some(u => u.manager_id === user.id);
+  return `
+    <div class="org-card ${isMgr?'manager':''} ${user.id===currentUserId?'self':''}">
+      <div class="org-card-actions">
+        <button class="org-card-action-add" onclick="event.stopPropagation();openAdd(${user.id})" title="Подчинённый">+</button>
+        <button class="org-card-action-edit" onclick="event.stopPropagation();openEdit(${user.id})" title="Ред.">✎</button>
+        <button class="org-card-action-del" onclick="event.stopPropagation();removeUser(${user.id})" title="Удалить">×</button>
+      </div>
+      <div class="org-card-avatar" style="background:${bg};" onclick="openEdit(${user.id})">${init}</div>
+      <div class="org-card-name" onclick="openEdit(${user.id})">${user.name}</div>
+      ${user.position?`<div class="org-card-pos">${user.position}</div>`:''}
+      ${user.department?`<div class="org-card-dept">${user.department}</div>`:''}
+      <div class="org-card-role" style="color:#${user.role_color};">${user.role_label}</div>
+    </div>`;
+}
+
+function buildList() {
+  document.getElementById('org-list').innerHTML = orgData.map(u => {
+    const init = (u.name||'?').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+    const bg = COLORS[u.id % COLORS.length];
+    const mgr = u.manager_id ? orgData.find(x=>x.id===u.manager_id) : null;
+    return `<div class="org-list-item">
+      <div class="org-card-actions" style="position:relative;top:auto;right:auto;">
+        <button class="org-card-action-add" onclick="event.stopPropagation();openAdd(${u.id})" title="Подчинённый">+</button>
+        <button class="org-card-action-edit" onclick="event.stopPropagation();openEdit(${u.id})" title="Ред.">✎</button>
+        <button class="org-card-action-del" onclick="event.stopPropagation();removeUser(${u.id})" title="Удалить">×</button>
+      </div>
+      <div class="org-list-avatar" style="background:${bg};">${init}</div>
+      <div class="org-list-info">
+        <div class="org-list-name">${u.name}</div>
+        <div class="org-list-detail">${u.position||'—'} ${mgr?' · 👤 '+mgr.name:''}</div>
+      </div>
+      <div class="org-list-meta">
+        <div class="org-list-dept">${u.department||'—'}</div>
+        <div style="font-size:10px;color:#${u.role_color};font-weight:700;margin-top:2px;">${u.role_label}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function openAdd(parentId) {
+  isAdd = true; currentId = parentId||null;
+  // First reset all visibility
+  document.getElementById('modal-add-fields').classList.add('hidden');
+  document.getElementById('sub-select-container').classList.add('hidden');
+  document.getElementById('btn-delete').classList.add('hidden');
+  
+  if (parentId) {
+    // Add existing user as subordinate
+    const avail = orgData.filter(u => u.id !== parentId);
+    if (!avail.length) return alert('Нет доступных сотрудников');
+    const list = avail.map(u => `<option value="${u.id}">${u.name} — ${u.position||u.role_label}</option>`).join('');
+    document.getElementById('modal-title').textContent = '+ Подчинённый';
+    document.getElementById('m-manager').parentElement.classList.add('hidden');
+    document.getElementById('m-position').parentElement.parentElement.classList.add('hidden');
+    document.getElementById('m-dept').parentElement.classList.add('hidden');
+    document.getElementById('sub-select-container').classList.remove('hidden');
+    document.getElementById('m-sub-select').innerHTML = list;
+    document.getElementById('edit-modal').classList.remove('hidden');
+  } else {
+    // Add new user
+    document.getElementById('modal-title').textContent = '+ Новый сотрудник';
+    buildSelect(); // Show all users for new employee
+    document.getElementById('m-manager').parentElement.classList.remove('hidden');
+    document.getElementById('m-position').parentElement.parentElement.classList.remove('hidden');
+    document.getElementById('m-dept').parentElement.classList.remove('hidden');
+    document.getElementById('m-name').value = '';
+    document.getElementById('m-email').value = '';
+    document.getElementById('m-role').value = 'employee';
+    document.getElementById('m-manager').value = '';
+    document.getElementById('m-position').value = '';
+    document.getElementById('m-phone').value = '';
+    document.getElementById('m-dept').value = '';
+    document.getElementById('edit-modal').classList.remove('hidden');
+  }
+}
+
+function openEdit(id) {
+  const u = orgData.find(x=>x.id===id); if(!u) return;
+  isAdd = false; currentId = id;
+  // Reset visibility
+  document.getElementById('modal-add-fields').classList.add('hidden');
+  document.getElementById('sub-select-container').classList.add('hidden');
+  document.getElementById('m-manager').parentElement.classList.remove('hidden');
+  document.getElementById('m-position').parentElement.parentElement.classList.remove('hidden');
+  document.getElementById('m-dept').parentElement.classList.remove('hidden');
+  document.getElementById('btn-delete').classList.remove('hidden');
+  document.getElementById('modal-title').textContent = '✏️ ' + u.name;
+  buildSelect(id);
+  document.getElementById('m-manager').value = u.manager_id||'';
+  document.getElementById('m-position').value = u.position||'';
+  document.getElementById('m-phone').value = u.phone||'';
+  document.getElementById('m-dept').value = u.department||'';
+  document.getElementById('edit-modal').classList.remove('hidden');
+}
+
+function closeModal() {
+  document.getElementById('edit-modal').classList.add('hidden');
+  document.getElementById('m-manager').parentElement.classList.remove('hidden');
+  document.getElementById('m-position').parentElement.parentElement.classList.remove('hidden');
+  document.getElementById('m-dept').parentElement.classList.remove('hidden');
+  document.getElementById('sub-select-container').classList.add('hidden');
+}
+
+async function saveUser() {
+  if (isAdd && currentId) {
+    const subId = document.getElementById('m-sub-select').value;
+    if (!subId) return alert('Выберите сотрудника из списка');
+    try {
+      const resp = await fetch('/api/orgchart', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({id:parseInt(subId), manager_id:currentId})
+      });
+      const r = await resp.json();
+      if (!r.ok) { alert('Ошибка: ' + (r.error||'неизвестно')); return; }
+    } catch(e) { alert('Ошибка сети: ' + e.message); return; }
+    closeModal(); load();
+    return;
+  }
+  
+  const mgr = document.getElementById('m-manager').value||null;
+  if (isAdd) {
+    const name = document.getElementById('m-name').value.trim();
+    const email = document.getElementById('m-email').value.trim();
+    if (!name||!email) return alert('Имя и email обязательны');
+    try {
+      const resp = await fetch('/api/orgchart/user', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({name, email, role:document.getElementById('m-role').value,
+          manager_id:mgr, position:document.getElementById('m-position').value,
+          phone:document.getElementById('m-phone').value, department:document.getElementById('m-dept').value})
+      });
+      const r = await resp.json();
+      if (!r.ok) { alert('Ошибка: ' + (r.error||'неизвестно')); return; }
+    } catch(e) { alert('Ошибка сети: ' + e.message); return; }
+  } else {
+    try {
+      const resp = await fetch('/api/orgchart', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({id:currentId, manager_id:mgr,
+          position:document.getElementById('m-position').value,
+          phone:document.getElementById('m-phone').value,
+          department:document.getElementById('m-dept').value})
+      });
+      const r = await resp.json();
+      if (!r.ok) { alert('Ошибка: ' + (r.error||'неизвестно')); return; }
+    } catch(e) { alert('Ошибка сети: ' + e.message); return; }
+  }
+  closeModal(); load();
+}
+
+async function removeUser(id) {
+  if (!id) id = currentId;
+  if (!confirm('Удалить сотрудника из оргструктуры? Подчинённые останутся без руководителя.')) return;
+  await fetch('/api/orgchart/user/' + id, { method:'DELETE', headers:{} });
+  closeModal(); load();
+}
+
+function switchView(v) {
+  document.getElementById('org-tree').style.display = v==='tree'?'flex':'none';
+  document.getElementById('org-list').style.display = v==='list'?'block':'none';
+  document.querySelectorAll('.org-toggle button').forEach((b,i)=>b.classList.toggle('active',(i===0&&v==='tree')||(i===1&&v==='list')));
+}
+
+function getCSRF(){ return document.cookie.split(';').map(c=>c.trim()).find(c=>c.startsWith('csrf_token='))?.split('=')[1]||''; }
+
+load();
+</script>
+{% endblock %}

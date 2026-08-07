@@ -1,9 +1,0 @@
-.env
-*.db
-*.db-journal
-static/photos/
-__pycache__/
-*.pyc
-venv/
-backup/
-*.log

@@ -69,7 +69,7 @@ export const api = {
     fetch("/Billing/api/Companies/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ login, password }),
+      body: JSON.stringify({ login: email, password }),
     }).then(async (r) => {
       if (r.ok) return r.json();
       const text = await r.text();

@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="ru" data-theme="{{ request.cookies.get('theme','') }}">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>ASSETO — Выдачи техники</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/css/asseto-ios.css">
+<script src="/static/js/csrf.js"></script>
+<script src="/static/js/app-polish.js"></script>
+<style>
+/* ───────── Layout ───────── */
+.wrap { max-width: 980px; margin: 0 auto; padding: 28px 20px 100px; }
+
+/* ───────── Stats row ───────── */
+.stats-row {
+  display: grid; grid-template-columns: repeat(3,1fr); gap: 14px; margin-bottom: 24px;
+}
+@media(max-width:520px){ .stats-row { grid-template-columns: 1fr 1fr; } }
+
+.stat-box {
+  background: var(--surface);
+  border: 0.5px solid var(--separator2);
+  border-radius: 20px;
+  padding: 20px 18px;
+  box-shadow: var(--shadow);
+  text-align: center;
+  cursor: default;
+  position: relative; overflow: hidden;
+  transition: transform .3s var(--ease-spring), box-shadow .3s;
+  animation: stat-pop .5s var(--ease-spring) both;
+}
+.stat-box::before {
+  content: ''; position: absolute; inset: 0; border-radius: inherit;
+  opacity: 0; transition: opacity .2s;
+  background: radial-gradient(circle at 60% 0%, var(--glow, rgba(0,122,255,.06)), transparent 70%);
+}
+.stat-box:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); }
+.stat-box:hover::before { opacity: 1; }
+.stat-box:nth-child(1){ animation-delay:.04s; --glow: rgba(0,122,255,.08); }
+.stat-box:nth-child(2){ animation-delay:.08s; --glow: rgba(255,149,0,.08); }
+.stat-box:nth-child(3){ animation-delay:.12s; --glow: rgba(52,199,89,.08); }
+
+.stat-num {
+  font-size: 36px; font-weight: 300; letter-spacing: -1.5px;
+  line-height: 1; margin-bottom: 5px;
+  transition: transform .2s var(--ease-spring);
+}
+.stat-box:hover .stat-num { transform: scale(1.05); }
+.stat-lbl { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--text2); }
+
+/* ───────── Toolbar ───────── */
+.toolbar {
+  background: var(--surface);
+  border: 0.5px solid var(--separator2);
+  border-radius: 20px;
+  box-shadow: var(--shadow);
+  padding: 14px 16px;
+  margin-bottom: 16px;
+  display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
+  animation: fadeUp .35s var(--ease-out) .08s both;
+}
+
+.search-wrap {
+  flex: 1; min-width: 160px;
+  display: flex; align-items: center; gap: 8px;
+  background: var(--surface2);
+  border-radius: 12px;
+  padding: 9px 13px;
+  transition: background .15s, box-shadow .15s;
+}
+.search-wrap:focus-within {
+  background: var(--surface);
+  box-shadow: 0 0 0 3px rgba(0,122,255,.18);
+}
+.search-wrap input {
+  background: none; border: none; outline: none;
+  color: var(--text); font-size: 15px; font-family: var(--sans); flex: 1;
+}
+.search-wrap input::placeholder { color: var(--text3); }
+.search-wrap svg { color: var(--text3); flex-shrink: 0; }
+
+/* ── Sliding pill tabs ── */
+.tabs {
+  display: flex; gap: 0; position: relative;
+  background: var(--surface2); border-radius: 12px;
+  padding: 3px;
+}
+.tab-btn {
+  position: relative; z-index: 1;
+  padding: 6px 14px; border-radius: 9px;
+  font-size: 13px; font-weight: 500;
+  border: none; background: none; color: var(--text2);
+  cursor: pointer; transition: color .2s; white-space: nowrap;
+  font-family: var(--sans);
+}
+.tab-btn.on { color: var(--text); font-weight: 600; }
+.tab-pill {
+  position: absolute; top: 3px; height: calc(100% - 6px);
+  background: var(--surface);
+  border-radius: 9px;
+  box-shadow: 0 1px 4px rgba(0,0,0,.1), 0 0 0 .5px var(--separator2);
+  transition: left .25s var(--ease-spring), width .25s var(--ease-spring);
+  pointer-events: none; z-index: 0;
+}
+
+/* ───────── Table card ───────── */
+.table-card {
+  background: var(--surface);
+  border: 0.5px solid var(--separator2);
+  border-radius: 20px;
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  animation: fadeUp .4s var(--ease-out) .14s both;
+}
+table { width: 100%; border-collapse: collapse; }
+thead { border-bottom: 0.5px solid var(--separator2); }
+th {
+  padding: 10px 16px; text-align: left;
+  font-size: 11px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .07em; color: var(--text3); white-space: nowrap;
+}
+tbody tr {
+  border-bottom: 0.5px solid var(--separator2);
+  transition: background .12s;
+  animation: row-in .3s var(--ease-out) both;
+}
+tbody tr:last-child { border-bottom: none; }
+tbody tr:hover { background: var(--surface2); }
+
+/* Staggered row entrance */
+@keyframes row-in { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:none} }
+tbody tr:nth-child(1){animation-delay:.02s}
+tbody tr:nth-child(2){animation-delay:.05s}
+tbody tr:nth-child(3){animation-delay:.08s}
+tbody tr:nth-child(4){animation-delay:.11s}
+tbody tr:nth-child(5){animation-delay:.14s}
+tbody tr:nth-child(6){animation-delay:.17s}
+tbody tr:nth-child(7){animation-delay:.19s}
+tbody tr:nth-child(8){animation-delay:.21s}
+
+td { padding: 14px 16px; font-size: 13px; vertical-align: middle; }
+.cell-id   { font-family:ui-monospace,'SF Mono',monospace; font-size:11px; color:var(--text3); }
+.cell-emp  { font-weight:600; letter-spacing:-.1px; }
+.cell-by   { color:var(--text2); font-size:12px; }
+.cell-cnt  { font-weight:700; font-size:15px; color:var(--accent); }
+.cell-date { font-size:12px; color:var(--text3); font-variant-numeric:tabular-nums; }
+
+/* ───────── Badges ───────── */
+.b-pending {
+  display:inline-flex; align-items:center; gap:5px;
+  font-size:11px; font-weight:600; padding:4px 10px; border-radius:980px;
+  background:rgba(255,149,0,.1); color:var(--ios-orange);
+}
+.b-confirmed {
+  display:inline-flex; align-items:center; gap:5px;
+  font-size:11px; font-weight:600; padding:4px 10px; border-radius:980px;
+  background:rgba(52,199,89,.1); color:var(--ios-green);
+  animation: badge-pop .35s var(--ease-spring) both;
+}
+@keyframes badge-pop { from{transform:scale(.7);opacity:0} 70%{transform:scale(1.08)} to{transform:scale(1);opacity:1} }
+
+/* ───────── Action buttons ───────── */
+.act-cell { display:flex; gap:6px; align-items:center; flex-wrap:wrap; }
+.btn-act {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-family: var(--sans); font-size: 12px; font-weight: 500;
+  padding: 6px 13px; border-radius: 980px;
+  border: 0.5px solid var(--separator2);
+  cursor: pointer;
+  transition: transform .2s var(--ease-spring), background .15s, box-shadow .15s;
+  white-space: nowrap; text-decoration: none;
+  background: var(--surface2); color: var(--text2);
+}
+.btn-act:hover { background: var(--surface3); transform: translateY(-1px); box-shadow: var(--shadow-xs); }
+.btn-act:active { transform: scale(.94); box-shadow: none; }
+
+.btn-confirm {
+  background: rgba(52,199,89,.1);
+  color: var(--ios-green);
+  border-color: rgba(52,199,89,.2);
+}
+.btn-confirm:hover { background: rgba(52,199,89,.18); }
+.btn-confirm:disabled { opacity:.4; cursor:not-allowed; transform:none !important; box-shadow:none !important; }
+
+/* ───────── Empty ───────── */
+.empty-block {
+  padding: 64px 20px; text-align: center;
+  animation: fadeUp .3s var(--ease-out) both;
+}
+.empty-block .ei {
+  width: 64px; height: 64px; border-radius: 20px;
+  background: var(--surface2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 28px; margin: 0 auto 16px;
+}
+.empty-block h3 { font-size: 16px; font-weight: 600; margin-bottom: 6px; }
+.empty-block p  { font-size: 13px; color: var(--text2); }
+
+/* ───────── Spin ───────── */
+@keyframes spin { to{transform:rotate(360deg)} }
+.spin { animation: spin .7s linear infinite; }
+
+@media(max-width:600px){ .hide-m { display:none !important; } }
+
+/* ───────── Modal Overlay & Sheet ───────── */
+.overlay {
+  display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4);
+  z-index: 500; align-items: flex-end; justify-content: center;
+  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+}
+.overlay.open { display: flex; }
+@media (min-width: 600px) { .overlay { align-items: center; } }
+
+.sheet {
+  background: var(--surface); width: 100%; max-width: 560px;
+  border-radius: 24px 24px 0 0; padding: 24px;
+  max-height: 92vh; display: flex; flex-direction: column;
+  transform: translateY(40px); opacity: 0; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+  border: 0.5px solid var(--separator2);
+}
+@media (min-width: 600px) { .sheet { border-radius: 24px; } }
+.overlay.open .sheet { transform: translateY(0); opacity: 1; }
+
+.sheet-body { flex: 1; overflow-y: auto; padding-right: 4px; }
+.sheet-body::-webkit-scrollbar { width: 4px; }
+.sheet-body::-webkit-scrollbar-thumb { background: var(--separator2); border-radius: 2px; }
+
+/* Item selection cards */
+.item-pick-card {
+  display: flex; align-items: center; gap: 12px;
+  padding: 11px 13px; border-radius: 14px; cursor: pointer;
+  border: 1.5px solid var(--separator2);
+  background: var(--surface2); margin-bottom: 6px;
+  transition: border-color .15s, background .15s, transform .1s;
+  user-select: none;
+}
+.item-pick-card:hover { border-color: var(--accent); background: rgba(0,122,255,.04); }
+.item-pick-card.sel {
+  border-color: var(--accent); background: rgba(0,122,255,.08);
+  transform: scale(1.01);
+}
+.item-pick-check {
+  width: 22px; height: 22px; border-radius: 50%; flex-shrink: 0;
+  border: 2px solid var(--separator2); background: var(--surface);
+  display: flex; align-items: center; justify-content: center;
+  transition: all .15s; font-size: 12px;
+}
+.item-pick-card.sel .item-pick-check {
+  background: var(--accent); border-color: var(--accent); color: #fff;
+}
+.item-pick-info { flex: 1; min-width: 0; }
+.item-pick-model { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.item-pick-meta { font-size: 11px; color: var(--text3); margin-top: 2px; display: flex; gap: 8px; }
+.item-pick-inv { font-family: monospace; font-size: 11px; font-weight: 700; color: var(--accent); }
+.item-pick-room { font-size: 11px; color: var(--text3); }
+.cat-header {
+  font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .08em;
+  color: var(--accent); padding: 10px 0 4px; border-bottom: .5px solid var(--separator2);
+  margin-bottom: 6px; display: flex; align-items: center; gap: 6px;
+}
+.sel-count-badge {
+  background: var(--accent); color: #fff; border-radius: 20px;
+  font-size: 11px; font-weight: 700; padding: 2px 8px;
+  margin-left: auto; transition: opacity .2s;
+}
+.sel-count-badge.zero { opacity: 0; }
+.iss-search-wrap {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--surface2); border-radius: 12px; padding: 9px 12px;
+  margin-bottom: 12px; border: 1px solid var(--separator2);
+}
+.iss-search-wrap input {
+  background: none; border: none; outline: none;
+  color: var(--text); font-size: 14px; flex: 1; font-family: var(--sans);
+}
+.iss-search-wrap input::placeholder { color: var(--text3); }
+
+.sheet-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; }
+.sheet-title { font-size: 20px; font-weight: 700; letter-spacing: -0.5px; }
+.sheet-close {
+  width: 30px; height: 30px; border-radius: 50%; background: var(--surface2);
+  border: none; display: flex; align-items: center; justify-content: center;
+  cursor: pointer; color: var(--text2);
+}
+
+.form-group { margin-bottom: 18px; }
+.form-group label { display: block; font-size: 13px; font-weight: 600; color: var(--text2); margin-bottom: 8px; }
+.form-ctrl {
+  width: 100%; background: var(--surface2); border: 1.5px solid transparent;
+  border-radius: 12px; padding: 12px 14px; color: var(--text);
+  font-family: var(--sans); font-size: 15px; outline: none; transition: all 0.2s;
+}
+.form-ctrl:focus { background: var(--surface); border-color: var(--accent); box-shadow: 0 0 0 4px rgba(0,122,255, 0.1); }
+</style>
+</head>
+<body>
+
+<nav class="ios-nav">
+  <div class="nav-left">
+    <a href="/dashboard" class="nav-back">
+      <svg width="10" height="16" viewBox="0 0 10 18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 1L1 9l8 8"/></svg>
+      Назад
+    </a>
+  </div>
+  <div class="nav-center">Выдачи техники</div>
+  <div class="nav-right"></div>
+</nav>
+
+<div class="wrap">
+
+  <!-- Stats -->
+  <div class="stats-row">
+    <div class="stat-box">
+      <div class="stat-num" id="s-total" style="color:var(--accent);">0</div>
+      <div class="stat-lbl">Всего</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-num" id="s-pending" style="color:var(--ios-orange);">0</div>
+      <div class="stat-lbl">Ожидают</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-num" id="s-confirmed" style="color:var(--ios-green);">0</div>
+      <div class="stat-lbl">Подтверждено</div>
+    </div>
+  </div>
+
+  <!-- Toolbar -->
+  <div class="toolbar">
+    <div class="search-wrap">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" id="search-inp" placeholder="Поиск по сотруднику…" oninput="applyFilter()" autocomplete="off">
+    </div>
+    <div class="tabs" id="tabs">
+      <div class="tab-pill" id="tab-pill"></div>
+      <button class="tab-btn on" id="tab-all"       onclick="setTab('all',this)">Все</button>
+      <button class="tab-btn"   id="tab-pending"    onclick="setTab('pending',this)">Ожидают</button>
+      <button class="tab-btn"   id="tab-confirmed"  onclick="setTab('confirmed',this)">Подтверждены</button>
+    </div>
+    <button class="btn-act btn-confirm" onclick="openNewIssModal()" style="padding: 10px 20px; font-weight: 600; font-size: 13px; border-radius: 12px; height: 38px;">
+      ➕ Оформить выдачу
+    </button>
+  </div>
+
+  <!-- Table -->
+  {% if issuances %}
+  <div class="table-card" id="table-card">
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Сотрудник</th>
+          <th class="hide-m">Выдал</th>
+          <th>Единиц</th>
+          <th class="hide-m">Дата</th>
+          <th>Статус</th>
+          <th>Действия</th>
+        </tr>
+      </thead>
+      <tbody id="tbody">
+        {% for iss in issuances %}
+        <tr data-status="{{ iss.status }}" data-emp="{{ iss.employee_name|lower }}">
+          <td class="cell-id">{{ iss.id }}</td>
+          <td class="cell-emp">{{ iss.employee_name }}</td>
+          <td class="cell-by hide-m">{{ iss.issued_by_name }}</td>
+          <td class="cell-cnt">{{ iss.item_count }}</td>
+          <td class="cell-date hide-m">{{ iss.created_at[:10] if iss.created_at else '—' }}</td>
+          <td>
+            {% if iss.status == 'confirmed' %}
+            <span class="b-confirmed">
+              <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+              Подтверждено
+            </span>
+            {% else %}
+            <span class="b-pending">
+              <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              Ожидает
+            </span>
+            {% endif %}
+          </td>
+          <td>
+            <div class="act-cell">
+              <a href="/issuances/{{ iss.id }}/print-act" target="_blank" class="btn-act">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+                Акт
+              </a>
+              {% if iss.status != 'confirmed' %}
+              <button class="btn-act btn-confirm" onclick="confirmIss({{ iss.id }}, this)">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+                Подтвердить
+              </button>
+              {% endif %}
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="empty-block" id="no-results" style="display:none;">
+    <div class="ei">🔍</div>
+    <h3>Ничего не найдено</h3>
+    <p>Измените фильтр или поисковый запрос</p>
+  </div>
+
+  {% else %}
+  <div class="table-card">
+    <div class="empty-block">
+      <div class="ei">📦</div>
+      <h3>Нет записей о выдаче</h3>
+      <p>Выдачи появятся здесь после оформления</p>
+    </div>
+  </div>
+  {% endif %}
+
+</div>
+
+<!-- Modal: New Issuance -->
+<div class="overlay" id="m-new-iss">
+  <div class="sheet">
+    <div class="sheet-header">
+      <div>
+        <div class="sheet-title">Новая выдача</div>
+        <div style="font-size: 13px; color: var(--text2); margin-top: 4px;">Закрепить технику за сотрудником</div>
+      </div>
+      <button class="sheet-close" onclick="close_m('m-new-iss')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="sheet-body">
+      <div class="form-group">
+        <label>Выберите сотрудника *</label>
+        <select id="iss-emp" class="form-ctrl">
+          <option value="">Загрузка сотрудников...</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+          <label style="margin:0;">Выберите свободные активы *</label>
+          <span class="sel-count-badge zero" id="iss-sel-badge">0 выбрано</span>
+        </div>
+        <div class="iss-search-wrap">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" id="iss-item-search" placeholder="Поиск по модели или инв. №…" oninput="filterIssItems()">
+        </div>
+        <div id="items-list-container">
+          <div style="font-size: 13px; color: var(--text3); text-align: center; padding: 20px;">Загрузка свободных активов...</div>
+        </div>
+      </div>
+    </div>
+    <div class="sheet-foot">
+      <button class="btn-act" onclick="close_m('m-new-iss')">Отмена</button>
+      <button class="btn-act btn-confirm" id="btn-iss-submit" onclick="submitIssuance()">Оформить выдачу</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"><span class="ti" id="ti">●</span>&nbsp;<span id="tm"></span></div>
+
+<script>
+// ── Data from server ──
+const TOTAL     = {{ issuances|length }};
+const N_PENDING = {{ issuances|selectattr('status','equalto','pending')|list|length }};
+const N_CONF    = {{ issuances|selectattr('status','equalto','confirmed')|list|length }};
+
+// ── Animated counter ──
+function animCount(el, target, duration) {
+  const start = performance.now();
+  function step(now) {
+    const p = Math.min((now - start) / duration, 1);
+    // ease-out-expo
+    const ease = p === 1 ? 1 : 1 - Math.pow(2, -10 * p);
+    el.textContent = Math.round(ease * target);
+    if (p < 1) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
+window.addEventListener('DOMContentLoaded', () => {
+  animCount(document.getElementById('s-total'),     TOTAL,     600);
+  animCount(document.getElementById('s-pending'),   N_PENDING, 700);
+  animCount(document.getElementById('s-confirmed'), N_CONF,    800);
+  initPill();
+});
+
+// ── Sliding tab pill ──
+let curTab = 'all';
+function initPill() {
+  movePill(document.getElementById('tab-all'));
+}
+function movePill(btn) {
+  const pill  = document.getElementById('tab-pill');
+  const tabs  = document.getElementById('tabs');
+  const tabsR = tabs.getBoundingClientRect();
+  const btnR  = btn.getBoundingClientRect();
+  pill.style.left  = (btnR.left - tabsR.left) + 'px';
+  pill.style.width = btnR.width + 'px';
+}
+function setTab(tab, btn) {
+  curTab = tab;
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+  movePill(btn);
+  applyFilter();
+}
+
+// ── Filter ──
+function applyFilter() {
+  const q = document.getElementById('search-inp').value.toLowerCase().trim();
+  const rows = document.querySelectorAll('#tbody tr');
+  let visible = 0;
+  rows.forEach(r => {
+    const ok = (curTab === 'all' || r.dataset.status === curTab)
+             && (!q || (r.dataset.emp || '').includes(q));
+    r.style.display = ok ? '' : 'none';
+    if (ok) visible++;
+  });
+  const card = document.getElementById('table-card');
+  const nr   = document.getElementById('no-results');
+  if (card) card.style.display = visible ? '' : 'none';
+  if (nr)   nr.style.display   = visible ? 'none' : 'block';
+}
+
+// ── Confirm ──
+async function confirmIss(id, btn) {
+  if (!await showConfirm('Получение техники', 'Подтвердить получение техники сотрудником?')) return;
+  const origHTML = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="spin"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>`;
+
+  try {
+    const r = await fetch(`/api/issuances/${id}/confirm`, { method: 'POST' });
+    const j = await r.json();
+    if (!r.ok) throw new Error(j.error || 'Ошибка сервера');
+
+    // Animate badge swap
+    const row  = btn.closest('tr');
+    const cell = row.querySelector('.b-pending, .b-confirmed');
+    if (cell) {
+      cell.style.transition = 'opacity .15s, transform .15s';
+      cell.style.opacity = '0'; cell.style.transform = 'scale(.85)';
+      setTimeout(() => {
+        cell.className = 'b-confirmed';
+        cell.innerHTML = `<svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg> Подтверждено`;
+        cell.style.opacity = ''; cell.style.transform = '';
+      }, 150);
+    }
+    row.dataset.status = 'confirmed';
+    // Animate row background flash
+    row.style.background = 'rgba(52,199,89,.08)';
+    setTimeout(() => { row.style.background = ''; }, 600);
+    btn.remove();
+
+    // Update counters with mini-animation
+    const p = document.getElementById('s-pending');
+    const c = document.getElementById('s-confirmed');
+    const pv = Math.max(0, parseInt(p.textContent) - 1);
+    const cv = parseInt(c.textContent) + 1;
+    animCount(p, pv, 300);
+    animCount(c, cv, 300);
+
+    toast('Выдача подтверждена', 'ok');
+  } catch (e) {
+    btn.disabled = false;
+    btn.innerHTML = origHTML;
+    toast(e.message, 'err');
+  }
+}
+
+// ── Toast ──
+let _t;
+function toast(msg, type = 'ok') {
+  const el = document.getElementById('toast');
+  document.getElementById('ti').textContent = '●';
+  document.getElementById('tm').textContent = msg;
+  el.className = 'toast ' + type + ' show';
+  clearTimeout(_t); _t = setTimeout(() => el.classList.remove('show'), 3000);
+}
+
+// ── Theme sync ──
+(function () {
+  const t = localStorage.getItem('asseto-theme') ||
+    document.cookie.match(/theme=([^;]+)/)?.[1] || '';
+  if (t) document.documentElement.setAttribute('data-theme', t);
+})();
+
+// ── Keyboard: Escape clears search ──
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    document.getElementById('search-inp').value = '';
+    applyFilter();
+    close_m('m-new-iss');
+  }
+  // Cmd/Ctrl+F focuses search
+  if ((e.metaKey || e.ctrlKey) && e.key === 'f') {
+    e.preventDefault();
+    document.getElementById('search-inp').focus();
+  }
+});
+
+// ── New Issuance Modal JS ──
+function open_m(id) {
+  const o = document.getElementById(id);
+  if (o) {
+    o.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+}
+function close_m(id) {
+  const o = document.getElementById(id);
+  if (o) {
+    o.classList.remove('open');
+    document.body.style.overflow = '';
+  }
+}
+
+// Close modals when clicking overlay background
+document.querySelectorAll('.overlay').forEach(o => {
+  o.addEventListener('click', e => { if (e.target === o) close_m(o.id); });
+});
+
+async function openNewIssModal(preselectedEmpId = null) {
+  const empSelect = document.getElementById('iss-emp');
+  const itemsContainer = document.getElementById('items-list-container');
+  
+  empSelect.innerHTML = '<option value="">Загрузка сотрудников...</option>';
+  itemsContainer.innerHTML = '<div style="font-size:13px;color:var(--text3);text-align:center;padding:20px;">Загрузка свободных активов...</div>';
+  
+  open_m('m-new-iss');
+  
+  // 1. Fetch Users
+  try {
+    const r = await fetch('/api/users/simple-list');
+    const users = await r.json();
+    let html = '<option value="">Выберите сотрудника...</option>';
+    users.forEach(u => {
+      html += `<option value="${u.id}">${u.name} (${u.department || '—'})</option>`;
+    });
+    empSelect.innerHTML = html;
+    if (preselectedEmpId) {
+      empSelect.value = preselectedEmpId;
+    }
+  } catch(e) {
+    empSelect.innerHTML = '<option value="">Ошибка загрузки сотрудников</option>';
+  }
+  
+  // 2. Fetch Free Items
+  try {
+    const r = await fetch('/api/onboarding/free-items');
+    _issItemsGrouped = await r.json();
+    _issSelectedIds = new Set();
+    renderIssItems(_issItemsGrouped);
+  } catch(e) {
+    itemsContainer.innerHTML = '<div style="font-size:13px;color:var(--ios-red);text-align:center;padding:20px;">Ошибка загрузки активов</div>';
+  }
+}
+
+const CAT_ICONS_ISS = {'Ноутбук':'💻','Монитор':'🖥️','Телефон':'📱','Клавиатура':'⌨️','Мышь':'🖱️','Принтер':'🖨️','Наушники':'🎧','Удлинитель':'🔌','Кресло':'🪑','Стол':'🪵','Другое':'📦'};
+let _issItemsGrouped = {}, _issSelectedIds = new Set();
+
+function renderIssItems(grouped, q = '') {
+  const container = document.getElementById('items-list-container');
+  let html = '', total = 0;
+  const qLow = q.toLowerCase();
+
+  for (const cat in grouped) {
+    const items = grouped[cat].filter(i =>
+      !q || i.model.toLowerCase().includes(qLow) || i.inv_num.toLowerCase().includes(qLow)
+    );
+    if (!items.length) continue;
+    const icon = CAT_ICONS_ISS[cat] || '📦';
+    html += `<div class="cat-header">${icon} ${cat} <span style="color:var(--text3);font-weight:600;font-size:10px;">${items.length} шт.</span></div>`;
+    items.forEach(item => {
+      total++;
+      const sel = _issSelectedIds.has(item.id);
+      html += `<div class="item-pick-card${sel?' sel':''}" data-id="${item.id}" onclick="toggleIssItem(${item.id}, this)">
+        <div class="item-pick-check">${sel?'✓':''}</div>
+        <div class="item-pick-info">
+          <div class="item-pick-model">${item.model || cat}</div>
+          <div class="item-pick-meta">
+            <span class="item-pick-inv">${item.inv_num}</span>
+            <span class="item-pick-room">📍 ${item.room || 'Склад'}</span>
+            ${item.condition ? `<span style="font-size:10px;padding:1px 6px;border-radius:6px;background:var(--surface);color:var(--text3);">${item.condition}</span>` : ''}
+          </div>
+        </div>
+      </div>`;
+    });
+  }
+
+  if (!total) {
+    container.innerHTML = q
+      ? `<div style="text-align:center;padding:24px;color:var(--text3);">🔍 Ничего не найдено по «${q}»</div>`
+      : `<div style="text-align:center;padding:24px;color:var(--text3);">📭 Нет свободной техники на складе</div>`;
+    return;
+  }
+  container.innerHTML = html;
+  updateIssSelBadge();
+}
+
+function toggleIssItem(id, card) {
+  if (_issSelectedIds.has(id)) {
+    _issSelectedIds.delete(id);
+    card.classList.remove('sel');
+    card.querySelector('.item-pick-check').textContent = '';
+  } else {
+    _issSelectedIds.add(id);
+    card.classList.add('sel');
+    card.querySelector('.item-pick-check').textContent = '✓';
+  }
+  updateIssSelBadge();
+}
+
+function updateIssSelBadge() {
+  const badge = document.getElementById('iss-sel-badge');
+  const n = _issSelectedIds.size;
+  badge.textContent = `${n} выбрано`;
+  badge.classList.toggle('zero', n === 0);
+}
+
+function filterIssItems() {
+  const q = document.getElementById('iss-item-search').value.trim();
+  renderIssItems(_issItemsGrouped, q);
+}
+
+async function submitIssuance() {
+  const empSelect = document.getElementById('iss-emp');
+  const empId = empSelect.value;
+  const empName = empSelect.options[empSelect.selectedIndex]?.text.split(' (')[0] || '';
+  
+  const itemIds = Array.from(_issSelectedIds);
+
+  if (!empId) { await showAlert('Внимание', 'Выберите сотрудника'); return; }
+  if (!itemIds.length) { await showAlert('Внимание', 'Выберите хотя бы одну единицу техники'); return; }
+  
+  const btn = document.getElementById('btn-iss-submit');
+  btn.disabled = true;
+  btn.innerText = 'Оформление...';
+  
+  try {
+    const r = await fetch('/api/issuances', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ employee_id: parseInt(empId), employee_name: empName, item_ids: itemIds })
+    });
+    const d = await r.json();
+    if (d.ok) {
+      toast('Выдача успешно оформлена ✓', 'ok');
+      close_m('m-new-iss');
+      setTimeout(() => location.reload(), 1000);
+    } else {
+      await showAlert('Ошибка', d.error || 'Ошибка');
+    }
+  } catch(e) {
+    await showAlert('Ошибка', 'Ошибка сети');
+  }
+  btn.disabled = false;
+  btn.innerText = 'Оформить';
+}
+
+// URL Params Auto-Modal
+window.addEventListener('DOMContentLoaded', () => {
+  const params = new URLSearchParams(window.location.search);
+  if (params.has('employee_id')) {
+    const empId = params.get('employee_id');
+    setTimeout(() => {
+      openNewIssModal(empId);
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }, 600);
+  }
+});
+</script>
+</body>
+</html>

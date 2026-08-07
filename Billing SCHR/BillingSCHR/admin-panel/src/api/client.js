@@ -59,7 +59,7 @@ export const api = {
 
   // Auth
   login: (login, password) =>
-    fetch("/api/Companies/login", {
+    fetch(BASE + "/api/Companies/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ login, password }),
@@ -110,7 +110,7 @@ export const api = {
     const token = localStorage.getItem("billing-schr-token");
     const params = new URLSearchParams({ year: String(year) });
     if (month) params.append("month", String(month));
-    const r = await fetch(`/api/Transactions/export?${params}`, {
+    const r = await fetch(BASE + `/api/Transactions/export?${params}`, {
       headers: { Authorization: `Bearer ${token}` },
     });
     if (!r.ok) throw new Error("Export failed");
