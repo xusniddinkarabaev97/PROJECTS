@@ -1,5 +1,3 @@
-using System.Text;
-using System.Text.Json;
 using SmartParking.Data;
 using SmartParking.Enums;
 using SmartParking.Models;
@@ -7,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.Json;
 
 namespace SmartParking.Controllers
 {
@@ -19,8 +18,7 @@ namespace SmartParking.Controllers
         private readonly IConfiguration _config;
         private readonly IHttpClientFactory _http;
 
-        public ClickParkingController(ApplicationDbContext context, IConfiguration config)
-            IHttpClientFactory http,
+        public ClickParkingController(ApplicationDbContext context, IConfiguration config, IHttpClientFactory http)
         {
             _context = context;
             _config = config;
@@ -85,19 +83,18 @@ namespace SmartParking.Controllers
                 fiscalStatus = "registered";
                 txn.PaymentMethod = $"click|fiscal:{fiscalReceiptId}";
 
-                // Send payment status back to Dahua
+                // Notify Dahua
                 try
                 {
                     var dahuaSettings = await _context.DahuaSettings.FirstOrDefaultAsync();
                     if (dahuaSettings?.PaymentCallbackUrl != null)
                     {
-                        var dahuaReq = JsonSerializer.Serialize(new { transactionId = txn.Id, plateNumber = txn.PaymentMethod != null ? "" : "", status = "paid", fiscalReceiptId });
+                        var payload = JsonSerializer.Serialize(new { transactionId = txn.Id, status = "paid", fiscalReceiptId });
                         var client = _http.CreateClient();
-                        await client.PostAsync(dahuaSettings.PaymentCallbackUrl, new StringContent(dahuaReq, Encoding.UTF8, "application/json"));
+                        await client.PostAsync(dahuaSettings.PaymentCallbackUrl, new StringContent(payload, Encoding.UTF8, "application/json"));
                     }
                 }
                 catch { }
-                }
             }
             else
             {
