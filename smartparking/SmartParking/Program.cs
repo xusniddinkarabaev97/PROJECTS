@@ -9,8 +9,7 @@ using Microsoft.OpenApi.Models;
 using System;
 using System.Text;
 using System.Text.Json.Serialization;
-// using SmartParking.Models; // Potentially needed if you use models directly in Program.cs
-// using SmartParking.DTOs;   // Potentially needed if you use DTOs directly in Program.cs
+using System.Reflection;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -81,7 +80,43 @@ builder.Services.AddRazorPages();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
-    c.SwaggerDoc("v1", new OpenApiInfo { Title = "SmartParking API", Version = "v1" });
+    c.SwaggerDoc("v1", new OpenApiInfo
+    {
+        Title = "SmartParking API",
+        Version = "v1",
+        Description = "Core API: транзакции, QR-коды, компании, тарифы"
+    });
+
+    c.SwaggerDoc("dahua", new OpenApiInfo
+    {
+        Title = "Dahua Интеграция",
+        Version = "v1",
+        Description = "Webhook для камер Dahua DSS:\n\n" +
+                      "**Подключение:**\n" +
+                      "1. В DSS: System Integration → Event Transferal → Web Service\n" +
+                      "2. URL: `https://whirl.uz/api/DahuaIntegration/events`\n" +
+                      "3. Secret: `dss_webhook_secret_2026`\n" +
+                      "4. Формат: JSON, ANPR события\n\n" +
+                      "**Бизнес-процесс:**\n" +
+                      "- Въезд → создание сессии + открытие шлагбаума\n" +
+                      "- Выезд → расчёт стоимости + QR для Click\n" +
+                      "- Оплата через Click → авт. открытие шлагбаума"
+    });
+
+    c.SwaggerDoc("click", new OpenApiInfo
+    {
+        Title = "Click Платёжная интеграция",
+        Version = "v1",
+        Description = "Интеграция с платёжной системой Click для оплаты парковки.\n\n" +
+                      "**Формат QR:** `service_id=2005&merchant_id=19876&amount={tiyin}&transaction_param={id}`\n\n" +
+                      "**Коды ошибок:**\n" +
+                      "- `0` — успех\n" +
+                      "- `-1` — неверная подпись\n" +
+                      "- `-2` — сумма не совпадает\n" +
+                      "- `-4` — уже оплачено / отменено\n" +
+                      "- `-5` — транзакция не найдена\n" +
+                      "- `-9` — внутренняя ошибка"
+    });
 
     var securityScheme = new OpenApiSecurityScheme
     {
@@ -102,6 +137,22 @@ builder.Services.AddSwaggerGen(c =>
     {
         { securityScheme, new[] { "Bearer" } }
     });
+
+    // XML comments
+    var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+    var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+    if (File.Exists(xmlPath))
+        c.IncludeXmlComments(xmlPath);
+
+    // Group controllers by namespace/attribute
+    c.DocInclusionPredicate((docName, apiDesc) =>
+    {
+        if (docName == "dahua")
+            return apiDesc.GroupName == "dahua" || apiDesc.RelativePath?.Contains("DahuaIntegration") == true;
+        if (docName == "click")
+            return apiDesc.GroupName == "click" || apiDesc.RelativePath?.Contains("click") == true;
+        return apiDesc.GroupName != "dahua" && apiDesc.GroupName != "click";
+    });
 });
 builder.Services.AddControllers().AddJsonOptions(options =>
 {
@@ -110,14 +161,18 @@ builder.Services.AddControllers().AddJsonOptions(options =>
 });
 var app = builder.Build();
 
-if (app.Environment.IsDevelopment())
+// Swagger always available (including production)
+app.UseSwagger(c =>
 {
-    app.UseSwagger();
-    app.UseSwaggerUI(c =>
-    {
-        c.SwaggerEndpoint("/swagger/v1/swagger.json", "SmartParking API V1");
-    });
-}
+    c.RouteTemplate = "swagger/{documentName}/swagger.json";
+});
+app.UseSwaggerUI(c =>
+{
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "SmartParking Core API V1");
+    c.SwaggerEndpoint("/swagger/dahua/swagger.json", "Dahua Интеграция");
+    c.SwaggerEndpoint("/swagger/click/swagger.json", "Click Платёжная интеграция");
+    c.RoutePrefix = "swagger";
+});
 
 app.UseCors();
 
