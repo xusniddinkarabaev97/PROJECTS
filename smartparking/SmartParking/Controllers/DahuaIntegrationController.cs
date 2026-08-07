@@ -20,6 +20,7 @@ namespace SmartParking.Controllers
         private readonly IAuditService _audit;
         private readonly ISignatureService _signature;
         private readonly ILogger<DahuaIntegrationController> _logger;
+        private readonly IConfiguration _config;
 
         public DahuaIntegrationController(
             ApplicationDbContext ctx,
@@ -27,7 +28,8 @@ namespace SmartParking.Controllers
             IDahuaApiService dahua,
             IAuditService audit,
             ISignatureService signature,
-            ILogger<DahuaIntegrationController> logger)
+            ILogger<DahuaIntegrationController> logger,
+            IConfiguration config)
         {
             _ctx = ctx;
             _parking = parking;
@@ -35,6 +37,7 @@ namespace SmartParking.Controllers
             _audit = audit;
             _signature = signature;
             _logger = logger;
+            _config = config;
         }
 
         // ==================== WEBHOOK RECEIVER ====================
