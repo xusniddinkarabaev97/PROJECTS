@@ -93,7 +93,6 @@ X-Billing-Secret: uparking-shared-secret-2026
 | `PendingBilling` | Создана, ожидает QR |
 | `QrReady` | QR сгенерирован |
 | `Paid` | Оплачено |
-| `BarrierOpened` | Шлагбаум открыт ✅ |
 | `Failed` | Ошибка оплаты |
 
 ---
