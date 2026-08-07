@@ -83,17 +83,16 @@ builder.Services.AddSwaggerGen(c =>
 
     c.SwaggerDoc("uparking", new OpenApiInfo
     {
+        Title = "UParking Billing Integration",
         Version = "v1",
-        Description = "Webhook для камер Dahua DSS:\n\n" +
-                      "**Подключение:**\n" +
-                      "1. В DSS: System Integration → Event Transferal → Web Service\n" +
-                      "2. URL: `https://whirl.uz/api/DahuaIntegration/events`\n" +
-                      "3. Secret: `dss_webhook_secret_2026`\n" +
-                      "4. Формат: JSON, ANPR события\n\n" +
-                      "**Бизнес-процесс:**\n" +
-                      "- Въезд → создание сессии + открытие шлагбаума\n" +
-                      "- Выезд → расчёт стоимости + QR для Click\n" +
-                      "- Оплата через Click → авт. открытие шлагбаума"
+        Description = "Billing Provider API per UParking spec v1.0.
+
+" +
+                      "**Direction A:** POST /api/billing/create — UParking sends parking session data, SmartParking returns QR.
+" +
+                      "**Direction B2:** POST /api/billing/payment — SmartParking notifies UParking when payment completes.
+" +
+                      "**Barriers:** Managed by UParking."
     });
 
     c.SwaggerDoc("click", new OpenApiInfo
