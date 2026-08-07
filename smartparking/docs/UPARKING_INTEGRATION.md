@@ -14,18 +14,12 @@
 │ (выезд)  │     │  /api/billing/  │     │ водителю │     │ (оплата) │
 └──────────┘     │     create      │     └──────────┘     └────┬─────┘
                  └────────┬────────┘                          │
-                          │                          подтверждение
-                          ▼ callback                       оплаты
-                 ┌─────────────────┐                          │
-                 │    UParking     │◄─────────────────────────┘
+                          │                                   │
+                          ▼ callback                    подтверждение
+                 ┌─────────────────┐                     оплаты
+                 │    UParking     │◄───────────────────────┘
                  │  {callbackUrl}  │
-                 └────────┬────────┘
-                          │
-                          ▼
-                 ┌──────────────┐
-                 │   Шлагбаум   │
-                 │  (UParking)  │
-                 └──────────────┘
+                 └─────────────────┘
 ```
 
 1. UParking при выезде отправляет данные → SmartParking
@@ -33,7 +27,6 @@
 3. Водитель сканирует QR → оплачивает через Click
 4. Click подтверждает оплату → SmartParking
 5. SmartParking отправляет статус "оплачено" → UParking (callback)
-6. UParking сам открывает шлагбаум
 
 ---
 
@@ -91,7 +84,7 @@ X-Billing-Secret: uparking-shared-secret-2026
 
 ## ⬅️ Шаг 2. Callback после оплаты (SmartParking → UParking)
 
-После успешной оплаты через Click SmartParking отправляет статус на callback URL UParking.
+После оплаты SmartParking отправляет статус на callback URL UParking.
 
 ```
 POST {callback_url_от_UParking}
