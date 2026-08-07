@@ -1,7 +1,7 @@
 # Click Payment Integration — SmartParking
 
 > **Click API:** `https://api.click.uz/v2/`  
-> **Умная парковка:** `https://whirl.uz/api/Transactions`
+> **Умная парковка:** `https://whirl.uz/Billing/api/Transactions`
 
 ---
 
@@ -28,7 +28,7 @@
 Click отправляет запрос для проверки возможности оплаты.
 
 ```
-POST https://whirl.uz/api/Transactions/click/prepare
+POST https://whirl.uz/Billing/api/Transactions/click/prepare
 Content-Type: application/json
 ```
 
@@ -90,7 +90,7 @@ Content-Type: application/json
 Click подтверждает успешную оплату.
 
 ```
-POST https://whirl.uz/api/Transactions/click/complete
+POST https://whirl.uz/Billing/api/Transactions/click/complete
 Content-Type: application/json
 ```
 

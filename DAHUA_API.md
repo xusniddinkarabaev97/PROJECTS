@@ -1,6 +1,8 @@
+> **Swagger:** `https://whirl.uz/Billing/swagger/`
+
 # Dahua Camera Integration → QR → Click
 
-> **SmartParking:** `https://whirl.uz/api/DahuaIntegration`  
+> **SmartParking:** `https://whirl.uz/Billing/api/DahuaIntegration`  
 > **Dahua DSS Server:** `http://10.0.1.XX:8080`
 
 ---
@@ -40,7 +42,7 @@
 Камера фиксирует номер при въезде, Dahua DSS отправляет вебхук.
 
 ```
-POST https://whirl.uz/api/DahuaIntegration/events
+POST https://whirl.uz/Billing/api/DahuaIntegration/events
 Content-Type: application/json
 X-Webhook-Secret: dss_webhook_secret_2026
 ```
@@ -80,7 +82,7 @@ X-Webhook-Secret: dss_webhook_secret_2026
 Камера фиксирует номер при выезде.
 
 ```
-POST https://whirl.uz/api/DahuaIntegration/events
+POST https://whirl.uz/Billing/api/DahuaIntegration/events
 X-Webhook-Secret: dss_webhook_secret_2026
 ```
 
@@ -115,7 +117,7 @@ X-Webhook-Secret: dss_webhook_secret_2026
 После выезда генерируется QR с данными для оплаты через Click.
 
 ```
-GET https://whirl.uz/api/Qr/89
+GET https://whirl.uz/Billing/api/Qr/89
 ```
 
 **Ответ:**
@@ -143,7 +145,7 @@ service_id={serviceId}&merchant_id={merchantId}&amount={tiyins}&transaction_para
 Приложение Click сканирует QR и вызывает Prepare.
 
 ```
-POST https://whirl.uz/api/Transactions/click/prepare
+POST https://whirl.uz/Billing/api/Transactions/click/prepare
 ```
 
 **Запрос от Click:**
@@ -179,7 +181,7 @@ POST https://whirl.uz/api/Transactions/click/prepare
 После успешной оплаты Click вызывает Complete.
 
 ```
-POST https://whirl.uz/api/Transactions/click/complete
+POST https://whirl.uz/Billing/api/Transactions/click/complete
 ```
 
 **Запрос от Click:**
@@ -217,7 +219,7 @@ POST https://whirl.uz/api/Transactions/click/complete
 ## 🔧 6. Ручное управление шлагбаумом
 
 ```
-POST https://whirl.uz/api/DahuaIntegration/barrier/open
+POST https://whirl.uz/Billing/api/DahuaIntegration/barrier/open
 Authorization: Bearer {token}
 ```
 

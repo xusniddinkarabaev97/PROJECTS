@@ -1,6 +1,8 @@
+> **Swagger:** `https://whirl.uz/Billing/swagger/`
+
 # SmartParking API — Парковочная система
 
-> **Базовый URL:** `https://whirl.uz/api/`  
+> **Базовый URL:** `https://whirl.uz/Billing/api/`  
 > **Локальный:** `http://10.0.1.206:5121/api/`
 
 ---
