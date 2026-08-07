@@ -80,16 +80,9 @@ builder.Services.AddRazorPages();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
-    c.SwaggerDoc("v1", new OpenApiInfo
-    {
-        Title = "SmartParking API",
-        Version = "v1",
-        Description = "Core API: транзакции, QR-коды, компании, тарифы"
-    });
 
-    c.SwaggerDoc("dahua", new OpenApiInfo
+    c.SwaggerDoc("uparking", new OpenApiInfo
     {
-        Title = "Dahua Интеграция",
         Version = "v1",
         Description = "Webhook для камер Dahua DSS:\n\n" +
                       "**Подключение:**\n" +
@@ -147,11 +140,11 @@ builder.Services.AddSwaggerGen(c =>
     // Group controllers by namespace/attribute
     c.DocInclusionPredicate((docName, apiDesc) =>
     {
-        if (docName == "dahua")
-            return apiDesc.GroupName == "dahua" || apiDesc.RelativePath?.Contains("DahuaIntegration") == true;
+        if (docName == "uparking")
+            return apiDesc.GroupName == "uparking" || apiDesc.RelativePath?.Contains("DahuaIntegration") == true;
         if (docName == "click")
             return apiDesc.GroupName == "click" || apiDesc.RelativePath?.Contains("click") == true;
-        return apiDesc.GroupName != "dahua" && apiDesc.GroupName != "click";
+        return apiDesc.GroupName != "uparking" && apiDesc.GroupName != "click";
     });
 });
 builder.Services.AddControllers().AddJsonOptions(options =>
@@ -168,8 +161,7 @@ app.UseSwagger(c =>
 });
 app.UseSwaggerUI(c =>
 {
-    c.SwaggerEndpoint("/smartparking/swagger/v1/swagger.json", "SmartParking Core API V1");
-    c.SwaggerEndpoint("/smartparking/swagger/dahua/swagger.json", "Dahua Интеграция");
+    c.SwaggerEndpoint("/smartparking/swagger/uparking/swagger.json", "UParking Интеграция");
     c.SwaggerEndpoint("/smartparking/swagger/click/swagger.json", "Click Платёжная интеграция");
     c.RoutePrefix = "swagger";
 });

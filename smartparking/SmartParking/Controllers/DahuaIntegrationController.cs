@@ -11,7 +11,7 @@ namespace SmartParking.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [ApiExplorerSettings(GroupName = "dahua")]
+    [ApiExplorerSettings(GroupName = "uparking")]
     public class DahuaIntegrationController : ControllerBase
     {
         private readonly ApplicationDbContext _ctx;
