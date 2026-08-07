@@ -6,7 +6,7 @@ import { api } from "../api/client";
 export default function Login() {
   const { t } = useTranslation();
   const { login } = useAuth();
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -14,16 +14,16 @@ export default function Login() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
-    if (!email.trim() || !password.trim()) {
+    if (!username.trim() || !password.trim()) {
       setError(t("loginError"));
       return;
     }
     setLoading(true);
     try {
-      const data = await api.login(email, password);
+      const data = await api.login(username, password);
       login(
         {
-          email: data.email || email,
+          email: data.email || username,
           role: data.role || "admin",
           companyId: data.companyId,
         },
@@ -93,11 +93,11 @@ export default function Login() {
               {t("username")}
             </label>
             <input
-              type="email"
+              type="text"
               className="input"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="company@example.com"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              placeholder="admin"
               autoFocus
             />
           </div>
