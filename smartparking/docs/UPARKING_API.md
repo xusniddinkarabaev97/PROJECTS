@@ -1,182 +1,105 @@
-# SmartParking ↔ Dahua Интеграция (Финальная)
+# SmartParking — UParking Billing Provider API
 
-> **Webhook:** `https://whirl.uz/api/DahuaIntegration/events`  
-> **Swagger:** `https://whirl.uz/smartparking/swagger/`
-
----
-
-## 🔄 Бизнес-процесс
-
-```
-Dahua                   SmartParking                Click                Клиент
-  |                         |                         |                    |
-  |-- Выезд (plate+сумма)->|                         |                    |
-  |                         |-- транзакция            |                    |
-  |                         |-- QR-код (base64)       |                    |
-  |<-- QR код --------------|                         |                    |
-  |                         |                         |                    |
-  |  (показывает QR клиенту)                          |                    |
-  |                         |                         |                    |
-  |                         |                    (клиент сканирует)        |
-  |                         |                         |                    |
-  |                         |<-- Prepare -------------|                    |
-  |                         |-- валидация ----------->|                    |
-  |                         |                         |                    |
-  |                         |<-- Complete ------------|                    |
-  |                         |-- статус = Paid         |                    |
-  |                         |-- фискальный чек        |                    |
-  |                         |                         |                    |
-  |<-- {status: "paid"} ----|                         |                    |
-  |                         |                         |                    |
-  |-- Открыть шлагбаум                                |                    |
-```
+> **Endpoint:** `POST https://whirl.uz/api/billing/create`  
+> **Swagger:** `https://whirl.uz/smartparking/swagger/` (UParking Интеграция)  
+> **Спецификация:** UParking Billing Integration v1.0
 
 ---
 
-## 1. Dahua → SmartParking (выезд)
+## Direction A: Create Payment (UParking → SmartParking)
 
-Dahua отправляет данные при выезде: номер авто + сумма к оплате.
+UParking отправляет данные выезда, SmartParking возвращает QR для оплаты.
+
+### Запрос
 
 ```
-POST https://whirl.uz/api/DahuaIntegration/events
+POST https://whirl.uz/api/billing/create
 Content-Type: application/json
-X-Webhook-Secret: dss_webhook_secret_2026
+X-Billing-Secret: uparking-shared-secret-2026
 ```
 
-**Запрос:**
 ```json
 {
-    "eventType": "ANPR",
-    "channelId": 1,
-    "plateNumber": "01A123AA",
-    "direction": "exit",
-    "timestamp": "2026-08-07T12:30:00Z",
+    "sessionId": "8f2c1a4e-9b7d-4c3a-8e21-0f5a6b7c8d90",
+    "parkingStart": "2026-08-06T09:14:32.000+00:00",
+    "parkingEnd": "2026-08-06T11:47:05.000+00:00",
+    "parkingTimeSeconds": 9153,
+    "plateNo": "01A123BC",
     "amount": 15000,
-    "fiscalData": {
-        "receiptId": "DH-20260807-001",
-        "entryTime": "2026-08-07T10:00:00Z",
-        "exitTime": "2026-08-07T12:30:00Z",
-        "duration": "2h 30m"
-    }
+    "currency": "UZS",
+    "purpose": "Parking"
 }
 ```
 
-**Ответ (с QR):**
+| Поле | Тип | Описание |
+|------|-----|----------|
+| `sessionId` | UUID | ID платёжной сессии UParking |
+| `parkingStart` | RFC 3339 | Время въезда |
+| `parkingEnd` | RFC 3339 | Время выезда |
+| `parkingTimeSeconds` | int | Длительность (сек) |
+| `plateNo` | string | Госномер |
+| `amount` | number | Сумма к оплате (UZS) |
+| `currency` | string | `UZS` |
+| `purpose` | string | `Parking` |
+
+### Ответ (синхронный QR)
+
 ```json
 {
-    "status": "completed",
-    "sessionId": 156,
-    "plateNumber": "01A123AA",
-    "transactionId": 89,
-    "parkingFee": 15000,
-    "qrCodeBase64": "iVBORw0KGgoAAAANSUhEUgAA...",
-    "qrContent": "service_id=2005&merchant_id=19876&amount=1500000&transaction_param=89",
-    "barrierOpened": false
+    "billingReferenceId": "89",
+    "qrPayload": "service_id=2005&merchant_id=19876&amount=1500000&transaction_param=89",
+    "qrCodeBase64": "iVBORw0KGgoAAAANSUhEUgAA..."
 }
 ```
+
+| Поле | Тип | Описание |
+|------|-----|----------|
+| `billingReferenceId` | string | ID транзакции в SmartParking |
+| `qrPayload` | string | QR-контент для отображения |
+| `qrCodeBase64` | string | QR-код PNG в Base64 |
 
 ---
 
-## 2. Click Prepare
+## Direction B2: Payment Callback (SmartParking → UParking)
+
+После успешной оплаты SmartParking отправляет статус в UParking.
 
 ```
-POST https://whirl.uz/api/Transactions/click/prepare
-
-{
-    "click_trans_id": 20260807001,
-    "service_id": 2005,
-    "merchant_trans_id": "89",
-    "amount": 1500000,
-    "action": 0,
-    "sign_time": "2026-08-07T12:31:00Z",
-    "sign_string": "md5..."
-}
-```
-
-Ответ: `{"error": 0, "error_note": "Success"}`
-
----
-
-## 3. Click Complete + Уведомление Dahua
-
-```
-POST https://whirl.uz/api/Transactions/click/complete
-
-{
-    "click_trans_id": 20260807001,
-    "service_id": 2005,
-    "merchant_trans_id": "89",
-    "merchant_prepare_id": 89,
-    "amount": 1500000,
-    "action": 1,
-    "error": 0,
-    "sign_time": "2026-08-07T12:32:00Z",
-    "sign_string": "md5..."
-}
-```
-
-Ответ:
-```json
-{
-    "error": 0,
-    "error_note": "Success",
-    "fiscalReceiptId": "FP-20260807-00089",
-    "fiscalStatus": "registered",
-    "barrierOpened": true,
-    "dahuaNotified": true
-}
-```
-
-После Complete SmartParking автоматически отправляет статус в Dahua:
-
-```
-POST {dahua_callback_url}
+POST {UparkingCallbackUrl}/api/billing/payment
 Content-Type: application/json
+X-Billing-Secret: uparking-shared-secret-2026
+```
 
+```json
 {
-    "transactionId": 89,
-    "plateNumber": "01A123AA",
-    "status": "paid",
-    "fiscalReceiptId": "FP-20260807-00089"
+    "sessionId": "8f2c1a4e-9b7d-4c3a-8e21-0f5a6b7c8d90",
+    "billingReferenceId": "89",
+    "paid": true,
+    "paidAt": "2026-08-06T11:49:10.000+00:00"
 }
 ```
 
----
+| Поле | Тип | Описание |
+|------|-----|----------|
+| `sessionId` | UUID | ID сессии UParking |
+| `billingReferenceId` | string | ID транзакции SmartParking |
+| `paid` | bool | `true` — оплачено, `false` — ошибка |
+| `paidAt` | RFC 3339 | Время оплаты |
 
-## Поля запроса (от Dahua)
+### Статусы сессии
 
-| Поле | Тип | Обязательно | Описание |
-|------|-----|-------------|----------|
-| `eventType` | string | Да | `ANPR` |
-| `channelId` | int | Да | ID канала |
-| `plateNumber` | string | Да | Госномер |
-| `direction` | string | Да | Только `exit` |
-| `timestamp` | datetime | Да | Время события |
-| `amount` | decimal | Да | Сумма к оплате (UZS) |
-| `fiscalData.receiptId` | string | Нет | ID фискального чека |
-| `fiscalData.entryTime` | datetime | Нет | Время въезда |
-| `fiscalData.exitTime` | datetime | Нет | Время выезда |
-| `fiscalData.duration` | string | Нет | Длительность |
-
----
-
-## Поля ответа (SmartParking → Dahua)
-
-| Поле | Описание |
-|------|----------|
-| `status` | `completed` |
-| `transactionId` | ID для оплаты |
-| `parkingFee` | Сумма |
-| `qrCodeBase64` | QR PNG в Base64 |
-| `qrContent` | Данные для Click |
+| Статус | Описание |
+|--------|----------|
+| `PendingBilling` | Создана, ожидает QR |
+| `QrReady` | QR сгенерирован |
+| `Paid` | Оплачено |
+| `BarrierOpened` | Шлагбаум открыт ✅ |
+| `Failed` | Ошибка оплаты |
 
 ---
 
-## Статус оплаты (SmartParking → Dahua callback)
+## Безопасность
 
-| Поле | Значение |
-|------|----------|
-| `transactionId` | ID транзакции |
-| `plateNumber` | Госномер |
-| `status` | `paid` / `failed` |
-| `fiscalReceiptId` | ID фискального чека |
+- **TLS 1.2+** обязателен
+- **X-Billing-Secret** — общий секрет, сравнивается посимвольно
+- Секрет НЕ логируется, НЕ передаётся в URL
