@@ -83,15 +83,17 @@ namespace SmartParking.Controllers
                 fiscalStatus = "registered";
                 txn.PaymentMethod = $"click|fiscal:{fiscalReceiptId}";
 
-                // Notify Dahua
-                try
-                {
-                    var dahuaSettings = await _context.DahuaSettings.FirstOrDefaultAsync();
-                    if (dahuaSettings?.PaymentCallbackUrl != null)
+                try {
+                    var uparkingUrl = _config["Billing:UparkingCallbackUrl"];
+                    if (!string.IsNullOrEmpty(uparkingUrl))
                     {
-                        var payload = JsonSerializer.Serialize(new { transactionId = txn.Id, status = "paid", fiscalReceiptId });
-                        var client = _http.CreateClient();
-                        await client.PostAsync(dahuaSettings.PaymentCallbackUrl, new StringContent(payload, Encoding.UTF8, "application/json"));
+                        var secret = _config["Billing:SharedSecret"];
+                        var sessionId = ""; try { var pm = JsonSerializer.Deserialize<JsonElement>(txn.PaymentMethod ?? "{}"); if (pm.TryGetProperty("sessionId", out var s)) sessionId = s.GetString(); } catch { }
+                        var cbPayload = JsonSerializer.Serialize(new { sessionId, billingReferenceId = txn.Id.ToString(), paid = true, paidAt = DateTime.UtcNow.ToString("o") });
+                        var cbClient = _http.CreateClient();
+                        var cbContent = new StringContent(cbPayload, Encoding.UTF8, "application/json");
+                        if (!string.IsNullOrEmpty(secret)) cbClient.DefaultRequestHeaders.Add("X-Billing-Secret", secret);
+                        await cbClient.PostAsync($"{uparkingUrl}/api/billing/payment", cbContent);
                     }
                 }
                 catch { }

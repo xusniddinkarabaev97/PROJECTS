@@ -1,38 +1,44 @@
-using Microsoft.AspNetCore.Authorization;
 using SmartParking.Data;
 using SmartParking.Enums;
 using SmartParking.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using QRCoder;
+using System.Text;
+using System.Text.Json;
 
 namespace SmartParking.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/billing")]
     [ApiExplorerSettings(GroupName = "dahua")]
     public class DahuaParkingController : ControllerBase
     {
         private readonly ApplicationDbContext _ctx;
         private readonly IConfiguration _config;
+        private readonly IHttpClientFactory _http;
 
-        public DahuaParkingController(ApplicationDbContext ctx, IConfiguration config)
+        public DahuaParkingController(ApplicationDbContext ctx, IConfiguration config, IHttpClientFactory http)
         {
             _ctx = ctx;
             _config = config;
+            _http = http;
         }
 
-        /// <summary>
-        /// Dahua sends exit data, we return QR for Click payment
-        /// </summary>
         [AllowAnonymous]
-        [HttpPost("exit")]
-        public async Task<IActionResult> Exit([FromBody] DahuaExitRequest req)
+        [HttpPost("create")]
+        public async Task<IActionResult> CreatePayment([FromBody] UParkingRequest req,
+            [FromHeader(Name = "X-Billing-Secret")] string? secret)
         {
+            var expectedSecret = _config["Billing:SharedSecret"];
+            if (!string.IsNullOrEmpty(expectedSecret) && secret != expectedSecret)
+                return Unauthorized(new { message = "Invalid billing secret" });
+
             var client = await _ctx.Clients.FirstOrDefaultAsync(c => c.ExternalId == req.PlateNo);
             if (client == null)
             {
-                client = new Client { ExternalId = req.PlateNo, FullName = req.PlateNo, Source = "dahua", Status = "active" };
+                client = new Client { ExternalId = req.PlateNo, FullName = req.PlateNo, Source = "uparking", Status = "active" };
                 _ctx.Clients.Add(client);
                 await _ctx.SaveChangesAsync();
             }
@@ -42,7 +48,7 @@ namespace SmartParking.Controllers
                 ClientId = client.Id,
                 TotalSum = req.Amount,
                 PaymentStatus = PaymentStatus.New,
-                PaymentMethod = System.Text.Json.JsonSerializer.Serialize(req),
+                PaymentMethod = JsonSerializer.Serialize(new { sessionId = req.SessionId, plateNo = req.PlateNo }),
                 Status = "parking",
                 FilledAt = DateTime.UtcNow
             };
@@ -59,20 +65,16 @@ namespace SmartParking.Controllers
             using var qr = new PngByteQRCode(data);
             var qrBase64 = Convert.ToBase64String(qr.GetGraphic(5));
 
-            return Ok(new DahuaExitResponse
+            return Ok(new
             {
-                TransactionId = txn.Id,
-                SessionId = req.SessionId,
-                PlateNumber = req.PlateNo,
-                Amount = req.Amount,
-                QrCodeBase64 = qrBase64,
-                QrContent = qrContent,
-                Status = "qr_generated"
+                billingReferenceId = txn.Id.ToString(),
+                qrPayload = qrContent,
+                qrCodeBase64 = qrBase64
             });
         }
     }
 
-    public class DahuaExitRequest
+    public class UParkingRequest
     {
         public string SessionId { get; set; } = "";
         public DateTime ParkingStart { get; set; }
@@ -82,16 +84,5 @@ namespace SmartParking.Controllers
         public decimal Amount { get; set; }
         public string Currency { get; set; } = "UZS";
         public string Purpose { get; set; } = "Parking";
-    }
-
-    public class DahuaExitResponse
-    {
-        public int TransactionId { get; set; }
-        public string SessionId { get; set; } = "";
-        public string PlateNumber { get; set; } = "";
-        public decimal Amount { get; set; }
-        public string QrCodeBase64 { get; set; } = "";
-        public string QrContent { get; set; } = "";
-        public string Status { get; set; } = "";
     }
 }
