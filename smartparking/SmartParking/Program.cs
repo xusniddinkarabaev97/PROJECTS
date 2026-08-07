@@ -85,14 +85,7 @@ builder.Services.AddSwaggerGen(c =>
     {
         Title = "UParking Billing Integration",
         Version = "v1",
-        Description = "Billing Provider API per UParking spec v1.0.
-
-" +
-                      "**Direction A:** POST /api/billing/create — UParking sends parking session data, SmartParking returns QR.
-" +
-                      "**Direction B2:** POST /api/billing/payment — SmartParking notifies UParking when payment completes.
-" +
-                      "**Barriers:** Managed by UParking."
+        Description = "Billing Provider API per UParking spec v1.0. Direction A: POST /api/billing/create. Direction B2: POST /api/billing/payment. Barriers managed by UParking."
     });
 
     c.SwaggerDoc("click", new OpenApiInfo
