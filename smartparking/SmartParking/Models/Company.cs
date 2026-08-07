@@ -26,6 +26,9 @@ namespace SmartParking.Models
         [StringLength(100)]
         public string Email { get; set; } = string.Empty;
 
+        [StringLength(100)]
+        public string Login { get; set; } = string.Empty;
+
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
