@@ -164,14 +164,14 @@ var app = builder.Build();
 // Swagger always available (including production)
 app.UseSwagger(c =>
 {
-    c.RouteTemplate = "swagger/{documentName}/swagger.json";
+    c.RouteTemplate = "Billing/swagger/{documentName}/swagger.json";
 });
 app.UseSwaggerUI(c =>
 {
     c.SwaggerEndpoint("/Billing/swagger/v1/swagger.json", "SmartParking Core API V1");
     c.SwaggerEndpoint("/Billing/swagger/dahua/swagger.json", "Dahua Интеграция");
     c.SwaggerEndpoint("/Billing/swagger/click/swagger.json", "Click Платёжная интеграция");
-    c.RoutePrefix = "swagger";
+    c.RoutePrefix = "Billing/swagger";
 });
 
 app.UseCors();
