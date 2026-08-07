@@ -80,13 +80,33 @@ namespace SmartParking.Controllers
             if (direction == "exit" || direction == "leave")
             {
                 var session = await _parking.ProcessExitEventAsync(dto, companyId);
+                string qrBase64 = null;
+                string qrContent = null;
+                if (session?.TransactionId > 0)
+                {
+                    var txn = await _ctx.Transactions.FindAsync(session.TransactionId);
+                    if (txn != null)
+                    {
+                        var mid = _config["ClickSettings:MerchantId"] ?? "19876";
+                        var sid = _config["ClickSettings:ServiceId"] ?? "2005";
+                        var amt = (long)(txn.TotalSum * 100);
+                        qrContent = $"service_id={sid}&merchant_id={mid}&amount={amt}&transaction_param={txn.Id}";
+                        using var gen = new QRCoder.QRCodeGenerator();
+                        using var qrData = gen.CreateQrCode(qrContent, QRCoder.QRCodeGenerator.ECCLevel.M);
+                        using var qr = new QRCoder.PngByteQRCode(qrData);
+                        qrBase64 = Convert.ToBase64String(qr.GetGraphic(5));
+                    }
+                }
+
                 return Ok(new
                 {
                     status = session != null ? "completed" : "no_session",
                     sessionId = session?.Id,
                     parkingFee = session?.ParkingFee,
                     transactionId = session?.TransactionId,
-                    barrierOpened = session?.ExitBarrierOpened ?? false
+                    barrierOpened = session?.ExitBarrierOpened ?? false,
+                    qrCodeBase64 = qrBase64,
+                    qrContent = qrContent
                 });
             }
             else
