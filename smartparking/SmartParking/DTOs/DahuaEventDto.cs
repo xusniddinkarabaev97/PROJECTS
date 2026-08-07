@@ -17,6 +17,10 @@ namespace SmartParking.DTOs
         public string? ChannelName { get; set; }
         public DateTime? EventTime { get; set; }
 
+        // Payment data from Dahua
+        public decimal Amount { get; set; }
+        public DahuaFiscalData? FiscalData { get; set; }
+
         // Nested Dahua structure
         public DahuaEventDetail? Detail { get; set; }
         public DahuaEventVehicle? Vehicle { get; set; }
@@ -42,6 +46,15 @@ namespace SmartParking.DTOs
     /// <summary>
     /// DTO for sending barrier open command to Dahua DSS
     /// </summary>
+
+    public class DahuaFiscalData
+    {
+        public string? ReceiptId { get; set; }
+        public DateTime? EntryTime { get; set; }
+        public DateTime? ExitTime { get; set; }
+        public string? Duration { get; set; }
+    }
+
     public class BarrierCommandDto
     {
         public string ChannelId { get; set; } = string.Empty;
