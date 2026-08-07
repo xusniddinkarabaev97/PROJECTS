@@ -73,7 +73,7 @@ POST /api/Transactions/42/fail
 ## 🅿️ Интеграция с Avto.itpanda.uz
 
 ### POST /Transactions/parking
-**Публичный.** Принимает данные о парковке от `avto.itpanda.uz`.
+**Публичный.** Принимает данные о парковке от `whirl.uz`.
 
 ```json
 {
@@ -110,7 +110,7 @@ GET /api/Qr/42?size=300
 ```json
 {
   "transactionId": 42,
-  "url": "http://avto.itpanda.uz",
+  "url": "https://whirl.uz/payment?txnId=42",
   "base64": "iVBORw0KGgoAAAANS...",
   "mimeType": "image/png"
 }
@@ -182,7 +182,7 @@ X-Webhook-Secret: {secret}
 ```
 1. Камера → POST /DahuaIntegration/receive-event (въезд)
 2. Камера → POST /DahuaIntegration/receive-event (выезд)
-3. avto.itpanda.uz → POST /Transactions/parking (расчёт)
+3. whirl.uz → POST /Transactions/parking (расчёт)
 4. Пользователь → сканирует QR → GET /Qr/{id}
 5. Пользователь → оплачивает → POST /Transactions/{id}/complete
 6. Шлагбаум открывается → POST /DahuaIntegration/open-barrier
