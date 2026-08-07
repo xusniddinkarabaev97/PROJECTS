@@ -168,9 +168,9 @@ app.UseSwagger(c =>
 });
 app.UseSwaggerUI(c =>
 {
-    c.SwaggerEndpoint("/swagger/v1/swagger.json", "SmartParking Core API V1");
-    c.SwaggerEndpoint("/swagger/dahua/swagger.json", "Dahua Интеграция");
-    c.SwaggerEndpoint("/swagger/click/swagger.json", "Click Платёжная интеграция");
+    c.SwaggerEndpoint("/Billing/swagger/v1/swagger.json", "SmartParking Core API V1");
+    c.SwaggerEndpoint("/Billing/swagger/dahua/swagger.json", "Dahua Интеграция");
+    c.SwaggerEndpoint("/Billing/swagger/click/swagger.json", "Click Платёжная интеграция");
     c.RoutePrefix = "swagger";
 });
 
