@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using SmartParking.Data;
 using SmartParking.Enums;
 using SmartParking.Models;
