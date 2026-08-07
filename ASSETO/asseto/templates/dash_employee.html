@@ -15,7 +15,7 @@
 
   <!-- Quick Action Buttons -->
   <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:20px;" class="fade-up">
-    <button onclick="window.location='/documents'" style="display:flex;flex-direction:column;align-items:center;gap:5px;padding:12px 6px;border:none;border-radius:14px;background:var(--surface);border:.5px solid var(--border);font-family:var(--sans);cursor:pointer;box-shadow:var(--shadow);color:var(--text);">
+    <button onclick="window.location='{{ BASE_PATH }}/documents'" style="display:flex;flex-direction:column;align-items:center;gap:5px;padding:12px 6px;border:none;border-radius:14px;background:var(--surface);border:.5px solid var(--border);font-family:var(--sans);cursor:pointer;box-shadow:var(--shadow);color:var(--text);">
       <span style="font-size:22px;">📄</span><span style="font-size:11px;font-weight:500;color:var(--text2);">Акты</span>
     </button>
     <button onclick="openScanner()" style="display:flex;flex-direction:column;align-items:center;gap:5px;padding:12px 6px;border:none;border-radius:14px;background:var(--surface);border:.5px solid var(--border);font-family:var(--sans);cursor:pointer;box-shadow:var(--shadow);color:var(--text);">
@@ -27,7 +27,7 @@
     <button onclick="openChatModal()" style="display:flex;flex-direction:column;align-items:center;gap:5px;padding:12px 6px;border:none;border-radius:14px;background:linear-gradient(135deg,var(--ios-purple),var(--ios-blue));border:none;font-family:var(--sans);cursor:pointer;box-shadow:var(--shadow);color:#fff;">
       <span style="font-size:22px;">🤖</span><span style="font-size:11px;font-weight:700;">ИИ Чат</span>
     </button>
-    <button onclick="window.location='/profile'" style="display:flex;flex-direction:column;align-items:center;gap:5px;padding:12px 6px;border:none;border-radius:14px;background:var(--surface);border:.5px solid var(--border);font-family:var(--sans);cursor:pointer;box-shadow:var(--shadow);color:var(--text);">
+    <button onclick="window.location='{{ BASE_PATH }}/profile'" style="display:flex;flex-direction:column;align-items:center;gap:5px;padding:12px 6px;border:none;border-radius:14px;background:var(--surface);border:.5px solid var(--border);font-family:var(--sans);cursor:pointer;box-shadow:var(--shadow);color:var(--text);">
       <span style="font-size:22px;">👤</span><span style="font-size:11px;font-weight:500;color:var(--text2);">Профиль</span>
     </button>
   </div>
@@ -203,7 +203,7 @@
         return;
       }
       el.innerHTML = items.map(i => `
-        <div onclick="window.location='/asset/${i.inv_num}'" style="padding:14px;background:var(--surface);border:.5px solid var(--border);border-radius:14px;cursor:pointer;transition:all .13s;box-shadow:var(--shadow);" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform=''">
+        <div onclick="window.location=ASSETO_BASE+'/asset/${i.inv_num}'" style="padding:14px;background:var(--surface);border:.5px solid var(--border);border-radius:14px;cursor:pointer;transition:all .13s;box-shadow:var(--shadow);" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform=''">
           <div style="font-size:26px;margin-bottom:8px;">${icons[i.category]||'📦'}</div>
           <div style="font-size:13px;font-weight:700;color:var(--text);">${i.model||i.category}</div>
           <div style="font-size:11px;font-family:monospace;color:var(--accent);margin-top:2px;">${i.inv_num}</div>

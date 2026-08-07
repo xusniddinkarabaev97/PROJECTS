@@ -20,21 +20,21 @@
   <!-- ══ HR DASHBOARD ══ -->
   <div id="dash-hr" class="fade-up">
     <div class="pro-card-grid stats-grid" style="grid-template-columns:repeat(auto-fit,minmax(200px,1fr));margin-bottom:20px;">
-      <div class="pro-card" onclick="window.location='/requests'" style="cursor:pointer;">
+      <div class="pro-card" onclick="window.location='{{ BASE_PATH }}/requests'" style="cursor:pointer;">
         <div class="pro-card-icon" style="background:#FF9500;color:#fff;box-shadow:0 8px 24px rgba(255,149,0,0.3);">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><line x1="16" y1="13" x2="8" y2="13"/></svg>
         </div>
         <div class="pro-card-val" id="hr-requests-cnt">0</div>
         <div class="pro-card-label">Заявки сотрудников (ожидают)</div>
       </div>
-      <div class="pro-card" onclick="window.location='/admin/dismissals'" style="cursor:pointer;">
+      <div class="pro-card" onclick="window.location='{{ BASE_PATH }}/admin/dismissals'" style="cursor:pointer;">
         <div class="pro-card-icon" style="background:#FF3B30;color:#fff;box-shadow:0 8px 24px rgba(255,59,48,0.3);">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/></svg>
         </div>
         <div class="pro-card-val" style="font-size:18px;">→</div>
         <div class="pro-card-label">Увольнения</div>
       </div>
-      <div class="pro-card" onclick="window.location='/office'" style="cursor:pointer;">
+      <div class="pro-card" onclick="window.location='{{ BASE_PATH }}/office'" style="cursor:pointer;">
         <div class="pro-card-icon" style="background:#8E8E93;color:#fff;box-shadow:0 8px 24px rgba(142,142,147,0.3);">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
         </div>

@@ -68,7 +68,7 @@
           <div style="font-size:13px;color:var(--text2);margin-top:2px;">Нажмите на строку — карточка сотрудника с техникой и QR (только просмотр)</div>
         </div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;">
-          <button onclick="window.location='/qr-print'" class="btn btn-secondary btn-sm" style="display:flex;align-items:center;gap:5px;">
+          <button onclick="window.location='{{ BASE_PATH }}/qr-print'" class="btn btn-secondary btn-sm" style="display:flex;align-items:center;gap:5px;">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 14h3v3m0 4h4M21 14h-4v4"/></svg>
             Печать QR
           </button>

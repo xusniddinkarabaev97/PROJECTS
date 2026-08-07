@@ -136,7 +136,7 @@ td{padding:12px 16px;font-size:13px;vertical-align:middle;}
     <span class="nav-title">Пользователи</span>
   </div>
   <div style="display:flex;gap:8px;align-items:center;">
-    <button class="btn btn-ghost btn-sm" onclick="window.location='/admin/dismissals'" title="Увольнения">
+    <button class="btn btn-ghost btn-sm" onclick="window.location='{{ BASE_PATH }}/admin/dismissals'" title="Увольнения">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="23" y1="18" x2="17" y2="18"/></svg>
       Увольнения
     </button>
@@ -438,7 +438,7 @@ async function openEdit(id) {
 
 function goAddItem() {
   const nm = document.getElementById('f-name').value || document.getElementById('sc-nm').textContent;
-  window.location = '/?add_emp=' + encodeURIComponent(nm);
+  window.location = ASSETO_BASE + '/?add_emp=' + encodeURIComponent(nm);
 }
 function printUserQR() {
   const src = document.getElementById('sc-qr').src;
@@ -500,7 +500,7 @@ document.getElementById('modal').addEventListener('click',e=>{if(e.target===docu
 
 async function doLogout(){
   await fetch('/api/auth/logout',{method:'POST'});
-  window.location='/login';
+  window.location=ASSETO_BASE+'/login';
 }
 
 async function initiateDismissal(){
@@ -523,11 +523,11 @@ async function initiateDismissal(){
       await showAlert('Ссылка скопирована', 'Ссылка успешно скопирована в буфер обмена');
     }
     toast('Процесс увольнения запущен','ok');
-    window.location='/admin/dismissals';
+    window.location=ASSETO_BASE+'/admin/dismissals';
   } else {
     if(r.id) {
       const go = await showConfirm('Уведомление', r.error + '\nОткрыть страницу увольнений?');
-      if(go) window.location='/admin/dismissals';
+      if(go) window.location=ASSETO_BASE+'/admin/dismissals';
     } else toast(r.error||'Ошибка','err');
   }
 }

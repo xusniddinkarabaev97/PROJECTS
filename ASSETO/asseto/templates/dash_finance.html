@@ -47,21 +47,21 @@
         <div class="pro-card-val" id="acc-approved-cnt">0</div>
         <div class="pro-card-label" data-t="pc_total_assets">Всего активов</div>
       </div>
-      <div class="pro-card" onclick="window.location='/analytics'" style="cursor:pointer;">
+      <div class="pro-card" onclick="window.location='{{ BASE_PATH }}/analytics'" style="cursor:pointer;">
         <div class="pro-card-icon" style="background:#5856D6;color:#fff;box-shadow:0 8px 24px rgba(88,86,214,0.3);">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
         </div>
         <div class="pro-card-val" id="acc-val" style="font-size:18px;">—</div>
         <div class="pro-card-label" data-t="pc_asset_value">Стоимость активов</div>
       </div>
-      <div class="pro-card" onclick="window.location='/finance'" style="cursor:pointer;">
+      <div class="pro-card" onclick="window.location='{{ BASE_PATH }}/finance'" style="cursor:pointer;">
         <div class="pro-card-icon" style="background:#30B0C7;color:#fff;box-shadow:0 8px 24px rgba(48,176,199,0.3);">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
         </div>
         <div class="pro-card-val" style="font-size:18px;">→</div>
         <div class="pro-card-label" data-t="pc_finance_link">Финансы: заявки, акты, бюджет</div>
       </div>
-      <div class="pro-card" onclick="window.location='/inventory'" style="cursor:pointer;">
+      <div class="pro-card" onclick="window.location='{{ BASE_PATH }}/inventory'" style="cursor:pointer;">
         <div class="pro-card-icon" style="background:#007AFF;color:#fff;box-shadow:0 8px 24px rgba(0,122,255,0.3);">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 14h3v3m0 4h4M21 14h-4v4"/></svg>
         </div>
@@ -85,7 +85,7 @@
   }
 
   function renderDocItem(doc) {
-    return `<div onclick="window.location='/documents?id=${doc.id}'"
+    return `<div onclick="window.location=ASSETO_BASE+'/documents?id=${doc.id}'"
       style="display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid var(--separator2);cursor:pointer;transition:background .12s;"
       onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''">
       <div style="width:36px;height:36px;border-radius:10px;background:rgba(0,122,255,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0;">

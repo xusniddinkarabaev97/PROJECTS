@@ -395,7 +395,7 @@
               <button class="btn-action" onclick="open_act(${r.id}, '${(r.employee_name||"").replace(/'/g, "")}', '${r.category}')">Решение</button>
             ` : ''}
             ${['superadmin', 'aho'].includes(USER_ROLE) && r.status === 'approved' ? `
-              <button class="btn-action" style="background:var(--ios-green); color:#fff; box-shadow:0 4px 10px rgba(52,199,89,0.2);" onclick="window.location='/admin/issuances?employee_id=${r.employee_id}&employee_name=${encodeURIComponent(r.employee_name)}'">Выдать технику</button>
+              <button class="btn-action" style="background:var(--ios-green); color:#fff; box-shadow:0 4px 10px rgba(52,199,89,0.2);" onclick="window.location=ASSETO_BASE+'/admin/issuances?employee_id=${r.employee_id}&employee_name=${encodeURIComponent(r.employee_name)}'">Выдать технику</button>
             ` : ''}
           </div>
         </div>

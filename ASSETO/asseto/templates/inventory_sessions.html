@@ -47,7 +47,7 @@ async function load() {
   const el = document.getElementById('sessions-list');
   if (!data.length) { el.innerHTML = '<div style="text-align:center;padding:60px;color:var(--text3);">Нет сессий. Нажмите «+ Новая сессия»</div>'; return; }
   el.innerHTML = data.map(s => `
-    <div class="session-card" onclick="window.location='/inventory/${s.id}'">
+    <div class="session-card" onclick="window.location=ASSETO_BASE+'/inventory/${s.id}'">
       <div>
         <div class="session-title">${s.title}</div>
         <div class="session-meta">${s.department||'Все отделы'} · ${s.total_items||0} ед. · Проверено: ${s.checked_items||0}</div>

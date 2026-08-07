@@ -89,7 +89,7 @@
           <div style="font-size:13px;color:var(--text2);margin-top:2px;">Нажмите на строку — откроется карточка с техникой и QR</div>
         </div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;">
-          <button onclick="window.location='/qr-print'" class="btn btn-secondary btn-sm" style="display:flex;align-items:center;gap:5px;">
+          <button onclick="window.location='{{ BASE_PATH }}/qr-print'" class="btn btn-secondary btn-sm" style="display:flex;align-items:center;gap:5px;">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 14h3v3m0 4h4M21 14h-4v4"/></svg>
             Печать QR
           </button>
@@ -274,7 +274,7 @@
   }
 
   function renderDocItem(doc) {
-    return `<div onclick="window.location='/documents?id=${doc.id}'"
+    return `<div onclick="window.location=ASSETO_BASE+'/documents?id=${doc.id}'"
       style="display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid var(--separator2);cursor:pointer;transition:background .12s;"
       onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''">
       <div style="width:36px;height:36px;border-radius:10px;background:rgba(0,122,255,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
