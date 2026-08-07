@@ -31,7 +31,7 @@ namespace SmartParking.Controllers
         [AllowAnonymous]
         public async Task<ActionResult<TokenDto>> Login([FromBody] LoginDto loginDto)
         {
-            var company = await _context.Companies.SingleOrDefaultAsync(c => c.Email == loginDto.Email);
+            var company = await _context.Companies.FirstOrDefaultAsync(c => (loginDto.Login != null && c.Login == loginDto.Login) || (loginDto.Email != null && c.Email == loginDto.Email));
 
             if (company == null)
             {

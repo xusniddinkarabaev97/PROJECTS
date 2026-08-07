@@ -1,4 +1,4 @@
-const API_BASE = "/smartparking/api";
+const API_BASE = "/Billing/api";
 
 async function request(url, options = {}) {
   const token = localStorage.getItem("bgz-token");
@@ -66,10 +66,10 @@ export const api = {
 
   // Auth
   login: (email, password) =>
-    fetch("/smartparking/api/Companies/login", {
+    fetch("/Billing/api/Companies/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({ login, password }),
     }).then(async (r) => {
       if (r.ok) return r.json();
       const text = await r.text();
