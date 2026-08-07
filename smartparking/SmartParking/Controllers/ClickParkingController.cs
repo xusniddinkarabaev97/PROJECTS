@@ -86,7 +86,7 @@ namespace SmartParking.Controllers
                 if (session != null)
                 {
                     session.ExitBarrierOpened = true;
-                    session.CompletedAt = DateTime.UtcNow;
+                    session.ExitTime = DateTime.UtcNow;
                     barrierOpened = true;
                 }
             }
@@ -139,8 +139,8 @@ namespace SmartParking.Controllers
         public string MerchantTransId { get; set; } = "";
         public int MerchantPrepareId { get; set; }
         public int MerchantConfirmId { get; set; }
-        public string FiscalReceiptId { get; set; }
-        public string FiscalStatus { get; set; }
+        public string? FiscalReceiptId { get; set; }
+        public string? FiscalStatus { get; set; }
         public bool BarrierOpened { get; set; }
         public int Error { get; set; }
         public string ErrorNote { get; set; } = "";
