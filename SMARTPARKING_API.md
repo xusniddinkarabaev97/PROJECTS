@@ -100,7 +100,7 @@ POST /api/Transactions/42/fail
 ## 📱 QR-код
 
 ### GET /Qr/{id}?size=250
-**Публичный.** Генерирует QR-код для транзакции.
+**Публичный.** Генерирует Click-совместимый QR-код для оплаты парковки.
 
 ```
 GET /api/Qr/42?size=300
@@ -110,7 +110,8 @@ GET /api/Qr/42?size=300
 ```json
 {
   "transactionId": 42,
-  "url": "https://whirl.uz/payment?txnId=42",
+  "qrContent": "service_id=20050026merchant_id=198760026amount=8250000026transaction_param=42",
+  "amount": 8250,
   "base64": "iVBORw0KGgoAAAANS...",
   "mimeType": "image/png"
 }
