@@ -52,9 +52,17 @@ SECURE_COOKIES     = os.environ.get('SECURE_COOKIES', 'False').lower() == 'true'
 MAX_UPLOAD_MB      = int(os.environ.get('MAX_UPLOAD_MB', '16'))
 app.config['MAX_CONTENT_LENGTH'] = MAX_UPLOAD_MB * 1024 * 1024
 
+# ── Base path for reverse proxy (e.g. /asseto) ─────────────────────────
+BASE_PATH = os.environ.get('BASE_PATH', '').rstrip('/')
+
 ALLOWED_EXTENSIONS = {'.jpg', '.jpeg', '.png', '.gif', '.webp', '.heic'}
 
 app.jinja_env.filters['from_json'] = json.loads
+
+# ── Inject BASE_PATH into all templates ─────────────────────────────────
+@app.context_processor
+def inject_base_path():
+    return dict(BASE_PATH=BASE_PATH or '/asseto')
 
 # ── File logging with rotation ─────────────────────────────────────────────────
 _log_dir = os.path.join(BASE_DIR, 'logs')

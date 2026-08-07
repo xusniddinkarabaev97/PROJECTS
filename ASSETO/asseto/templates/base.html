@@ -37,7 +37,7 @@
           <button class="icon-btn mob-hidden" onclick="toggleSidebarCollapse()" title="Свернуть/Развернуть" style="width:32px;height:32px;">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
           </button>
-          <span style="font-size:17px;font-weight:700;cursor:pointer;" onclick="window.location='/'">ASSETO</span>
+          <span style="font-size:17px;font-weight:700;cursor:pointer;" onclick="window.location='{{ BASE_PATH }}/'">ASSETO</span>
         </div>
       </div>
     </div>
@@ -94,7 +94,7 @@
         <span>⌘K</span>
       </button>
       <!-- History -->
-      <button class="icon-btn" onclick="window.location='/history'" title="История" data-t-title="nav_history">
+      <button class="icon-btn" onclick="window.location='{{ BASE_PATH }}/history'" title="История" data-t-title="nav_history">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
           <circle cx="12" cy="12" r="10" />
           <polyline points="12 6 12 12 16 14" />
@@ -102,7 +102,7 @@
         <span class="mob-label" data-t="nav_history">История</span>
       </button>
       <!-- Profile -->
-      <button class="icon-btn" onclick="window.location='/profile'" title="Профиль" data-t-title="nav_profile">
+      <button class="icon-btn" onclick="window.location='{{ BASE_PATH }}/profile'" title="Профиль" data-t-title="nav_profile">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
           <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
           <circle cx="12" cy="7" r="4" />
@@ -178,7 +178,7 @@
         <div class="sb-group-label" data-t="sb_sections">Разделы кабинета</div>
         
         <!-- Dynamic Side Menu per Role -->
-        <button class="sb-nav-btn {% if request.path == '/' or request.path == '/dashboard' %}active{% endif %}" onclick="window.location='/'">
+        <button class="sb-nav-btn {% if request.path == '/' or request.path == '/dashboard' %}active{% endif %}" onclick="window.location='{{ BASE_PATH }}/'">
           <span class="sb-nav-ico" style="background:rgba(0,122,255,.15);">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#007AFF" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
           </span>
@@ -186,7 +186,7 @@
         </button>
 
         {# ── ОБОРУДОВАНИЕ: все #}
-        <button class="sb-nav-btn {% if request.path == '/equipment' %}active{% endif %}" onclick="window.location='/equipment'">
+        <button class="sb-nav-btn {% if request.path == '/equipment' %}active{% endif %}" onclick="window.location='{{ BASE_PATH }}/equipment'">
           <span class="sb-nav-ico" style="background:rgba(8,145,178,.12);">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0891B2" stroke-width="2" stroke-linecap="round"><rect x="4" y="2" width="16" height="20" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M12 14l2-2m0 0l2 2m-2-2v5"/></svg>
           </span>
@@ -195,7 +195,7 @@
 
         {# ── КАНЦЕЛЯРИЯ: все кроме viewer #}
         {% if current_user.role != 'viewer' %}
-        <button class="sb-nav-btn {% if request.path == '/office' %}active{% endif %}" onclick="window.location='/office'">
+        <button class="sb-nav-btn {% if request.path == '/office' %}active{% endif %}" onclick="window.location='{{ BASE_PATH }}/office'">
           <span class="sb-nav-ico" style="background:rgba(0,122,255,.12);">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#007AFF" stroke-width="2" stroke-linecap="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
           </span>
@@ -205,7 +205,7 @@
 
         {# ── ДОКУМЕНТЫ: все кроме viewer #}
         {% if current_user.role != 'viewer' %}
-        <button class="sb-nav-btn {% if request.path == '/documents' %}active{% endif %}" onclick="window.location='/documents'">
+        <button class="sb-nav-btn {% if request.path == '/documents' %}active{% endif %}" onclick="window.location='{{ BASE_PATH }}/documents'">
           <span class="sb-nav-ico" style="background:rgba(255,149,0,.12);">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FF9500" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
           </span>
@@ -216,13 +216,13 @@
 
         {# ── ВЫДАЧИ / УВОЛЬНЕНИЯ: АХО, HR, супер #}
         {% if current_user.role in ('superadmin','aho','hr') %}
-        <button class="sb-nav-btn {% if request.path == '/admin/issuances' %}active{% endif %}" onclick="window.location='/admin/issuances'">
+        <button class="sb-nav-btn {% if request.path == '/admin/issuances' %}active{% endif %}" onclick="window.location='{{ BASE_PATH }}/admin/issuances'">
           <span class="sb-nav-ico" style="background:rgba(52,199,89,.12);">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#34C759" stroke-width="2" stroke-linecap="round"><path d="M20 12V22H4V12"/><path d="M22 7H2v5h20V7z"/><path d="M12 22V7"/></svg>
           </span>
           <span class="sb-nav-label" data-t="nav_issuances">Выдачи</span>
         </button>
-        <button class="sb-nav-btn {% if request.path == '/admin/dismissals' %}active{% endif %}" onclick="window.location='/admin/dismissals'">
+        <button class="sb-nav-btn {% if request.path == '/admin/dismissals' %}active{% endif %}" onclick="window.location='{{ BASE_PATH }}/admin/dismissals'">
           <span class="sb-nav-ico" style="background:rgba(255,59,48,.12);">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FF3B30" stroke-width="2" stroke-linecap="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/></svg>
           </span>
@@ -232,7 +232,7 @@
 
         {# ── РЕМОНТЫ: АХО, супер, director #}
         {% if current_user.role in ('superadmin','aho','director') %}
-        <button class="sb-nav-btn {% if request.path == '/maintenance' %}active{% endif %}" onclick="window.location='/maintenance'">
+        <button class="sb-nav-btn {% if request.path == '/maintenance' %}active{% endif %}" onclick="window.location='{{ BASE_PATH }}/maintenance'">
           <span class="sb-nav-ico" style="background:rgba(255,149,0,.12);">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FF9500" stroke-width="2" stroke-linecap="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
           </span>
@@ -242,7 +242,7 @@
 
         {# ── ЗАЯВКИ: все кроме viewer/auditor #}
         {% if current_user.role in ('superadmin','aho','hr','employee','director','deputy','department_head','accountant') %}
-        <button class="sb-nav-btn {% if request.path == '/requests' %}active{% endif %}" onclick="window.location='/requests'">
+        <button class="sb-nav-btn {% if request.path == '/requests' %}active{% endif %}" onclick="window.location='{{ BASE_PATH }}/requests'">
           <span class="sb-nav-ico" style="background:rgba(52,199,89,.12);">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#34C759" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
           </span>
@@ -252,7 +252,7 @@
 
         {# ── АНАЛИТИКА: управленцы, аудитор, бухгалтер #}
         {% if current_user.role in ('superadmin','aho','director','deputy','auditor','accountant') %}
-        <button class="sb-nav-btn {% if request.path == '/analytics' %}active{% endif %}" onclick="window.location='/analytics'">
+        <button class="sb-nav-btn {% if request.path == '/analytics' %}active{% endif %}" onclick="window.location='{{ BASE_PATH }}/analytics'">
           <span class="sb-nav-ico" style="background:rgba(88,86,214,.12);">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#5856D6" stroke-width="2" stroke-linecap="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
           </span>
@@ -262,7 +262,7 @@
 
         {# ── АМОРТИЗАЦИЯ: супер, бухгалтер, АХО #}
         {% if current_user.role in ('superadmin','aho','accountant','auditor') %}
-        <button class="sb-nav-btn {% if request.path == '/reports/depreciation' %}active{% endif %}" onclick="window.location='/reports/depreciation'">
+        <button class="sb-nav-btn {% if request.path == '/reports/depreciation' %}active{% endif %}" onclick="window.location='{{ BASE_PATH }}/reports/depreciation'">
           <span class="sb-nav-ico" style="background:rgba(48,176,199,.12);">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#30B0C7" stroke-width="2" stroke-linecap="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
           </span>
@@ -272,7 +272,7 @@
 
         {# ── ФИНАНСЫ: бухгалтер, директор (не супер-админ — не его функция) #}
         {% if current_user.role in ('accountant','director') %}
-        <button class="sb-nav-btn {% if request.path == '/finance' %}active{% endif %}" onclick="window.location='/finance'">
+        <button class="sb-nav-btn {% if request.path == '/finance' %}active{% endif %}" onclick="window.location='{{ BASE_PATH }}/finance'">
           <span class="sb-nav-ico" style="background:rgba(48,176,199,.12);">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#30B0C7" stroke-width="2" stroke-linecap="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
           </span>
@@ -282,7 +282,7 @@
 
         {# ── ПОЛЬЗОВАТЕЛИ: супер, директор #}
         {% if current_user.role in ('superadmin','director') %}
-        <button class="sb-nav-btn {% if request.path == '/admin/users' %}active{% endif %}" onclick="window.location='/admin/users'">
+        <button class="sb-nav-btn {% if request.path == '/admin/users' %}active{% endif %}" onclick="window.location='{{ BASE_PATH }}/admin/users'">
           <span class="sb-nav-ico" style="background:rgba(90,200,250,.12);">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#5AC8FA" stroke-width="2" stroke-linecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
           </span>
@@ -292,7 +292,7 @@
 
         {# ── БЕЗОПАСНОСТЬ: только супер #}
         {% if current_user.role == 'superadmin' %}
-        <button class="sb-nav-btn {% if request.path == '/security' %}active{% endif %}" onclick="window.location='/security'">
+        <button class="sb-nav-btn {% if request.path == '/security' %}active{% endif %}" onclick="window.location='{{ BASE_PATH }}/security'">
           <span class="sb-nav-ico" style="background:rgba(255,59,48,.1);">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FF3B30" stroke-width="2" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
           </span>
@@ -301,7 +301,7 @@
         {% endif %}
 
         {# ── НАСТРОЙКИ: все #}
-        <button class="sb-nav-btn {% if request.path == '/settings' %}active{% endif %}" onclick="window.location='/settings'">
+        <button class="sb-nav-btn {% if request.path == '/settings' %}active{% endif %}" onclick="window.location='{{ BASE_PATH }}/settings'">
           <span class="sb-nav-ico" style="background:rgba(142,142,147,.12);">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8E8E93" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2"/></svg>
           </span>
@@ -346,6 +346,7 @@
 
   <!-- ═══ GLOBAL JS ═══ -->
   <script>
+    const ASSETO_BASE = "{{ BASE_PATH }}";
     // Theme
     function applyTheme(t) {
       document.documentElement.setAttribute('data-theme', t);
@@ -396,7 +397,7 @@
     async function doLogout() {
       sessionStorage.removeItem('asseto_splash_shown');
       await fetch('/api/auth/logout', { method: 'POST' });
-      window.location = '/login';
+      window.location = ASSETO_BASE + '/login';
     }
 
     // Command Palette
@@ -480,7 +481,7 @@
           const badge = n.count && n.count > 0 ? `<div style="background:var(--ios-red);color:#fff;border-radius:12px;padding:2px 8px;font-size:11px;font-weight:700;display:inline-block;white-space:nowrap;flex-shrink:0;">${n.count}</div>` : '';
           
           return `
-            <div class="notif-item" style="${clr}cursor:pointer; display:flex; gap:14px; padding:14px 20px; align-items:center;" onclick="window.location.href='${n.link || '/'}'">
+            <div class="notif-item" style="${clr}cursor:pointer; display:flex; gap:14px; padding:14px 20px; align-items:center;" onclick="window.location.href='${n.link || ASSETO_BASE + '/'}'">
               <div class="notif-ico" style="width:38px; height:38px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0; background:rgba(88,86,214,.15);">🔔</div>
               <div class="notif-text" style="flex:1; min-width:0; display:flex; flex-direction:column; justify-content:center;">
                 <div style="font-size:14px; font-weight:600; color:var(--text); line-height:1.2; margin-bottom:3px; display:flex; align-items:center; justify-content:space-between; gap:8px;">
