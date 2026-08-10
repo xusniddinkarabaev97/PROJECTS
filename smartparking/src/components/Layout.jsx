@@ -154,7 +154,7 @@ export default function Layout({ children }) {
           </div>
           <div style={{ display: "flex", gap: 6 }}>
             <a
-              href="/swagger"
+              href="/swagger/"
               target="_blank"
               rel="noopener noreferrer"
               className="btn btn-ghost btn-sm"
