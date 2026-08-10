@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "4wv579BUxl4=",
+  "dgSpecHash": "ZQl5ey1ibmU=",
   "success": true,
-  "projectFilePath": "D:\\PROJECTS\\SmartParking\\SmartParking\\SmartParking.csproj",
+  "projectFilePath": "D:\\PROJECTS\\PROJECTS\\SmartParking\\SmartParking\\SmartParking.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\Legion\\.nuget\\packages\\humanizer.core\\2.14.1\\humanizer.core.2.14.1.nupkg.sha512",
     "C:\\Users\\Legion\\.nuget\\packages\\microsoft.aspnetcore.authentication.jwtbearer\\8.0.6\\microsoft.aspnetcore.authentication.jwtbearer.8.0.6.nupkg.sha512",

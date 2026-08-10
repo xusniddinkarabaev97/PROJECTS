@@ -3697,11 +3697,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "D:\\PROJECTS\\SmartParking\\SmartParking\\SmartParking.csproj",
+      "projectUniqueName": "D:\\PROJECTS\\PROJECTS\\SmartParking\\SmartParking\\SmartParking.csproj",
       "projectName": "SmartParking",
-      "projectPath": "D:\\PROJECTS\\SmartParking\\SmartParking\\SmartParking.csproj",
+      "projectPath": "D:\\PROJECTS\\PROJECTS\\SmartParking\\SmartParking\\SmartParking.csproj",
       "packagesPath": "C:\\Users\\Legion\\.nuget\\packages\\",
-      "outputPath": "D:\\PROJECTS\\SmartParking\\SmartParking\\obj\\",
+      "outputPath": "D:\\PROJECTS\\PROJECTS\\SmartParking\\SmartParking\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "C:\\Users\\Legion\\AppData\\Roaming\\NuGet\\NuGet.Config"
