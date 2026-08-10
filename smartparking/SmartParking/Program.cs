@@ -133,7 +133,7 @@ builder.Services.AddSwaggerGen(c =>
     c.DocInclusionPredicate((docName, apiDesc) =>
     {
         if (docName == "uparking")
-            return apiDesc.GroupName == "uparking" || apiDesc.RelativePath?.Contains("DahuaIntegration") == true;
+            return apiDesc.GroupName == "uparking" || apiDesc.RelativePath?.Contains("DahuaIntegration") == true || apiDesc.RelativePath?.Contains("billing") == true;
         if (docName == "click")
             return apiDesc.GroupName == "click" || apiDesc.RelativePath?.Contains("click") == true;
         return apiDesc.GroupName != "uparking" && apiDesc.GroupName != "click";
