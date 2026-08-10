@@ -8,37 +8,62 @@ namespace SmartParking.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[ApiExplorerSettings(GroupName = "uparking")]
 public class QrController : ControllerBase
 {
     private readonly ApplicationDbContext _context;
-    private readonly IConfiguration _config;
 
-    public QrController(ApplicationDbContext context, IConfiguration config)
+    public QrController(ApplicationDbContext context)
     {
         _context = context;
-        _config = config;
     }
 
     /// <summary>
-    /// Generate Click-compatible QR code for parking payment
+    /// Generate QR by transaction ID — avto.itpanda.uz link with entry/exit data
     /// </summary>
     [AllowAnonymous]
     [HttpGet("{id}")]
     public async Task<IActionResult> GetQr(int id, [FromQuery] int size = 250)
     {
-        var txn = await _context.Transactions.FindAsync(id);
+        var txn = await _context.Transactions.FirstOrDefaultAsync(t => t.Id == id);
         if (txn == null)
             return NotFound(new { error = "Transaction not found" });
 
-        var merchantId = _config["ClickSettings:MerchantId"] ?? "19876";
-        var serviceId = _config["ClickSettings:ServiceId"] ?? "2005";
+        // Extract entry/exit from PaymentMethod
+        string qrUrl = $"http://avto.itpanda.uz/pay.html?txn={id}&amount={txn.TotalSum}";
 
-        // Click app QR format: service_id, merchant_id, amount in tiyins, transaction_param
-        var amountTiyins = (long)(txn.TotalSum * 100);
-        var qrData = $"service_id={serviceId}&merchant_id={merchantId}&amount={amountTiyins}&transaction_param={id}";
+        if (!string.IsNullOrEmpty(txn.PaymentMethod))
+        {
+            try
+            {
+                var json = txn.PaymentMethod.Split('|')[0];
+                using var doc = System.Text.Json.JsonDocument.Parse(json);
+                var r = doc.RootElement;
+
+                if (r.TryGetProperty("parkingStart", out var ps))
+                    qrUrl += "&entry=" + Uri.EscapeDataString(ps.GetString()!);
+                else if (r.TryGetProperty("kirish", out var k))
+                    qrUrl += "&entry=" + Uri.EscapeDataString(k.GetString()!);
+                else if (r.TryGetProperty("Kirish", out var k2))
+                    qrUrl += "&entry=" + Uri.EscapeDataString(k2.GetString()!);
+
+                if (r.TryGetProperty("parkingEnd", out var pe))
+                    qrUrl += "&exit=" + Uri.EscapeDataString(pe.GetString()!);
+                else if (r.TryGetProperty("chiqish", out var c))
+                    qrUrl += "&exit=" + Uri.EscapeDataString(c.GetString()!);
+                else if (r.TryGetProperty("Chiqish", out var c2))
+                    qrUrl += "&exit=" + Uri.EscapeDataString(c2.GetString()!);
+
+                if (r.TryGetProperty("parkingTimeSeconds", out var pts))
+                    qrUrl += "&duration=" + pts.GetInt32();
+                else if (r.TryGetProperty("Davomiyligi", out var d))
+                    qrUrl += "&duration=" + Uri.EscapeDataString(d.GetString()!);
+            }
+            catch { }
+        }
 
         using var generator = new QRCodeGenerator();
-        using var data = generator.CreateQrCode(qrData, QRCodeGenerator.ECCLevel.M);
+        using var data = generator.CreateQrCode(qrUrl, QRCodeGenerator.ECCLevel.M);
         using var qr = new PngByteQRCode(data);
         var bytes = qr.GetGraphic(Math.Clamp(size, 100, 500));
 
@@ -46,7 +71,7 @@ public class QrController : ControllerBase
         {
             transactionId = id,
             amount = txn.TotalSum,
-            qrContent = qrData,
+            qrUrl,
             base64 = Convert.ToBase64String(bytes),
             mimeType = "image/png"
         });
