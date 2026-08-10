@@ -39,26 +39,28 @@ export default function Layout({ children }) {
       >
         <div
           style={{
-            padding: "20px 16px",
-            borderBottom: "1px solid var(--border)",
+            padding: "24px 20px",
+            borderBottom: "1px solid rgba(255,255,255,0.08)",
+            background: "linear-gradient(135deg, #1e40af, #0f172a)",
           }}
         >
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <span style={{ fontSize: 24 }}>🅿️</span>
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <span style={{ fontSize: 28 }}>🅿️</span>
             {sidebarOpen && (
               <div>
                 <h1
                   style={{
                     fontSize: 16,
-                    fontWeight: 700,
-                    color: "var(--text-primary)",
+                    fontWeight: 800,
+                    color: "#fff",
                     whiteSpace: "nowrap",
+                    letterSpacing: "-0.5px",
                   }}
                 >
-                  SmartParking
+                  ODU Parking
                 </h1>
-                <p style={{ fontSize: 11, color: "var(--text-muted)" }}>
-                  Parking Admin
+                <p style={{ fontSize: 11, color: "rgba(255,255,255,0.5)", fontWeight: 500 }}>
+                  Billing System
                 </p>
               </div>
             )}
@@ -107,22 +109,22 @@ export default function Layout({ children }) {
           })}
         </nav>
 
-        <div style={{ padding: 12, borderTop: "1px solid var(--border)" }}>
+        <div style={{ padding: 16, borderTop: "1px solid rgba(255,255,255,0.08)" }}>
           {/* User info */}
           {sidebarOpen && (
             <div
               style={{
-                marginBottom: 10,
-                padding: "8px 10px",
-                background: "var(--bg-hover)",
-                borderRadius: 8,
+                marginBottom: 12,
+                padding: "10px 12px",
+                background: "rgba(255,255,255,0.05)",
+                borderRadius: 10,
               }}
             >
               <div
                 style={{
                   fontSize: 13,
                   fontWeight: 600,
-                  color: "var(--text-primary)",
+                  color: "rgba(255,255,255,0.8)",
                 }}
               >
                 👤 {user?.email || "Admin"}
