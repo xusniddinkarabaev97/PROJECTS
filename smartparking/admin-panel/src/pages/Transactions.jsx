@@ -23,10 +23,10 @@ function parseParking(paymentMethod) {
 
 function ParkingDetail({ p }) {
   if (!p) return <span>—</span>;
-  const avto = p.AvtoRaqam || p.avtoRaqam || "—";
-  const k = (p.Kirish || p.kirish || "").slice(11, 16) || "—";
-  const c = (p.Chiqish || p.chiqish || "").slice(11, 16) || "—";
-  const d = p.Davomiyligi || p.davomiyligi || "—";
+  const avto = p.plateNo || p.PlateNo || p.AvtoRaqam || p.avtoRaqam || "—";
+  const k = (p.parkingStart || p.ParkingStart || p.Kirish || p.kirish || "").slice(11, 16) || "—";
+  const c = (p.parkingEnd || p.ParkingEnd || p.Chiqish || p.chiqish || "").slice(11, 16) || "—";
+  const d = p.parkingTimeSeconds || p.ParkingTimeSeconds || p.Davomiyligi || p.davomiyligi || "—";
   return (
     <div style={{ fontSize: 11, lineHeight: 1.5 }}>
       <div>
