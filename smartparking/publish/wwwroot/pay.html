@@ -64,7 +64,7 @@
 <script>
 var p = new URLSearchParams(location.search);
 var API = 'https://whirl.uz/smartparking';
-var D = { txn: '', sum: '', in: '', out: '', dur: '' };
+var D = { txn: '', sum: '', in: '', out: '', dur: '', plate: '' };
 
 function row(k, v) {
     return '<div class="row"><span class="label">' + k + '</span><span class="value">' + v + '</span></div>';
@@ -90,6 +90,8 @@ function dur(v) {
 function render() {
     var h = '';
 
+    if (D.plate) h += row('🚗 Номер', '<b>' + D.plate + '</b>');
+
     if (D.sum && parseFloat(D.sum) > 0) {
         h += '<div class="amount"><div class="sum">' + Number(D.sum).toLocaleString('ru-RU') + '</div><div class="currency">UZS</div></div>';
     }
@@ -109,6 +111,7 @@ async function init() {
     // 1. URL params (QR scan)
     D.txn = p.get('txn') || p.get('id') || '';
     D.sum = p.get('amount') || '';
+    D.plate = p.get('plate') || p.get('plateNo') || '';
     D.in  = p.get('entry') || p.get('kirish') || p.get('parkingStart') || '';
     D.out = p.get('exit') || p.get('chiqish') || p.get('parkingEnd') || '';
     D.dur = p.get('duration') || p.get('davomiyligi') || p.get('parkingTimeSeconds') || '';

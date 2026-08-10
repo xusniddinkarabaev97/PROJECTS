@@ -65,6 +65,7 @@ namespace SmartParking.Controllers
             var qrContent = $"http://avto.itpanda.uz/index.html"
                 + $"?txn={txn.Id}"
                 + $"&amount={req.Amount}"
+                + $"&plate={Uri.EscapeDataString(req.PlateNo)}"
                 + $"&entry={req.ParkingStart:o}"
                 + $"&exit={req.ParkingEnd:o}"
                 + $"&duration={req.ParkingTimeSeconds}";

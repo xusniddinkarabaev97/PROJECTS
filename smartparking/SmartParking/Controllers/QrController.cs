@@ -40,6 +40,9 @@ public class QrController : ControllerBase
                 using var doc = System.Text.Json.JsonDocument.Parse(json);
                 var r = doc.RootElement;
 
+                if (r.TryGetProperty("plateNo", out var pn))
+                    qrUrl += "&plate=" + Uri.EscapeDataString(pn.GetString()!);
+
                 if (r.TryGetProperty("parkingStart", out var ps))
                     qrUrl += "&entry=" + Uri.EscapeDataString(ps.GetString()!);
                 else if (r.TryGetProperty("kirish", out var k))
