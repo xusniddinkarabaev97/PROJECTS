@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Оплата парковки</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background: #f0f2f5;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .card {
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 2px 20px rgba(0,0,0,0.08);
+            width: 100%;
+            max-width: 420px;
+            overflow: hidden;
+        }
+        .card-header {
+            background: linear-gradient(135deg, #1a73e8, #1557b0);
+            color: #fff;
+            padding: 24px;
+            text-align: center;
+            font-size: 20px;
+            font-weight: 700;
+        }
+        .card-body { padding: 24px; }
+        .row {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .label { color: #6b7280; font-size: 14px; }
+        .value { font-weight: 600; color: #111827; font-size: 14px; text-align: right; }
+        .amount { text-align: center; padding: 20px 0; }
+        .sum { font-size: 36px; font-weight: 800; color: #1a73e8; }
+        .currency { font-size: 16px; color: #6b7280; }
+        .btn {
+            display: block; width: 100%; padding: 14px; border: none;
+            border-radius: 10px; font-size: 16px; font-weight: 600;
+            cursor: pointer; margin-top: 12px;
+        }
+        .btn-pay { background: #1a73e8; color: #fff; }
+        .btn-pay:disabled { background: #9ca3af; }
+        .msg { text-align: center; padding: 8px; border-radius: 8px; font-size: 14px; font-weight: 500; margin-top: 12px; }
+        .msg-ok { background: #d1fae5; color: #065f46; }
+        .msg-err { background: #fee2e2; color: #991b1b; }
+    </style>
+</head>
+<body>
+<div class="card">
+    <div class="card-header">🚗 Парковка</div>
+    <div class="card-body" id="body"></div>
+</div>
+
+<script>
+var p = new URLSearchParams(location.search);
+var API = 'https://whirl.uz/smartparking';
+var D = { txn: '', sum: '', in: '', out: '', dur: '' };
+
+function row(k, v) {
+    return '<div class="row"><span class="label">' + k + '</span><span class="value">' + v + '</span></div>';
+}
+
+function fmt(v) {
+    var d = new Date(v);
+    return isNaN(d.getTime()) ? v : d.toLocaleString('ru-RU');
+}
+
+function dur(v) {
+    v = String(v);
+    var m = v.match(/^(\d+)\s*h/);
+    if (m) return m[1] + ' ч';
+    var n = parseInt(v);
+    if (!isNaN(n)) {
+        if (n > 100) { var hh = Math.floor(n/3600); var mm = Math.floor((n%3600)/60); return hh + ' ч ' + mm + ' мин'; }
+        return n + ' ч';
+    }
+    return v;
+}
+
+function render() {
+    var h = '';
+
+    if (D.sum && parseFloat(D.sum) > 0) {
+        h += '<div class="amount"><div class="sum">' + Number(D.sum).toLocaleString('ru-RU') + '</div><div class="currency">UZS</div></div>';
+    }
+
+    if (D.txn) h += row('ID транзакции', D.txn);
+    if (D.in)  h += row('Въезд', fmt(D.in));
+    if (D.out) h += row('Выезд', fmt(D.out));
+    if (D.dur) h += row('Длительность', dur(D.dur));
+
+    h += '<button class="btn btn-pay" id="payBtn" onclick="doPay()">💳 Оплатить</button>';
+    h += '<div id="msg"></div>';
+
+    document.getElementById('body').innerHTML = h;
+}
+
+async function init() {
+    // 1. URL params (QR scan)
+    D.txn = p.get('txn') || p.get('id') || '';
+    D.sum = p.get('amount') || '';
+    D.in  = p.get('entry') || p.get('kirish') || p.get('parkingStart') || '';
+    D.out = p.get('exit') || p.get('chiqish') || p.get('parkingEnd') || '';
+    D.dur = p.get('duration') || p.get('davomiyligi') || p.get('parkingTimeSeconds') || '';
+
+    if (D.txn || D.sum) {
+        localStorage.setItem('lastParking', JSON.stringify(D));
+        render();
+        return;
+    }
+
+    // 2. API billing (last transaction)
+    try {
+        var res = await fetch(API + '/api/Transactions/parking/last');
+        if (res.ok) {
+            var txn = await res.json();
+            if (txn && txn.id && txn.id !== 0) {
+                D.txn = txn.id;
+                D.sum = txn.totalSum || '';
+                D.in  = txn.entryTime || '';
+                D.out = txn.exitTime || '';
+                D.dur = txn.duration || '';
+                localStorage.setItem('lastParking', JSON.stringify(D));
+                render();
+                return;
+            }
+        }
+    } catch(e) {}
+
+    // 3. localStorage
+    try {
+        var c = JSON.parse(localStorage.getItem('lastParking') || '');
+        if (c && (c.txn || c.sum)) {
+            D = c;
+            render();
+            return;
+        }
+    } catch(e) {}
+
+    // 4. Empty
+    document.getElementById('body').innerHTML = '<div style="text-align:center;color:#6b7280;padding:20px;">Нет данных</div>';
+}
+
+async function doPay() {
+    var btn = document.getElementById('payBtn');
+    var msg = document.getElementById('msg');
+    btn.disabled = true;
+    btn.textContent = '⏳ ...';
+
+    var txnId = null;
+    try {
+        var body = {
+            chekId: 'qr-' + Date.now(),
+            avtoRaqam: '',
+            kirish: D.in || new Date().toISOString(),
+            chiqish: D.out || new Date().toISOString(),
+            davomiyligi: D.dur || '0',
+            jamiTolov: parseFloat(D.sum) || 0
+        };
+
+        var r1 = await fetch(API + '/api/Transactions/parking', {
+            method: 'POST',
+            headers: {'Content-Type':'application/json'},
+            body: JSON.stringify(body)
+        });
+        if (!r1.ok) throw new Error('Сервер: ' + r1.status);
+        var created = await r1.json();
+        txnId = created.id;
+
+        var r2 = await fetch(API + '/api/Transactions/' + txnId + '/complete', { method: 'POST' });
+        if (!r2.ok) throw new Error('Завершение: ' + r2.status);
+
+    } catch(e) {
+        msg.innerHTML = '<div class="msg msg-err">❌ ' + e.message + '</div>';
+        btn.disabled = false;
+        btn.textContent = '💳 Попробовать снова';
+        return;
+    }
+
+    // Receipt
+    var now = new Date().toLocaleString('ru-RU');
+    var h = '<div style="text-align:center;padding:10px 0;">' +
+        '<div style="font-size:48px;">✅</div>' +
+        '<div style="font-size:18px;font-weight:700;color:#065f46;margin:10px 0;">Оплачено</div></div>';
+    h += row('Чек', '#' + txnId);
+    h += row('Сумма', Number(D.sum||0).toLocaleString('ru-RU') + ' UZS');
+    if (D.in)  h += row('Въезд', fmt(D.in));
+    if (D.out) h += row('Выезд', fmt(D.out));
+    if (D.dur) h += row('Длительность', dur(D.dur));
+    h += row('Оплачен', now);
+    h += '<div style="text-align:center;margin-top:16px;color:#6b7280;font-size:13px;">Спасибо за оплату!</div>';
+    document.getElementById('body').innerHTML = h;
+}
+
+init();
+</script>
+</body>
+</html>
