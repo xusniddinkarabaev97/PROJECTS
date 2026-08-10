@@ -53,8 +53,20 @@ export default function Transactions() {
   const paged = filtered.slice((page - 1) * pageSize, page * pageSize);
   const totalPages = Math.ceil(filtered.length / pageSize);
 
-  const downloadExcel = () => {
-    window.open("/Billing/Transactions?handler=Export&period=" + period, "_blank");
+  const downloadExcel = async () => {
+    try {
+      const res = await fetch("/Billing/Transactions?handler=Export&period=" + period);
+      if (!res.ok) throw new Error("Ошибка");
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "transactions_" + period + ".csv";
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch(e) {
+      alert("Не удалось скачать отчёт");
+    }
   };
 
   if (loading) return (

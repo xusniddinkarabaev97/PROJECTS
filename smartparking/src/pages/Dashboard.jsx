@@ -15,8 +15,20 @@ export default function Dashboard() {
       .finally(() => setLoading(false));
   }, []);
 
-  const downloadExcel = (period) => {
-    window.open("/Billing/Transactions?handler=Export&period=" + period, "_blank");
+  const downloadExcel = async (period) => {
+    try {
+      const res = await fetch("/Billing/Transactions?handler=Export&period=" + period);
+      if (!res.ok) throw new Error("Ошибка");
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "transactions_" + period + ".csv";
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch(e) {
+      alert("Не удалось скачать отчёт");
+    }
   };
 
   if (loading) {
