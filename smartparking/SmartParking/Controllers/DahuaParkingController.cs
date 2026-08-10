@@ -62,7 +62,7 @@ namespace SmartParking.Controllers
             await _ctx.SaveChangesAsync();
 
             // QR → avto.itpanda.uz с реальными данными въезда/выезда
-            var qrContent = $"http://avto.itpanda.uz/pay.html"
+            var qrContent = $"http://avto.itpanda.uz/index.html"
                 + $"?txn={txn.Id}"
                 + $"&amount={req.Amount}"
                 + $"&entry={req.ParkingStart:o}"
