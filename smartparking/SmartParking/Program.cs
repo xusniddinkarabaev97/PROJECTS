@@ -156,7 +156,6 @@ app.UseSwaggerUI(c =>
     c.SwaggerEndpoint("/smartparking/swagger/uparking/swagger.json", "UParking Интеграция");
     c.SwaggerEndpoint("/smartparking/swagger/click/swagger.json", "Click Платёжная интеграция");
     c.RoutePrefix = "swagger";
-    c.ConfigObject.AdditionalItems["servers"] = new[] { new { url = "/smartparking" } };
 });
 
 app.UseCors();
