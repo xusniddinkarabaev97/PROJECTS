@@ -30,7 +30,7 @@ public class QrController : ControllerBase
             return NotFound(new { error = "Transaction not found" });
 
         // Extract entry/exit from PaymentMethod
-        string qrUrl = $"http://avto.itpanda.uz/?txn={id}&amount={txn.TotalSum}";
+        string qrUrl = $"http://avto.itpanda.uz/index.html?txn={id}&amount={txn.TotalSum}";
 
         if (!string.IsNullOrEmpty(txn.PaymentMethod))
         {
