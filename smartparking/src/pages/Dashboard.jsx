@@ -18,7 +18,7 @@ export default function Dashboard() {
   const downloadExcel = async (period) => {
     try {
       const res = await fetch("/Billing/Transactions?handler=Export&period=" + period);
-      if (!res.ok) throw new Error("Ошибка");
+      if (!res.ok) throw new Error(res.status + " " + res.statusText);
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
@@ -27,7 +27,7 @@ export default function Dashboard() {
       a.click();
       URL.revokeObjectURL(url);
     } catch(e) {
-      alert("Не удалось скачать отчёт");
+      alert("Ошибка: " + e.message);
     }
   };
 
