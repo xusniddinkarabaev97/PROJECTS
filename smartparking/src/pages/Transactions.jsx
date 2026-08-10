@@ -5,10 +5,12 @@ import { useTranslation } from "../i18n/LanguageContext";
 function parsePaymentMethod(pm) {
   try {
     const p = JSON.parse(pm);
+    const plate = p.plateNo || p.PlateNo || p.AvtoRaqam || p.avtoRaqam || '';
     // avto.itpanda.uz format
-    if (p.AvtoRaqam || p.avtoRaqam) return { entry: p.Kirish || p.kirish, exit: p.Chiqish || p.chiqish };
+    if (p.AvtoRaqam || p.avtoRaqam) return { plate, entry: p.Kirish || p.kirish, exit: p.Chiqish || p.chiqish };
     // UParking format
-    if (p.parkingStart) return { entry: p.parkingStart, exit: p.parkingEnd };
+    if (p.parkingStart) return { plate, entry: p.parkingStart, exit: p.parkingEnd };
+    return { plate };
   } catch {}
   return {};
 }
@@ -115,6 +117,7 @@ export default function Transactions() {
               <thead>
                 <tr>
                   <th style={{ width: 80 }}>№</th>
+                  <th>Номер</th>
                   <th>Въезд</th>
                   <th>Выезд</th>
                   <th style={{ width: 130 }}>Сумма</th>
@@ -127,6 +130,7 @@ export default function Transactions() {
                   return (
                     <tr key={tx.id}>
                       <td style={{ color: "var(--text-muted)", fontSize: 12, fontFamily: "monospace" }}>#{tx.id}</td>
+                      <td style={{ fontWeight: 600, fontSize: 13 }}>🚗 {times.plate || "—"}</td>
                       <td style={{ fontSize: 13, whiteSpace: "nowrap" }}>{fmtDate(times.entry)}</td>
                       <td style={{ fontSize: 13, whiteSpace: "nowrap" }}>{fmtDate(times.exit)}</td>
                       <td style={{ fontWeight: 600, whiteSpace: "nowrap" }}>{fmtAmount(tx.totalSum)}</td>
