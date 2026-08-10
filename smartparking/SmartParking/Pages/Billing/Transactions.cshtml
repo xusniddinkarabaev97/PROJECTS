@@ -6,13 +6,34 @@
 
 <div class="container-fluid px-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="h3 mb-0">
-            &#128179; Панель Транзакций
-        </h1>
-        <a asp-page="/Billing/Index" class="btn btn-outline-secondary">&larr; Назад к панели</a>
+        <h1 class="h3 mb-0">&#128179; Транзакции</h1>
+        <a asp-page="/Billing/Index" class="btn btn-outline-secondary">&larr; Назад</a>
     </div>
 
-    @* ФИЛЬТРЫ *@
+    @* ПЕРИОД + ЭКСПОРТ *@
+    <div class="row mb-3 align-items-end">
+        <div class="col-md-auto">
+            <div class="btn-group">
+                <a asp-page="./Transactions" asp-route-period="day"
+                   class="btn @(Model.Period == "day" ? "btn-primary" : "btn-outline-primary")">📅 День</a>
+                <a asp-page="./Transactions" asp-route-period="week"
+                   class="btn @(Model.Period == "week" ? "btn-primary" : "btn-outline-primary")">📆 Неделя</a>
+                <a asp-page="./Transactions" asp-route-period="month"
+                   class="btn @(Model.Period == "month" ? "btn-primary" : "btn-outline-primary")">🗓 Месяц</a>
+            </div>
+            <small class="text-muted ms-2">
+                @Model.DateFrom.ToLocalTime().ToString("dd.MM.yyyy") — @Model.DateTo.AddDays(-1).ToLocalTime().ToString("dd.MM.yyyy")
+            </small>
+        </div>
+        <div class="col-md-3 ms-auto text-end">
+            <span class="text-muted me-2">
+                Сумма: <strong>@Model.TotalAmount.ToString("N0") UZS</strong>
+            </span>
+            <span class="text-muted">Транзакций: <strong>@Model.Transactions.Count</strong></span>
+        </div>
+    </div>
+
+    @* ФИЛЬТРЫ + ЭКСПОРТ *@
     <div class="row mb-3">
         <div class="col-md-3">
             <select class="form-select" id="statusFilter" onchange="filterTable()">
@@ -27,12 +48,13 @@
         <div class="col-md-3">
             <input type="text" class="form-control" id="searchFilter" placeholder="Поиск по клиенту..." onkeyup="filterTable()">
         </div>
-        <div class="col-md-3 ms-auto text-end">
-            <span class="text-muted">Всего: <strong>@Model.Transactions.Count</strong></span>
+        <div class="col-md-auto ms-auto">
+            <a asp-page="./Transactions" asp-page-handler="Export" asp-route-period="@Model.Period"
+               class="btn btn-success">📥 Excel</a>
         </div>
     </div>
 
-    @* ТАБЛИЦА ТРАНЗАКЦИЙ *@
+    @* ТАБЛИЦА *@
     <div class="card shadow-sm">
         <div class="card-body p-0">
             <div class="table-responsive">
@@ -54,8 +76,8 @@
                         {
                             var (badgeClass, badgeText) = t.PaymentStatus switch
                             {
-                                SmartParking.Enums.PaymentStatus.Completed => ("success", "Transaction completed"),
-                                SmartParking.Enums.PaymentStatus.Failed => ("danger", "Transaction failed"),
+                                SmartParking.Enums.PaymentStatus.Completed => ("success", "Completed"),
+                                SmartParking.Enums.PaymentStatus.Failed => ("danger", "Failed"),
                                 SmartParking.Enums.PaymentStatus.Cancelled => ("secondary", "Cancelled"),
                                 SmartParking.Enums.PaymentStatus.Pending => ("info", "Pending"),
                                 SmartParking.Enums.PaymentStatus.New => ("warning", "New"),
@@ -69,29 +91,30 @@
                                         || t.PaymentStatus == SmartParking.Enums.PaymentStatus.Failed
                                         || t.PaymentStatus == SmartParking.Enums.PaymentStatus.Cancelled;
 
-                            <tr data-status="@t.PaymentStatus" data-client="@t.ClientName.ToLower()" class="@(t.PaymentStatus == SmartParking.Enums.PaymentStatus.Completed ? "table-success" : t.PaymentStatus == SmartParking.Enums.PaymentStatus.Failed ? "table-danger" : "")">
+                            var rowClass = t.PaymentStatus == SmartParking.Enums.PaymentStatus.Completed ? "table-success"
+                                         : t.PaymentStatus == SmartParking.Enums.PaymentStatus.Failed ? "table-danger" : "";
+
+                            <tr data-status="@t.PaymentStatus" data-client="@t.ClientName.ToLower()" class="@rowClass">
                                 <td><code>#@t.Id</code></td>
                                 <td class="fw-medium">@t.ClientName</td>
-                                <td class="fw-bold">@t.TotalSum.ToString("N2") ₽</td>
-                                <td>@(t.PaymentMethod ?? "—")</td>
-                                <td>
-                                    <span class="badge bg-@badgeClass">@badgeText</span>
+                                <td class="fw-bold">@t.TotalSum.ToString("N0") UZS</td>
+                                <td style="max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="@t.PaymentMethod">
+                                    @(t.PaymentMethod ?? "—")
                                 </td>
-                                <td>
-                                    <span class="badge bg-dark">@t.Status</span>
-                                </td>
+                                <td><span class="badge bg-@badgeClass">@badgeText</span></td>
+                                <td><span class="badge bg-dark">@t.Status</span></td>
                                 <td class="text-muted small">@t.FilledAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</td>
                                 <td class="text-center">
                                     <div class="btn-group btn-group-sm">
                                         <button class="btn btn-success @(disabled ? "disabled" : "")"
                                                 onclick="processTxn(@t.Id, 'complete')"
                                                 @(disabled ? "disabled" : "")>
-                                            To'lash
+                                            ✓
                                         </button>
                                         <button class="btn btn-danger @(disabled ? "disabled" : "")"
                                                 onclick="processTxn(@t.Id, 'fail')"
                                                 @(disabled ? "disabled" : "")>
-                                            Bekor qilish
+                                            ✕
                                         </button>
                                     </div>
                                 </td>
@@ -109,32 +132,20 @@
         function filterTable() {
             const status = document.getElementById('statusFilter').value;
             const search = document.getElementById('searchFilter').value.toLowerCase();
-            const rows = document.querySelectorAll('#txnTable tbody tr');
-
-            rows.forEach(row => {
-                const rowStatus = row.dataset.status;
-                const rowClient = row.dataset.client;
-                const statusMatch = status === 'all' || rowStatus === status;
-                const searchMatch = search === '' || rowClient.includes(search);
-                row.style.display = statusMatch && searchMatch ? '' : 'none';
+            document.querySelectorAll('#txnTable tbody tr').forEach(row => {
+                const ok = (status === 'all' || row.dataset.status === status)
+                        && (search === '' || row.dataset.client.includes(search));
+                row.style.display = ok ? '' : 'none';
             });
         }
 
         async function processTxn(id, action) {
-            const label = action === 'complete' ? 'To\'lash' : 'Bekor qilish';
-            if (!confirm(`"${label}" — подтвердить для транзакции #${id}?`)) return;
-
+            if (!confirm('Подтвердить для #' + id + '?')) return;
             try {
-                const res = await fetch(`/api/Transactions/${id}/${action}`, { method: 'POST' });
-                if (res.ok) {
-                    location.reload();
-                } else {
-                    const err = await res.text();
-                    alert('Ошибка: ' + err);
-                }
-            } catch (e) {
-                alert('Ошибка соединения: ' + e.message);
-            }
+                const res = await fetch('/api/Transactions/' + id + '/' + action, { method: 'POST' });
+                if (res.ok) location.reload();
+                else alert('Ошибка: ' + await res.text());
+            } catch(e) { alert('Ошибка: ' + e.message); }
         }
     </script>
 }

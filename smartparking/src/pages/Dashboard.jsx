@@ -15,6 +15,10 @@ export default function Dashboard() {
       .finally(() => setLoading(false));
   }, []);
 
+  const downloadExcel = (period) => {
+    window.open("/Billing/Transactions?handler=Export&period=" + period, "_blank");
+  };
+
   if (loading) {
     return (
       <div style={{ display: "flex", alignItems: "center", justifyContent: "center", padding: "60px 0", gap: 12 }}>
@@ -35,12 +39,12 @@ export default function Dashboard() {
   }
 
   const cards = [
-    { label: t("totalStations"), value: stats?.totalStations ?? 0, icon: "🅿️", color: "#1f6feb" },
-    { label: t("totalCompanies"), value: stats?.totalCompanies ?? 0, icon: "🏢", color: "#7c3aed" },
-    { label: t("totalClients"), value: stats?.totalClients ?? 0, icon: "👥", color: "#238636" },
-    { label: t("totalTransactions"), value: stats?.totalTransactions ?? 0, icon: "💳", color: "#a371f7" },
     { label: t("todayTransactions"), value: stats?.todayTransactions ?? 0, icon: "📅", color: "#d2991d" },
     { label: t("todayRevenue"), value: `${(stats?.todayRevenue ?? 0).toLocaleString()} UZS`, icon: "💰", color: "#238636" },
+    { label: t("totalTransactions"), value: stats?.totalTransactions ?? 0, icon: "💳", color: "#a371f7" },
+    { label: t("totalClients"), value: stats?.totalClients ?? 0, icon: "👥", color: "#238636" },
+    { label: t("totalStations"), value: stats?.totalStations ?? 0, icon: "🅿️", color: "#1f6feb" },
+    { label: t("totalCompanies"), value: stats?.totalCompanies ?? 0, icon: "🏢", color: "#7c3aed" },
   ];
 
   return (
@@ -48,7 +52,9 @@ export default function Dashboard() {
       <h2 style={{ fontSize: 24, fontWeight: 700, marginBottom: 24, color: "var(--text-primary)" }}>
         📊 {t("dashboard")}
       </h2>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 16 }}>
+
+      {/* STAT CARDS */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 16, marginBottom: 32 }}>
         {cards.map((card) => (
           <div key={card.label} className="stat-card">
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
@@ -59,6 +65,22 @@ export default function Dashboard() {
             <div className="stat-label">{card.label}</div>
           </div>
         ))}
+      </div>
+
+      {/* ОТЧЁТЫ */}
+      <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 16, color: "var(--text-primary)" }}>
+        📥 {t("reports")}
+      </h3>
+      <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+        <button className="btn btn-primary" onClick={() => downloadExcel("day")}>
+          📅 Отчёт за день
+        </button>
+        <button className="btn btn-primary" onClick={() => downloadExcel("week")}>
+          📆 Отчёт за неделю
+        </button>
+        <button className="btn btn-primary" onClick={() => downloadExcel("month")}>
+          🗓 Отчёт за месяц
+        </button>
       </div>
     </div>
   );

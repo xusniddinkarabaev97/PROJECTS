@@ -1,7 +1,9 @@
 using SmartParking.Data;
 using SmartParking.Models;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
+using System.Text;
 
 namespace SmartParking.Pages.Billing;
 
@@ -15,12 +17,29 @@ public class TransactionsModel : PageModel
     }
 
     public List<TransactionRow> Transactions { get; set; } = new();
+    public string Period { get; set; } = "day";
+    public DateTime DateFrom { get; set; }
+    public DateTime DateTo { get; set; }
+    public decimal TotalAmount { get; set; }
 
-    public async Task OnGetAsync()
+    public async Task OnGetAsync(string period = "day")
     {
-        Transactions = await _db.Transactions
+        Period = period;
+        var now = DateTime.UtcNow.Date;
+
+        (DateFrom, DateTo) = period switch
+        {
+            "week"  => (now.AddDays(-7), now.AddDays(1)),
+            "month" => (now.AddDays(-30), now.AddDays(1)),
+            _       => (now, now.AddDays(1))  // day
+        };
+
+        var query = _db.Transactions
             .Include(t => t.Client)
-            .OrderByDescending(t => t.FilledAt)
+            .Where(t => t.FilledAt >= DateFrom && t.FilledAt < DateTo)
+            .OrderByDescending(t => t.FilledAt);
+
+        Transactions = await query
             .Select(t => new TransactionRow
             {
                 Id = t.Id,
@@ -32,6 +51,43 @@ public class TransactionsModel : PageModel
                 FilledAt = t.FilledAt
             })
             .ToListAsync();
+
+        TotalAmount = Transactions.Sum(t => t.TotalSum);
+    }
+
+    public async Task<IActionResult> OnGetExportAsync(string period = "day")
+    {
+        var now = DateTime.UtcNow.Date;
+        var (from, to) = period switch
+        {
+            "week"  => (now.AddDays(-7), now.AddDays(1)),
+            "month" => (now.AddDays(-30), now.AddDays(1)),
+            _       => (now, now.AddDays(1))
+        };
+
+        var txns = await _db.Transactions
+            .Include(t => t.Client)
+            .Where(t => t.FilledAt >= from && t.FilledAt < to)
+            .OrderByDescending(t => t.FilledAt)
+            .Select(t => new {
+                t.Id,
+                Client = t.Client.FullName ?? t.Client.Phone ?? t.Client.ExternalId,
+                t.TotalSum,
+                t.PaymentStatus,
+                t.Status,
+                t.FilledAt
+            })
+            .ToListAsync();
+
+        var sb = new StringBuilder();
+        sb.AppendLine("ID;Клиент;Сумма;Статус;Тип;Дата");
+        foreach (var t in txns)
+        {
+            sb.AppendLine($"{t.Id};{t.Client};{t.TotalSum};{t.PaymentStatus};{t.Status};{t.FilledAt.ToLocalTime():dd.MM.yyyy HH:mm}");
+        }
+
+        var name = $"transactions_{period}_{now:yyyyMMdd}.csv";
+        return File(Encoding.UTF8.GetBytes(sb.ToString()), "text/csv", name);
     }
 
     public class TransactionRow

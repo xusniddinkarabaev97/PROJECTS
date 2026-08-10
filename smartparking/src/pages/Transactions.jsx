@@ -2,23 +2,35 @@ import { useState, useEffect, useCallback } from "react";
 import { api } from "../api/client";
 import { useTranslation } from "../i18n/LanguageContext";
 
-const STATUS_MAP = {
-  Completed: { cls: "badge-success", label: "Completed" },
-  Paid: { cls: "badge-success", label: "Paid" },
-  New: { cls: "badge-warning", label: "New" },
-  Pending: { cls: "badge-warning", label: "Pending" },
-  Failed: { cls: "badge-danger", label: "Failed" },
-  Cancelled: { cls: "badge-danger", label: "Cancelled" },
-};
+function parsePaymentMethod(pm) {
+  try {
+    const p = JSON.parse(pm);
+    // avto.itpanda.uz format
+    if (p.AvtoRaqam || p.avtoRaqam) return { entry: p.Kirish || p.kirish, exit: p.Chiqish || p.chiqish };
+    // UParking format
+    if (p.parkingStart) return { entry: p.parkingStart, exit: p.parkingEnd };
+  } catch {}
+  return {};
+}
+
+function fmtDate(v) {
+  if (!v) return "—";
+  const d = new Date(v);
+  return isNaN(d.getTime()) ? v : d.toLocaleString("ru-RU", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
+}
+
+function fmtAmount(v) {
+  return v != null ? Number(v).toLocaleString() + " UZS" : "—";
+}
 
 export default function Transactions() {
   const { t } = useTranslation();
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [search, setSearch] = useState("");
+  const [period, setPeriod] = useState("day");
   const [page, setPage] = useState(1);
-  const pageSize = 15;
+  const pageSize = 20;
 
   const fetchData = useCallback(async () => {
     setLoading(true); setError(null);
@@ -29,17 +41,21 @@ export default function Transactions() {
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
-  const filtered = search ? data.filter((tx) =>
-    String(tx.id).includes(search) ||
-    tx.client?.fullName?.toLowerCase().includes(search.toLowerCase()) ||
-    tx.paymentStatus?.toLowerCase().includes(search.toLowerCase())
-  ) : data;
+  // Filter by period
+  const now = new Date();
+  const from = period === "week" ? new Date(now - 7*86400000)
+             : period === "month" ? new Date(now - 30*86400000)
+             : new Date(now.setHours(0,0,0,0));
+
+  const filtered = data.filter(tx => new Date(tx.filledAt) >= from)
+    .sort((a, b) => new Date(b.filledAt) - new Date(a.filledAt));
 
   const paged = filtered.slice((page - 1) * pageSize, page * pageSize);
   const totalPages = Math.ceil(filtered.length / pageSize);
 
-  const fmt = (v) => v != null ? Number(v).toLocaleString() + " UZS" : "—";
-  const fmtDate = (d) => d ? new Date(d).toLocaleString("ru-RU", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "—";
+  const downloadExcel = () => {
+    window.open("/Billing/Transactions?handler=Export&period=" + period, "_blank");
+  };
 
   if (loading) return (
     <div style={{ display: "flex", alignItems: "center", justifyContent: "center", padding: 60, gap: 12 }}>
@@ -53,22 +69,32 @@ export default function Transactions() {
       <div className="card-header">
         <div>
           <h2 style={{ fontSize: 24, fontWeight: 700, color: "var(--text-primary)", margin: 0 }}>💳 {t("transactions")}</h2>
-          <p style={{ fontSize: 13, color: "var(--text-muted)", margin: "4px 0 0 0" }}>{t("total")}: {filtered.length}</p>
         </div>
         <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-          <input className="input" style={{ width: 220, padding: "8px 12px" }} placeholder={"🔍 " + t("search")} value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }} />
+          <div className="btn-group" style={{ display: "flex" }}>
+            {["day","week","month"].map(p => (
+              <button key={p} onClick={() => { setPeriod(p); setPage(1); }}
+                style={{
+                  padding: "6px 14px", fontSize: 13, fontWeight: 500, cursor: "pointer",
+                  border: "1px solid var(--border)", background: period === p ? "var(--accent)" : "transparent",
+                  color: period === p ? "#fff" : "var(--text-secondary)", borderRadius: 0
+                }}>
+                {{day:"📅 День",week:"📆 Нед",month:"🗓 Мес"}[p]}
+              </button>
+            ))}
+          </div>
+          <button className="btn btn-success btn-sm" onClick={downloadExcel}>📥 Excel</button>
           <button className="btn btn-ghost btn-sm" onClick={fetchData}>🔄</button>
         </div>
       </div>
 
       {error && (
-        <div style={{ background: "var(--danger-bg)", border: "1px solid var(--danger)", color: "var(--danger)", padding: 12, borderRadius: 8, marginBottom: 16, display: "flex", justifyContent: "space-between" }}>
-          <span>{error}</span>
-          <button onClick={() => setError(null)} style={{ color: "var(--danger)", fontWeight: 700, background: "none", border: "none", cursor: "pointer" }}>×</button>
+        <div style={{ background: "var(--danger-bg)", border: "1px solid var(--danger)", color: "var(--danger)", padding: 12, borderRadius: 8, marginBottom: 16 }}>
+          {error}
         </div>
       )}
 
-      {data.length === 0 ? (
+      {filtered.length === 0 ? (
         <div className="empty-state"><div className="empty-state-icon">💳</div><p>{t("noTransactions")}</p></div>
       ) : (
         <div className="card" style={{ padding: 0, overflow: "hidden" }}>
@@ -76,39 +102,34 @@ export default function Transactions() {
             <table className="data-table">
               <thead>
                 <tr>
-                  <th style={{ width: 80 }}>ID</th>
-                  <th>{t("name") || "Mijoz"}</th>
-                  <th style={{ width: 130 }}>{t("amount")}</th>
-                  <th style={{ width: 120 }}>{t("paymentStatus")}</th>
-                  <th style={{ width: 100 }}>{t("type")}</th>
-                  <th style={{ width: 160 }}>{t("date")}</th>
+                  <th style={{ width: 80 }}>№</th>
+                  <th>Въезд</th>
+                  <th>Выезд</th>
+                  <th style={{ width: 130 }}>Сумма</th>
+                  <th style={{ width: 100 }}>Статус</th>
                 </tr>
               </thead>
               <tbody>
                 {paged.map((tx) => {
-                  const s = STATUS_MAP[tx.paymentStatus] || STATUS_MAP.New;
+                  const times = parsePaymentMethod(tx.paymentMethod);
                   return (
                     <tr key={tx.id}>
                       <td style={{ color: "var(--text-muted)", fontSize: 12, fontFamily: "monospace" }}>#{tx.id}</td>
-                      <td style={{ fontWeight: 600 }}>
-                        {tx.status === "parking" ? (
-                          <span>🚗 {(() => { try { const p = JSON.parse(tx.paymentMethod); return p.AvtoRaqam || p.avtoRaqam || "—"; } catch { return "—"; } })()}</span>
-                        ) : tx.client?.fullName || `#${tx.clientId || "—"}`}
-                      </td>
-                      <td style={{ fontWeight: 600, whiteSpace: "nowrap" }}>{fmt(tx.totalSum)}</td>
-                      <td><span className={`badge ${s.cls}`}>{s.label}</span></td>
+                      <td style={{ fontSize: 13, whiteSpace: "nowrap" }}>{fmtDate(times.entry)}</td>
+                      <td style={{ fontSize: 13, whiteSpace: "nowrap" }}>{fmtDate(times.exit)}</td>
+                      <td style={{ fontWeight: 600, whiteSpace: "nowrap" }}>{fmtAmount(tx.totalSum)}</td>
                       <td>
-                        <span className="badge badge-accent" style={{ background: "rgba(31,111,235,0.12)", color: "#58a6ff" }}>
-                          {tx.status || "—"}
+                        <span className={`badge ${tx.paymentStatus === "Completed" ? "badge-success" : tx.paymentStatus === "Failed" ? "badge-danger" : "badge-warning"}`}>
+                          {tx.paymentStatus === "Completed" ? "✅" : tx.paymentStatus === "Failed" ? "❌" : "⏳"}
                         </span>
                       </td>
-                      <td style={{ color: "var(--text-secondary)", fontSize: 12, whiteSpace: "nowrap" }}>{fmtDate(tx.filledAt)}</td>
                     </tr>
                   );
                 })}
               </tbody>
             </table>
           </div>
+
           {totalPages > 1 && (
             <div style={{ display: "flex", justifyContent: "center", gap: 4, padding: 12, borderTop: "1px solid var(--border)" }}>
               {Array.from({ length: totalPages }, (_, i) => (
@@ -119,8 +140,10 @@ export default function Transactions() {
               ))}
             </div>
           )}
-          <div style={{ padding: "12px 16px", borderTop: "1px solid var(--border)", color: "var(--text-muted)", fontSize: 12 }}>
-            {t("total")}: {filtered.length} · {t("amount")}: {fmt(filtered.reduce((s, tx) => s + (tx.totalSum || 0), 0))}
+
+          <div style={{ padding: "12px 16px", borderTop: "1px solid var(--border)", color: "var(--text-muted)", fontSize: 12, display: "flex", justifyContent: "space-between" }}>
+            <span>{t("total")}: {filtered.length}</span>
+            <span>Сумма: {fmtAmount(filtered.reduce((s, tx) => s + (tx.totalSum || 0), 0))}</span>
           </div>
         </div>
       )}

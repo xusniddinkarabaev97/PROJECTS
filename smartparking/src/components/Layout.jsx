@@ -10,22 +10,8 @@ export default function Layout({ children }) {
 
   const menuItems = [
     { path: "/", label: t("dashboard"), icon: "📊" },
-    { path: "/stations", label: t("stations"), icon: "🅿️" },
-    { path: "/map", label: t("map"), icon: "🗺️" },
-    { path: "/vehicles", label: t("vehicles"), icon: "🚗" },
-    { path: "/companies", label: t("companies"), icon: "🏢" },
-    { path: "/clients", label: t("clients"), icon: "👥" },
     { path: "/transactions", label: t("transactions"), icon: "💳" },
-    { path: "/plans", label: t("plans"), icon: "📋" },
-    { path: "/sharepercents", label: t("sharePercents"), icon: "📊" },
-    { path: "/reports", label: t("reports"), icon: "📈" },
     { path: "/profile", label: t("profile"), icon: "👤" },
-    { type: "divider" },
-    { type: "section", label: "Dahua DSS" },
-    { path: "/dahua-settings", label: t("dahuaIntegration"), icon: "🔌" },
-    { path: "/dahua-devices", label: t("dahuaDevices"), icon: "📷" },
-    { path: "/vehicle-management", label: t("vehicleManagement"), icon: "🚙" },
-    { path: "/parking-sessions", label: t("parkingSessions"), icon: "🚦" },
   ];
 
   return (
