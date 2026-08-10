@@ -117,6 +117,62 @@ namespace SmartParking.Controllers
                     return Ok(new { id, status = "Transaction failed" });
                 }
 
+                // GET: api/Transactions/parking/last (last parking transaction)
+                [AllowAnonymous]
+                [HttpGet("parking/last")]
+                public async Task<IActionResult> LastParking()
+                {
+                    // Try parking first, fallback to any transaction
+                    var txn = await _context.Transactions
+                        .Include(t => t.Client)
+                        .Where(t => t.Status == "parking")
+                        .OrderByDescending(t => t.FilledAt)
+                        .FirstOrDefaultAsync();
+
+                    if (txn == null)
+                    {
+                        txn = await _context.Transactions
+                            .Include(t => t.Client)
+                            .OrderByDescending(t => t.FilledAt)
+                            .FirstOrDefaultAsync();
+                    }
+
+                    if (txn == null)
+                        return Ok(new { id = 0, clientName = "—", totalSum = 0, 
+                            entryTime = (string?)null, exitTime = (string?)null, 
+                            duration = (string?)null, status = "empty", filledAt = (DateTime?)null });
+
+                    // Extract entry/exit/duration from PaymentMethod (stored as JSON before first '|')
+                    string entryTime = null, exitTime = null, duration = null;
+                    if (!string.IsNullOrEmpty(txn.PaymentMethod))
+                    {
+                        try
+                        {
+                            var json = txn.PaymentMethod.Split('|')[0]; // strip |click|fiscal:... suffix
+                            var dto = System.Text.Json.JsonSerializer.Deserialize<ParkingDto>(json);
+                            if (dto != null)
+                            {
+                                entryTime = dto.Kirish.ToString("o");
+                                exitTime = dto.Chiqish.ToString("o");
+                                duration = dto.Davomiyligi;
+                            }
+                        }
+                        catch { }
+                    }
+
+                    return Ok(new
+                    {
+                        id = txn.Id,
+                        clientName = txn.Client?.FullName ?? txn.Client?.ExternalId,
+                        totalSum = txn.TotalSum,
+                        entryTime,
+                        exitTime,
+                        duration,
+                        status = txn.PaymentStatus.ToString(),
+                        filledAt = txn.FilledAt
+                    });
+                }
+
                 // POST: api/Transactions/parking (from avto.itpanda.uz)
                 [AllowAnonymous]
                 [HttpPost("parking")]

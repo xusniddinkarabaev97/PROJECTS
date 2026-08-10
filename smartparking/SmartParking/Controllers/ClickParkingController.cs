@@ -51,7 +51,7 @@ namespace SmartParking.Controllers
                 return Ok(new ClickResponse { ClickTransId = request.ClickTransId, MerchantTransId = request.MerchantTransId, Error = -4, ErrorNote = "Transaction cancelled" });
 
             txn.PaymentStatus = PaymentStatus.Pending;
-            txn.PaymentMethod = "click";
+            txn.PaymentMethod = (txn.PaymentMethod ?? "") + "|click";
             await _context.SaveChangesAsync();
 
             return Ok(new ClickResponse { ClickTransId = request.ClickTransId, MerchantTransId = request.MerchantTransId, MerchantPrepareId = txn.Id, Error = 0, ErrorNote = "Success" });
@@ -81,7 +81,8 @@ namespace SmartParking.Controllers
                 txn.FilledAt = DateTime.UtcNow;
                 fiscalReceiptId = $"FP-{DateTime.UtcNow:yyyyMMdd}-{txn.Id:D5}";
                 fiscalStatus = "registered";
-                txn.PaymentMethod = $"click|fiscal:{fiscalReceiptId}";
+                // Keep original PaymentMethod (ParkingDto), append fiscal info
+                txn.PaymentMethod = (txn.PaymentMethod ?? "") + $"|fiscal:{fiscalReceiptId}";
 
                 try {
                     var uparkingUrl = _config["Billing:UparkingCallbackUrl"];

@@ -48,17 +48,26 @@ namespace SmartParking.Controllers
                 ClientId = client.Id,
                 TotalSum = req.Amount,
                 PaymentStatus = PaymentStatus.New,
-                PaymentMethod = JsonSerializer.Serialize(new { sessionId = req.SessionId, plateNo = req.PlateNo }),
+                PaymentMethod = JsonSerializer.Serialize(new {
+                    sessionId = req.SessionId,
+                    plateNo = req.PlateNo,
+                    parkingStart = req.ParkingStart,
+                    parkingEnd = req.ParkingEnd,
+                    parkingTimeSeconds = req.ParkingTimeSeconds
+                }),
                 Status = "parking",
                 FilledAt = DateTime.UtcNow
             };
             _ctx.Transactions.Add(txn);
             await _ctx.SaveChangesAsync();
 
-            var mid = _config["ClickSettings:MerchantId"] ?? "19876";
-            var sid = _config["ClickSettings:ServiceId"] ?? "2005";
-            var amt = (long)(txn.TotalSum * 100);
-            var qrContent = $"service_id={sid}&merchant_id={mid}&amount={amt}&transaction_param={txn.Id}";
+            // QR → avto.itpanda.uz с реальными данными въезда/выезда
+            var qrContent = $"http://avto.itpanda.uz/pay.html"
+                + $"?txn={txn.Id}"
+                + $"&amount={req.Amount}"
+                + $"&entry={req.ParkingStart:o}"
+                + $"&exit={req.ParkingEnd:o}"
+                + $"&duration={req.ParkingTimeSeconds}";
 
             using var gen = new QRCodeGenerator();
             using var data = gen.CreateQrCode(qrContent, QRCodeGenerator.ECCLevel.M);
