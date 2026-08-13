@@ -152,8 +152,8 @@ namespace SmartParking.Controllers
                             var dto = System.Text.Json.JsonSerializer.Deserialize<ParkingDto>(json);
                             if (dto != null)
                             {
-                                entryTime = dto.Kirish.ToString("o");
-                                exitTime = dto.Chiqish.ToString("o");
+                                entryTime = dto.Kirish?.ToString("o");
+                                exitTime = dto.Chiqish?.ToString("o");
                                 duration = dto.Davomiyligi;
                             }
                         }
@@ -214,8 +214,8 @@ namespace SmartParking.Controllers
     {
         public string ChekId { get; set; } = string.Empty;
         public string AvtoRaqam { get; set; } = string.Empty;
-        public DateTime Kirish { get; set; }
-        public DateTime Chiqish { get; set; }
+        public DateTime? Kirish { get; set; }
+        public DateTime? Chiqish { get; set; }
         public string Davomiyligi { get; set; } = string.Empty;
         public decimal JamiTolov { get; set; }
     }
