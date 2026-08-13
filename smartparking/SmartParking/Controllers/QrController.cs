@@ -44,14 +44,22 @@ public class QrController : ControllerBase
                     qrUrl += "&plate=" + Uri.EscapeDataString(pn.GetString()!);
 
                 if (r.TryGetProperty("parkingStart", out var ps))
-                    qrUrl += "&entry=" + Uri.EscapeDataString(ps.GetString()!);
+                {
+                    var v = ps.GetString();
+                    if (!string.IsNullOrEmpty(v) && !v.StartsWith("0001-01-01"))
+                        qrUrl += "&entry=" + Uri.EscapeDataString(v);
+                }
                 else if (r.TryGetProperty("kirish", out var k))
                     qrUrl += "&entry=" + Uri.EscapeDataString(k.GetString()!);
                 else if (r.TryGetProperty("Kirish", out var k2))
                     qrUrl += "&entry=" + Uri.EscapeDataString(k2.GetString()!);
 
                 if (r.TryGetProperty("parkingEnd", out var pe))
-                    qrUrl += "&exit=" + Uri.EscapeDataString(pe.GetString()!);
+                {
+                    var v = pe.GetString();
+                    if (!string.IsNullOrEmpty(v) && !v.StartsWith("0001-01-01"))
+                        qrUrl += "&exit=" + Uri.EscapeDataString(v);
+                }
                 else if (r.TryGetProperty("chiqish", out var c))
                     qrUrl += "&exit=" + Uri.EscapeDataString(c.GetString()!);
                 else if (r.TryGetProperty("Chiqish", out var c2))

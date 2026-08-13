@@ -51,8 +51,8 @@ namespace SmartParking.Controllers
                 PaymentMethod = JsonSerializer.Serialize(new {
                     sessionId = req.SessionId,
                     plateNo = req.PlateNo,
-                    parkingStart = req.ParkingStart,
-                    parkingEnd = req.ParkingEnd,
+                    parkingStart = req.ParkingStart.HasValue && req.ParkingStart.Value.Year > 1 ? req.ParkingStart.Value : (DateTime?)null,
+                    parkingEnd = req.ParkingEnd.HasValue && req.ParkingEnd.Value.Year > 1 ? req.ParkingEnd.Value : (DateTime?)null,
                     parkingTimeSeconds = req.ParkingTimeSeconds
                 }),
                 Status = "parking",
@@ -65,10 +65,14 @@ namespace SmartParking.Controllers
             var qrContent = $"http://avto.itpanda.uz/index.html"
                 + $"?txn={txn.Id}"
                 + $"&amount={req.Amount}"
-                + $"&plate={Uri.EscapeDataString(req.PlateNo)}"
-                + $"&entry={req.ParkingStart:o}"
-                + $"&exit={req.ParkingEnd:o}"
-                + $"&duration={req.ParkingTimeSeconds}";
+                + $"&plate={Uri.EscapeDataString(req.PlateNo)}";
+
+            if (req.ParkingStart.HasValue && req.ParkingStart.Value.Year > 1)
+                qrContent += $"&entry={req.ParkingStart.Value:o}";
+            if (req.ParkingEnd.HasValue && req.ParkingEnd.Value.Year > 1)
+                qrContent += $"&exit={req.ParkingEnd.Value:o}";
+            if (req.ParkingTimeSeconds > 0)
+                qrContent += $"&duration={req.ParkingTimeSeconds}";
 
             using var gen = new QRCodeGenerator();
             using var data = gen.CreateQrCode(qrContent, QRCodeGenerator.ECCLevel.M);
@@ -87,8 +91,8 @@ namespace SmartParking.Controllers
     public class UParkingRequest
     {
         public string SessionId { get; set; } = "";
-        public DateTime ParkingStart { get; set; }
-        public DateTime ParkingEnd { get; set; }
+        public DateTime? ParkingStart { get; set; }
+        public DateTime? ParkingEnd { get; set; }
         public int ParkingTimeSeconds { get; set; }
         public string PlateNo { get; set; } = "";
         public decimal Amount { get; set; }
