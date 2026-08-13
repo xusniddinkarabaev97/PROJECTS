@@ -65,12 +65,12 @@ namespace SmartParking.Controllers
             var qrContent = $"http://avto.itpanda.uz/index.html"
                 + $"?txn={txn.Id}"
                 + $"&amount={req.Amount}"
-                + $"&plate={Uri.EscapeDataString(req.PlateNo)}";
+                + $"&plate={req.PlateNo}";
 
             if (req.ParkingStart.HasValue && req.ParkingStart.Value.Year > 1)
-                qrContent += $"&entry={Uri.EscapeDataString(req.ParkingStart.Value.ToString("yyyy-MM-ddTHH:mm:sszzz"))}";
+                qrContent += $"&entry={req.ParkingStart.Value.ToString("yyyy-MM-ddTHH:mm:sszzz")}";
             if (req.ParkingEnd.HasValue && req.ParkingEnd.Value.Year > 1)
-                qrContent += $"&exit={Uri.EscapeDataString(req.ParkingEnd.Value.ToString("yyyy-MM-ddTHH:mm:sszzz"))}";
+                qrContent += $"&exit={req.ParkingEnd.Value.ToString("yyyy-MM-ddTHH:mm:sszzz")}";
             if (req.ParkingTimeSeconds > 0)
                 qrContent += $"&duration={req.ParkingTimeSeconds}";
 

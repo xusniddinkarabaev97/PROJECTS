@@ -41,29 +41,29 @@ public class QrController : ControllerBase
                 var r = doc.RootElement;
 
                 if (r.TryGetProperty("plateNo", out var pn))
-                    qrUrl += "&plate=" + Uri.EscapeDataString(pn.GetString()!);
+                    qrUrl += "&plate=" + pn.GetString();
 
                 if (r.TryGetProperty("parkingStart", out var ps))
                 {
                     var v = ps.GetString();
                     if (!string.IsNullOrEmpty(v) && !v.StartsWith("0001-01-01"))
-                        qrUrl += "&entry=" + Uri.EscapeDataString(v);
+                        qrUrl += "&entry=" + v;
                 }
                 else if (r.TryGetProperty("kirish", out var k))
-                    qrUrl += "&entry=" + Uri.EscapeDataString(k.GetString()!);
+                    qrUrl += "&entry=" + k.GetString();
                 else if (r.TryGetProperty("Kirish", out var k2))
-                    qrUrl += "&entry=" + Uri.EscapeDataString(k2.GetString()!);
+                    qrUrl += "&entry=" + k2.GetString();
 
                 if (r.TryGetProperty("parkingEnd", out var pe))
                 {
                     var v = pe.GetString();
                     if (!string.IsNullOrEmpty(v) && !v.StartsWith("0001-01-01"))
-                        qrUrl += "&exit=" + Uri.EscapeDataString(v);
+                        qrUrl += "&exit=" + v;
                 }
                 else if (r.TryGetProperty("chiqish", out var c))
-                    qrUrl += "&exit=" + Uri.EscapeDataString(c.GetString()!);
+                    qrUrl += "&exit=" + c.GetString();
                 else if (r.TryGetProperty("Chiqish", out var c2))
-                    qrUrl += "&exit=" + Uri.EscapeDataString(c2.GetString()!);
+                    qrUrl += "&exit=" + c2.GetString();
 
                 if (r.TryGetProperty("parkingTimeSeconds", out var pts))
                     qrUrl += "&duration=" + pts.GetInt32();
