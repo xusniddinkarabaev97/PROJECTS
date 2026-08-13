@@ -175,7 +175,7 @@ async function doPay() {
     try {
         var body = {
             chekId: 'qr-' + Date.now(),
-            avtoRaqam: '',
+            avtoRaqam: D.plate || '',
             kirish: fixDate(D.in) || new Date().toISOString(),
             chiqish: fixDate(D.out) || new Date().toISOString(),
             davomiyligi: D.dur || '0',
