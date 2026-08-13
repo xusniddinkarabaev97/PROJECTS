@@ -75,6 +75,13 @@ function fmt(v) {
     return isNaN(d.getTime()) ? v : d.toLocaleString('ru-RU');
 }
 
+function fixDate(v) {
+    if (!v) return '';
+    // ' 00:00' → '+00:00', ' 05:00' → '+05:00'
+    v = String(v).replace(/ (\d{2}:\d{2})$/, '+$1');
+    return v;
+}
+
 function dur(v) {
     v = String(v);
     var m = v.match(/^(\d+)\s*h/);
@@ -165,8 +172,8 @@ async function doPay() {
         var body = {
             chekId: 'qr-' + Date.now(),
             avtoRaqam: '',
-            kirish: D.in || new Date().toISOString(),
-            chiqish: D.out || new Date().toISOString(),
+            kirish: fixDate(D.in) || new Date().toISOString(),
+            chiqish: fixDate(D.out) || new Date().toISOString(),
             davomiyligi: D.dur || '0',
             jamiTolov: parseFloat(D.sum) || 0
         };

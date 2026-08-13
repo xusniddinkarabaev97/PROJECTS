@@ -68,9 +68,9 @@ namespace SmartParking.Controllers
                 + $"&plate={Uri.EscapeDataString(req.PlateNo)}";
 
             if (req.ParkingStart.HasValue && req.ParkingStart.Value.Year > 1)
-                qrContent += $"&entry={req.ParkingStart.Value:o}";
+                qrContent += $"&entry={Uri.EscapeDataString(req.ParkingStart.Value.ToString("o"))}";
             if (req.ParkingEnd.HasValue && req.ParkingEnd.Value.Year > 1)
-                qrContent += $"&exit={req.ParkingEnd.Value:o}";
+                qrContent += $"&exit={Uri.EscapeDataString(req.ParkingEnd.Value.ToString("o"))}";
             if (req.ParkingTimeSeconds > 0)
                 qrContent += $"&duration={req.ParkingTimeSeconds}";
 
