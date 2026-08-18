@@ -4,6 +4,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System;
+using System.Text;
+using System.Text.Json;
 
 namespace SmartParking.Controllers
 {
@@ -13,10 +15,14 @@ namespace SmartParking.Controllers
     public class TransactionsController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
+        private readonly IConfiguration _config;
+        private readonly IHttpClientFactory _http;
 
-        public TransactionsController(ApplicationDbContext context)
+        public TransactionsController(ApplicationDbContext context, IConfiguration config, IHttpClientFactory http)
         {
             _context = context;
+            _config = config;
+            _http = http;
         }
 
         // GET: api/Transactions
@@ -102,6 +108,8 @@ namespace SmartParking.Controllers
                     txn.PaymentMethod ??= "qr";
                     await _context.SaveChangesAsync();
 
+                    await SendPaymentCallback(txn, paid: true);
+
                     return Ok(new { id, status = "Transaction completed" });
                 }
 
@@ -114,7 +122,45 @@ namespace SmartParking.Controllers
                     if (txn == null) return NotFound($"Transaction #{id} not found");
                     txn.PaymentStatus = Enums.PaymentStatus.Failed;
                     await _context.SaveChangesAsync();
+
+                    await SendPaymentCallback(txn, paid: false);
+
                     return Ok(new { id, status = "Transaction failed" });
+                }
+
+                // Direction B2: SmartParking → UParking payment callback
+                private async Task SendPaymentCallback(Transaction txn, bool paid)
+                {
+                    try
+                    {
+                        var uparkingUrl = _config["Billing:UparkingCallbackUrl"];
+                        if (string.IsNullOrEmpty(uparkingUrl)) return;
+
+                        var secret = _config["Billing:SharedSecret"];
+                        var sessionId = "";
+                        try
+                        {
+                            var pm = JsonSerializer.Deserialize<JsonElement>(txn.PaymentMethod ?? "{}");
+                            if (pm.TryGetProperty("sessionId", out var s)) sessionId = s.GetString();
+                        }
+                        catch { }
+
+                        var cbPayload = JsonSerializer.Serialize(new
+                        {
+                            sessionId,
+                            billingReferenceId = txn.Id.ToString(),
+                            paid,
+                            paidAt = DateTime.UtcNow.ToString("o")
+                        });
+
+                        var cbClient = _http.CreateClient();
+                        var cbContent = new StringContent(cbPayload, Encoding.UTF8, "application/json");
+                        if (!string.IsNullOrEmpty(secret))
+                            cbClient.DefaultRequestHeaders.Add("X-Billing-Secret", secret);
+
+                        await cbClient.PostAsync($"{uparkingUrl}/api/billing/payment", cbContent);
+                    }
+                    catch { }
                 }
 
                 // GET: api/Transactions/parking/last (last parking transaction)
@@ -193,19 +239,27 @@ namespace SmartParking.Controllers
                         await _context.SaveChangesAsync();
                     }
 
+                    // Дедупликация: одна машина + одно время въезда/выезда = одна транзакция
+                    var dedupKey = $"{dto.AvtoRaqam}|{dto.Kirish?.ToString("yyyy-MM-ddTHH:mm:ss")}|{dto.Chiqish?.ToString("yyyy-MM-ddTHH:mm:ss")}";
+                    var existing = await _context.Transactions
+                        .FirstOrDefaultAsync(t => t.ExternalRef == dedupKey);
+                    if (existing != null)
+                        return Ok(new { id = existing.Id, chekId = dto.ChekId, status = "exists", duplicate = true });
+
                     var txn = new Transaction
                     {
                         ClientId = client.Id,
                         TotalSum = dto.JamiTolov,
                         PaymentStatus = Enums.PaymentStatus.New,
                         PaymentMethod = System.Text.Json.JsonSerializer.Serialize(dto),
+                        ExternalRef = dedupKey,
                         Status = "parking",
                         FilledAt = DateTime.UtcNow
                     };
                     _context.Transactions.Add(txn);
                     await _context.SaveChangesAsync();
 
-                    return Ok(new { id = txn.Id, chekId = dto.ChekId, status = "created" });
+                    return Ok(new { id = txn.Id, chekId = dto.ChekId, status = "created", duplicate = false });
                 }
         }
 
